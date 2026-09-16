@@ -79,10 +79,12 @@ Everything below installs into `~/.claude/...` (global, not per-project) and onl
 once per machine. **After that**, starting a new project is just: open Claude Code inside the
 repo and run `/bootstrap-project`. Nothing in this repository gets touched again.
 
-**Quickest way:** paste `00-run-all.md` as a single message. It's the five steps below,
-concatenated, with one instruction wrapping all of them: work through all five in one sitting
-without waiting for a "go on" between each, but still stop and ask wherever an individual step's
-own instructions call for it (an existing file, a conflicting rule). One paste, one sitting.
+**Quickest way:** open `00-run-all.md` and copy everything from its marked line down (the file
+itself has a short human-only explanation above that line, don't paste that part). One paste,
+but not one uninterrupted pass: the agent stops and reports after each of the five steps and
+waits for you to say "continue" before starting the next, so a problem at one step gets caught
+before the rest build on it. Every individual step's own "stop and ask" instructions still apply
+on top of that.
 
 **Step-by-step way**, if you'd rather review each install before moving to the next, or you're
 resuming after stopping partway through: paste each file below as its own message, in order:

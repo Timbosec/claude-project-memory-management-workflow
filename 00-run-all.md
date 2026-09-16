@@ -1,27 +1,40 @@
-# Run all five core bootstrap steps in one sitting
+# Run all five core bootstrap steps in one sitting, with a checkpoint after each
 
-Paste this whole file as a single message instead of pasting the five numbered files one at a
-time. It's the same five steps, concatenated, with one instruction wrapping all of them. It does
-NOT include prompt 6 (the optional sub-agent record-file guard) since that one isn't something
-everyone using this bundle wants; run `06-subagent-record-guard-bootstrap.md` separately if you
-delegate work to sub-agents.
+**This section is for you, the human — don't paste it.** It stops at the marked line below.
 
-**Work through the five steps below in order, in this same sitting, without waiting for me to
-say "go on" between them — but every individual step's own "stop and show me" / "ask before
-overwriting" instructions still apply exactly as written.** Running this as one file changes how
-many times I have to paste something; it does not change any step's own judgement calls about
-when to pause. If step 2 tells you to stop because a file already exists, stop there and wait for
-me, then continue with step 3 onward once I've responded — don't skip ahead and don't silently
-resolve it yourself.
+This file bundles the same five steps as the numbered files (`01`-`05`) into one paste instead of
+five, but runs them as a real chain, not one uninterrupted pass: the agent stops and reports after
+every step and waits for you to say to continue before starting the next one. That way a problem
+at step 2 gets caught before steps 3-5 build on it, and the only added cost per step is a short
+reply from you — not a re-paste. It does NOT include prompt 6 (the optional sub-agent record-file
+guard), since that's not something everyone using this bundle wants; run
+`06-subagent-record-guard-bootstrap.md` separately if you delegate work to sub-agents. If you'd
+rather review every file yourself before anything is pasted, use `01`-`05` individually instead of
+this one.
 
-After each step, give me one line confirming what was created before moving to the next, so I can
-follow along — not a full report each time, just enough that I could interrupt if something looks
-wrong. Give the fuller per-step report (byte sizes etc.) as each step's own instructions already
-ask for.
+**How to use it:** copy everything from the marked line below down to the end of the file, and
+paste it as a single message into a Claude Code session on the machine you're setting up. After
+each step, the agent will report what it did and stop; reply with something like "continue" to
+move to the next one. If a step's own instructions say to stop and ask you something first (an
+existing file, a conflict), that happens too — answer it the same way, then it resumes.
 
-If nothing needs my input anywhere, tell me at the end that all five completed clean, and remind
-me that all of it is one-time machine setup — from here on, a new project just needs
-`/bootstrap-project`.
+================================================================================
+EVERYTHING BELOW THIS LINE IS THE PROMPT — COPY FROM HERE TO THE END OF THE FILE
+================================================================================
+
+You are setting up personal working-rules infrastructure ported from another Claude Code setup,
+across five steps below. Read all five before starting, then work through them **one at a time,
+in the order given**:
+
+- Complete a step fully, including responding to anything its own instructions told you to stop
+  and ask about.
+- Report what you did — one line is enough unless the step's own instructions ask for more.
+- Then **stop and wait for me to say to continue** before starting the next step. Don't begin the
+  next step in the same turn, and don't chain two steps into one turn just because the first one
+  raised no issues — the pause happens at every step boundary, unconditionally.
+
+Once step 5 is done and I've confirmed it, tell me all five completed and remind me this was
+one-time machine setup — from here on, a new project just needs `/bootstrap-project`.
 
 ---
 
