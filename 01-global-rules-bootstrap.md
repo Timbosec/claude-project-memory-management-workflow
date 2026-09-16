@@ -1,9 +1,11 @@
 # Bootstrap prompt 1 of 5 — global rule files (run ONCE per machine)
 
-Paste this whole file as a single message into a Claude Code session on this machine. It sets up
-the five user-scope files that a `/finalise`-style session-close ritual depends on. Run this
-before prompts 2 and 3. Do not run it per-project — these files live in `~/.claude/` and apply to
-every project on this machine.
+This step sets up the five user-scope files that a `/finalise`-style session-close ritual depends
+on. Run it before prompts 2 and 3. These files live in `~/.claude/` and apply to every project on
+this machine — never run this per individual project.
+
+*(Reading this file on its own, not as part of `00-run-all.md`? Paste this whole file as a single
+message into a Claude Code session on this machine.)*
 
 ## Instructions for Claude
 

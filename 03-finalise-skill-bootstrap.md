@@ -1,10 +1,13 @@
 # Bootstrap prompt 3 of 5 — the finalise skill itself (run ONCE per machine)
 
-Run this after prompts 1 and 2. This installs `/finalise` as a **global** skill at
+This installs `/finalise` as a **global** skill at
 `~/.claude/skills/finalise/` — available in every project on this machine, not just one — plus
 its three checker scripts and the git-commit reminder hook wired into the **global**
 `~/.claude/settings.json`. You will not need to reinstall this per new project; prompt 4 handles
 the per-project piece (a `backlog.md`/`decisions.md` pair).
+
+*(Reading this file on its own, not as part of `00-run-all.md`? Paste it as a single message,
+after prompts 1 and 2 have been run.)*
 
 ## Why this isn't a byte-for-byte copy
 

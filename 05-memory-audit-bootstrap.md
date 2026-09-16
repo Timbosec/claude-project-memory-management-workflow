@@ -1,8 +1,11 @@
 # Bootstrap prompt 5 of 5 — /memory-audit (run ONCE per machine)
 
-Run this after prompt 3 (it invokes the global finalise scripts prompt 3 installs, so it depends
-on that having run first). Like `/finalise`, this is a **global** command — one file, used across
+This depends on prompt 3 (it invokes the global finalise scripts prompt 3 installs). Like
+`/finalise`, this is a **global** command — one file, used across
 every project on this machine — not something you reinstall per project.
+
+*(Reading this file on its own, not as part of `00-run-all.md`? Paste it as a single message,
+after prompt 3 has been run.)*
 
 ## Why this one matters
 
