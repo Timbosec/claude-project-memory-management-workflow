@@ -38,16 +38,11 @@ one-time machine setup — from here on, a new project just needs `/bootstrap-pr
 
 ---
 
-## Step 1 of 5
-
-# Bootstrap prompt 1 of 5 — global rule files (run ONCE per machine)
+## Step 1 of 5 — global rule files
 
 This step sets up the five user-scope files that a `/finalise`-style session-close ritual depends
 on. Run it before prompts 2 and 3. These files live in `~/.claude/` and apply to every project on
 this machine — never run this per individual project.
-
-*(Reading this file on its own, not as part of `00-run-all.md`? Paste this whole file as a single
-message into a Claude Code session on this machine.)*
 
 ## Instructions for Claude
 
@@ -589,9 +584,7 @@ rather than park it.
 
 ---
 
-## Step 2 of 5
-
-# Bootstrap prompt 2 of 5 — empty ledger files (run ONCE per machine)
+## Step 2 of 5 — empty ledger files
 
 These two files are accumulating logs, not rule files — on the source
 machine they hold dozens of entries, but every one of those entries is a project-specific
@@ -599,9 +592,6 @@ observation (specific tools, task numbers, one-off incidents) that can never fin
 "second contrasting case" from unrelated future work. Porting the entries would just be noise, so
 only the schema and the explanatory front matter comes across — both files start with zero
 entries here, exactly as they once did on the source machine before any case had been logged.
-
-*(Reading this file on its own, not as part of `00-run-all.md`? Paste it as a single message,
-after prompt 1 has been run.)*
 
 ## Instructions for Claude
 
@@ -844,18 +834,13 @@ pass-only test cannot see, and it is the one users have flagged as their main co
 
 ---
 
-## Step 3 of 5
-
-# Bootstrap prompt 3 of 5 — the finalise skill itself (run ONCE per machine)
+## Step 3 of 5 — the finalise skill
 
 This installs `/finalise` as a **global** skill at
 `~/.claude/skills/finalise/` — available in every project on this machine, not just one — plus
 its three checker scripts and the git-commit reminder hook wired into the **global**
 `~/.claude/settings.json`. You will not need to reinstall this per new project; prompt 4 handles
 the per-project piece (a `backlog.md`/`decisions.md` pair).
-
-*(Reading this file on its own, not as part of `00-run-all.md`? Paste it as a single message,
-after prompts 1 and 2 have been run.)*
 
 ## Why this isn't a byte-for-byte copy
 
@@ -3684,9 +3669,7 @@ hook entries in the file (if any) reference their own script paths and match tha
 
 ---
 
-## Step 4 of 5
-
-# Bootstrap prompt 4 of 5 — installs the `/bootstrap-project` command (run ONCE per machine)
+## Step 4 of 5 — the /bootstrap-project command
 
 This one changed shape from earlier drafts of this bundle. It used to be a prompt you'd paste
 into every new project by hand. That's fragile — it means keeping track of a saved file and
@@ -3869,16 +3852,11 @@ If creating fresh, this is the whole file. If appending to an existing one, writ
 
 ---
 
-## Step 5 of 5
-
-# Bootstrap prompt 5 of 5 — /memory-audit (run ONCE per machine)
+## Step 5 of 5 — the /memory-audit command
 
 This depends on prompt 3 (it invokes the global finalise scripts prompt 3 installs). Like
 `/finalise`, this is a **global** command — one file, used across
 every project on this machine — not something you reinstall per project.
-
-*(Reading this file on its own, not as part of `00-run-all.md`? Paste it as a single message,
-after prompt 3 has been run.)*
 
 ## Why this one matters
 
