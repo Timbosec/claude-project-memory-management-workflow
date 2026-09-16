@@ -41,7 +41,7 @@ one-time machine setup — from here on, a new project just needs `/bootstrap-pr
 ## Step 1 of 5 — global rule files
 
 This step sets up the five user-scope files that a `/finalise`-style session-close ritual depends
-on. Run it before prompts 2 and 3. These files live in `~/.claude/` and apply to every project on
+on. Run it before steps 2 and 3. These files live in `~/.claude/` and apply to every project on
 this machine — never run this per individual project.
 
 ### What to do
@@ -596,7 +596,7 @@ entries here, exactly as they once did on the source machine before any case had
 ### What to do
 
 Create these two files with exactly the content given below. If either already exists, stop and
-show me its content before overwriting. Do not commit/push — same reasoning as prompt 1.
+show me its content before overwriting. Do not commit/push — same reasoning as step 1.
 
 **Known gaps, left as-is deliberately, not bugs to fix:** the embedded text below references two
 things that are NOT part of this bootstrap and won't exist on this machine yet — a
@@ -839,7 +839,7 @@ pass-only test cannot see, and it is the one users have flagged as their main co
 This installs `/finalise` as a **global** skill at
 `~/.claude/skills/finalise/` — available in every project on this machine, not just one — plus
 its three checker scripts and the git-commit reminder hook wired into the **global**
-`~/.claude/settings.json`. You will not need to reinstall this per new project; prompt 4 handles
+`~/.claude/settings.json`. You will not need to reinstall this per new project; step 4 handles
 the per-project piece (a `backlog.md`/`decisions.md` pair).
 
 ## Why this isn't a byte-for-byte copy
@@ -863,7 +863,7 @@ substitution; write it as given.
    from that root's path) at its top, and uses them throughout instead of any one hardcoded
    project. Note two things it already handles: step 5's three script calls pass their paths
    explicitly as flags, and steps 5-6 skip gracefully if `backlog.md`/`CLAUDE.md` don't exist yet
-   in the current project (i.e. before prompt 4 has been run there).
+   in the current project (i.e. before step 4 has been run there).
 
 3. Create `~/.claude/hooks/remind_finalise.py` with the content under "Hook" below — this one
    needs no changes at all, it's already generic (it fires on any Bash command containing both
@@ -874,13 +874,13 @@ substitution; write it as given.
    array, add this as one more entry in it rather than replacing the array; if it already has a
    hook matching `Bash` that does something else, keep both.
 
-5. Do NOT commit/push anything in `~/.claude` yet — ask me first, per prompt 1's instruction.
+5. Do NOT commit/push anything in `~/.claude` yet — ask me first, per step 1's instruction.
 
 6. Report what you created and ask me to open a fresh Claude Code session in any project
    directory and try `/finalise` (it may not have much to do yet in a brand-new project, but it
    should at least run steps 1-2, report zero candidates, and run the three checks without
    crashing — check_thread_state.py and context_budget_report.py will complain about a missing
-   `backlog.md`/`CLAUDE.md` gracefully if prompt 4 hasn't been run yet; if either crashes instead
+   `backlog.md`/`CLAUDE.md` gracefully if step 4 hasn't been run yet; if either crashes instead
    of reporting cleanly, tell me rather than papering over it).
 
 ---
@@ -3673,19 +3673,19 @@ hook entries in the file (if any) reference their own script paths and match tha
 
 This one changed shape from earlier drafts of this bundle. It used to be a prompt you'd paste
 into every new project by hand. That's fragile — it means keeping track of a saved file and
-remembering it exists, months from now, for the fifth new project you start. Instead, this prompt
+remembering it exists, months from now, for the fifth new project you start. Instead, this step
 installs a **permanent, global command** — `~/.claude/commands/bootstrap-project.md` — the same
-way `/memory-audit` is installed (prompt 5). From then on, setting up a new project is just:
+way `/memory-audit` is installed (step 5). From then on, setting up a new project is just:
 open Claude Code inside the new repo and type `/bootstrap-project`. No file to find.
 
-Run this once per machine, any time relative to prompts 1/2/5 — but ideally after prompt 3, since
+Run this once per machine, any time relative to steps 1/2/5 — but ideally after step 3, since
 the command's own CLAUDE.md template tells the new project to run `/finalise`, and that reference
-only means something once prompt 3 has installed it.
+only means something once step 3 has installed it.
 
 ### What to do
 
 1. Create `~/.claude/commands/bootstrap-project.md` with exactly the content given below.
-2. Do NOT commit/push — same reasoning as the earlier prompts.
+2. Do NOT commit/push — same reasoning as the earlier steps.
 3. Report the file's byte size so I can sanity-check nothing got truncated.
 4. Once created, tell me I can test it immediately: open a fresh Claude Code session in any repo
    (a scratch/throwaway one is fine for a first try) and type `/bootstrap-project`.
@@ -3854,7 +3854,7 @@ If creating fresh, this is the whole file. If appending to an existing one, writ
 
 ## Step 5 of 5 — the /memory-audit command
 
-This depends on prompt 3 (it invokes the global finalise scripts prompt 3 installs). Like
+This depends on step 3 (it invokes the global finalise scripts step 3 installs). Like
 `/finalise`, this is a **global** command — one file, used across
 every project on this machine — not something you reinstall per project.
 
@@ -3862,7 +3862,7 @@ every project on this machine — not something you reinstall per project.
 
 `/finalise` writes to `lesson-candidates.md` but explicitly does NOT age it — its own header says
 "`/finalise` step 2 does the pairing... `/memory-audit` Part 2.6 does the aging... neither assumes
-the other ran." Skip this prompt and that half of the system never runs: candidates that could be
+the other ran." Skip this step and that half of the system never runs: candidates that could be
 promoted or retired just accumulate forever, and a rule marked "Provisional — single case" is
 never revisited to check whether a second case has since turned up. This command is also the only
 thing that periodically checks the rule homes, both CLAUDE.mds, and memory against each other for
@@ -3891,7 +3891,7 @@ instead of the script. Port that skill separately if you want the automated vers
 
 1. Create `~/.claude/commands/memory-audit.md` with exactly the content below — it's already
    adapted, don't make further path substitutions.
-2. Do NOT commit/push — same reasoning as the earlier prompts.
+2. Do NOT commit/push — same reasoning as the earlier steps.
 3. Report the file's byte size so I can sanity-check nothing got truncated.
 
 ---
