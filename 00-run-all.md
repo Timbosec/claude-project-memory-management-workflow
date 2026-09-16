@@ -44,7 +44,7 @@ This step sets up the five user-scope files that a `/finalise`-style session-clo
 on. Run it before prompts 2 and 3. These files live in `~/.claude/` and apply to every project on
 this machine — never run this per individual project.
 
-## Instructions for Claude
+### What to do
 
 You are setting up personal working-rules infrastructure ported from another Claude Code setup.
 The content below is already generalised: it holds cross-project operating rules only, with the
@@ -593,7 +593,7 @@ observation (specific tools, task numbers, one-off incidents) that can never fin
 only the schema and the explanatory front matter comes across — both files start with zero
 entries here, exactly as they once did on the source machine before any case had been logged.
 
-## Instructions for Claude
+### What to do
 
 Create these two files with exactly the content given below. If either already exists, stop and
 show me its content before overwriting. Do not commit/push — same reasoning as prompt 1.
@@ -852,7 +852,7 @@ adaptation is already done in the content below — `SKILL.md` now defines `<pro
 their paths as command-line flags with sensible defaults. Nothing here needs further
 substitution; write it as given.
 
-## Instructions for Claude
+### What to do
 
 1. Create `~/.claude/skills/finalise/scripts/` and write into it, verbatim, the four files given
    under "Scripts" below: `check_memory_index.py`, `check_thread_state.py`,
@@ -3682,7 +3682,7 @@ Run this once per machine, any time relative to prompts 1/2/5 — but ideally af
 the command's own CLAUDE.md template tells the new project to run `/finalise`, and that reference
 only means something once prompt 3 has installed it.
 
-## Instructions for Claude
+### What to do
 
 1. Create `~/.claude/commands/bootstrap-project.md` with exactly the content given below.
 2. Do NOT commit/push — same reasoning as the earlier prompts.
@@ -3887,7 +3887,7 @@ already has a fallback for this ("if that script's output doesn't list the rule 
 them directly") — so the audit still works without it, just with a manual measurement step
 instead of the script. Port that skill separately if you want the automated version.
 
-## Instructions for Claude
+### What to do
 
 1. Create `~/.claude/commands/memory-audit.md` with exactly the content below — it's already
    adapted, don't make further path substitutions.
