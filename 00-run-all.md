@@ -18,9 +18,9 @@ each step, the agent will report what it did and stop; reply with something like
 move to the next one. If a step's own instructions say to stop and ask you something first (an
 existing file, a conflict), that happens too — answer it the same way, then it resumes.
 
-================================================================================
+====
 EVERYTHING BELOW THIS LINE IS THE PROMPT — COPY FROM HERE TO THE END OF THE FILE
-================================================================================
+====
 
 You are setting up personal working-rules infrastructure ported from another Claude Code setup,
 across five steps below. Read all five before starting, then work through them **one at a time,
