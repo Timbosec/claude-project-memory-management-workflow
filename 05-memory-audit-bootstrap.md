@@ -38,8 +38,10 @@ instead of the script. Port that skill separately if you want the automated vers
 
 ## Instructions for Claude
 
-1. Create `~/.claude/commands/memory-audit.md` with exactly the content below — it's already
-   adapted, don't make further path substitutions.
+1. **Check whether `~/.claude/commands/memory-audit.md` already exists first.** If it does, read
+   it in full, diff it against the content below, and show me the differences before overwriting —
+   same discipline as every other install step in this bundle. If it doesn't exist yet, create it
+   with exactly the content below — it's already adapted, don't make further path substitutions.
 2. Do NOT commit/push — same reasoning as the earlier prompts.
 3. Report the file's byte size so I can sanity-check nothing got truncated.
 
@@ -76,8 +78,11 @@ User-scope rule homes — standing rules, and they go stale like any other doc:
   ~/.claude/CLAUDE.md appears twice on purpose — audited as an instruction file above, and as
   a rule home here. The actor test that assigns a rule to one of these is canonical in that
   file's header; apply it from there, don't re-derive it.
-Lesson ledger — NOT a rule home; nothing in it is in force. Audit per Part 2.6, not Part 2:
+Lesson ledgers — NOT rule homes; nothing in them is in force. Audit per Part 2.6, not Part 2:
   - ~/.claude/lesson-candidates.md    (first cases awaiting a second; origin logs of promoted rules)
+  - <repo>/lesson-candidates.md       (this project's own ledger, if it has one — same schema,
+    scoped to this project; see Part 2.6, which treats every project's ledger and the global one
+    as one pool)
 Evidence logs and repo docs — same directory, not rule homes, easy to miss:
   - ~/.claude/under-explained-cases.md  (real instances of unclear writing; carries its own
     capture + evaluation protocol — read it, don't re-derive)
@@ -176,43 +181,69 @@ For entries kept only for their rationale/"why we did X" (DURABLE-DECISION):
   Routing a rule into decisions.md buries it where no other project will ever read it.
 
 ### Part 2.6 — Lesson ledger: aging review
-`~/.claude/lesson-candidates.md` holds first cases awaiting a second contrasting case, plus
-origin logs for rules already promoted. **Nothing in it is in force, so the Part 2 keep/cut test
-does not apply** — a candidate is not stale for being unused; waiting is what it is for.
+Two kinds of ledger hold first cases awaiting a second contrasting case, plus origin logs for
+rules already promoted: `~/.claude/lesson-candidates.md` (global) and, per project, `<repo>/
+lesson-candidates.md` (that project's own, where one exists). **Nothing in either is in force, so
+the Part 2 keep/cut test does not apply** — a candidate is not stale for being unused; waiting is
+what it is for.
 
-Run `python3 ~/.claude/skills/finalise/scripts/context_budget_report.py --project-claude
-<repo>/CLAUDE.md --memory-index <memory-dir>/MEMORY.md --ledger ~/.claude/lesson-candidates.md
---prompt-lessons ~/.claude/prompt-lessons.md --writing-standing-docs
-~/.claude/writing-standing-docs.md --writing-executor-briefs
-~/.claude/writing-executor-briefs.md --history <repo>/context_budget_log.csv` and read its
-counts — candidates awaiting a second case with the oldest age in days, and rules still carrying
-a single-case "Provisional" marker per home. Consume that output; don't recount by hand.
-`<repo>` and `<memory-dir>` are the project root and its derived auto-memory directory for
-whichever project this audit run is scoped to (see the derivation rule in the finalise bootstrap:
-the project's absolute path with every `/` replaced by `-`).
+Run `context_budget_report.py` exactly as `/finalise`'s own SKILL.md step 5 specifies for the
+project being audited (same script, same flags — see there rather than re-deriving them here) and
+read its counts: candidates awaiting a second case with the oldest age in days, and rules still
+carrying a single-case "Provisional" marker per home. Consume that output; don't recount by hand.
+
+**Read every project's ledger, not just the one(s) chosen for this audit run.** A candidate that
+looks project-specific from inside a single `/finalise` session can turn out to match a case
+sitting in a *different* project's ledger — the only way to see that is to look across all of them
+together, which is exactly the corpus view `/finalise` doesn't have. Discover every project ledger
+the same way the Scope section above discovers auto-memory dirs: `find ~/.claude/projects -name
+MEMORY.md` gives every project path Claude Code has touched on this machine (decode each
+directory name back to a real path — reverse the `/`-to-`-` substitution), then check each
+decoded root for a `lesson-candidates.md`. **Reading these ledgers is not the same as auditing
+those projects** — this step reads only that one named file from each; it does not open, and must
+not touch, anything else in a project that wasn't chosen for full audit.
+
+Treat every waiting candidate — the global ledger and every project ledger — as **one pool** when
+looking for a pairing:
+- **Same project** — promotes into that project's own `CLAUDE.md`.
+- **Different projects, or one global candidate + one project-level candidate** — promotes to a
+  global home instead. The project-level candidate's own "Would live in" guess was made from
+  inside one session's limited view; a cross-project match is new information that supersedes it.
+- Either way, **the proposal must name the shared mechanism, not just the resemblance.** Quote
+  each candidate's `Case:` and `What a second case would need to show:` fields and state
+  specifically what the two share. A surface-similar pair that turns out to rest on different
+  underlying claims — one about verifying a single intel source, say, one about a single flaky
+  test run — is not a match, whatever their one-line headlines look like. If the shared mechanism
+  can't be named in one sentence, it isn't one: propose "still waiting" for both rather than
+  forcing a pairing.
+- **A promotion touching a project other than the one(s) chosen for this audit run still needs
+  explicit approval before writing** — show the pairing and the target file plainly; don't fold it
+  silently into this run's change plan as if it were local to the audited project.
 
 Propose one outcome per waiting candidate, and ask before writing:
-- **Promote** — a second, contrasting case has since arrived. Name it. Then follow the ledger's
-  own Promotion section (write the rule to its home, move both narratives to an origin log,
-  delete the candidate).
+- **Promote** — a second, contrasting case has arrived (same project or a different one, per
+  above). Name it and the shared mechanism. Then follow the ledger's own Promotion section (write
+  the rule to its home, move both narratives to an origin log, delete both candidates).
 - **Still waiting** — the claim is live and worth keeping parked. Age alone is not a reason to
-  act; say so and move on.
+  act, and neither is a similar-looking case that doesn't share the mechanism; say so and move on.
 - **Retire** — the project has moved past it, or the first case no longer reproduces.
 
 A rule still marked "Provisional" is the inverse case: it is in force but only one case supports
 it. Flag it for a second case or for demotion back to a candidate — don't silently drop the
 marker, and don't assume why it carries one.
 
-**Scope split, so neither side assumes the other did it:** `/finalise` owns *pairing* — matching
-a newly observed case against the waiting candidates at the moment it happens, which is when the
-new case is in hand. This audit owns *aging* only, which `/finalise` cannot see from inside one
-session.
+**Scope split, so neither side assumes the other did it:** `/finalise` owns *pairing within one
+project's own visibility* — matching a newly observed case against that project's own ledger (and
+the global one) at the moment it happens. This audit owns two things `/finalise` structurally
+cannot do from inside a single session: *aging* (how long a candidate has waited) and
+*cross-project matching* (a pairing only visible once every project's ledger is read together).
 
 ### Part 3 — Index & link integrity (after every change)
 - Every topic file has exactly one pointer line in MEMORY.md; remove dangling
   pointers for deleted files; add missing ones.
 - Add a CLAUDE.md pointer in `<repo>/CLAUDE.md`: "Decision history & rationale: decisions.md" —
-  only if this project has a project-level CLAUDE.md and the pointer isn't already there.
+  only if this project has a project-level CLAUDE.md and the pointer isn't already there. Same
+  check for a `lesson-candidates.md` pointer if the project has that file but no line naming it.
 - Keep the frontmatter FIELDS (name/description/metadata.type) on kept files, but
   UPDATE `description:` whenever it no longer matches the body — a stale description
   is what misleads the next session. Don't leave a wrong one in place as "preserved."

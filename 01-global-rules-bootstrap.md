@@ -35,13 +35,16 @@ Do the following, **checking before overwriting anything**:
      something about the same situation — especially around confirmation-before-acting, verbosity
      of responses, how to present options/decisions, when to ask vs. proceed, and tool/permission
      behaviour, since those are the areas most likely for a corporate default to differ from a
-     personal one. Produce a short list of every specific overlap or contradiction you find,
-     quoting both the existing text and the incoming text side by side, and show me that list
-     **before writing anything** — even if the list is empty, say so explicitly rather than
-     silently proceeding. Wait for my go-ahead on how to reconcile each item (keep existing, take
-     incoming, merge, or word it as an explicit exception) before writing the file. Once resolved,
-     append the (possibly adjusted) content below as new top-level sections, separated by a blank
-     line — never overwrite or delete existing content without my say-so on that specific content.
+     personal one. Build a short list of every specific overlap or contradiction you find, quoting
+     both the existing text and the incoming text side by side — even if the list ends up empty,
+     say so explicitly rather than silently proceeding. **Present it one item at a time, not as
+     one block** — the ruleset you're installing says decisions come to the user one at a time
+     (see "one-decision-at-a-time" in the content below), and presenting your own conflict list as
+     a single wall of text breaks that rule while installing it. Get a decision on each item (keep
+     existing, take incoming, merge, or word it as an explicit exception) before moving to the
+     next. Once every item is resolved, append the (possibly adjusted) content below as new
+     top-level sections, separated by a blank line — never overwrite or delete existing content
+     without my say-so on that specific content.
 2. Create `~/.claude/prompt-lessons.md`, `~/.claude/writing-standing-docs.md`,
    `~/.claude/writing-executor-briefs.md`, and `~/.claude/doc-test-probes.md` with exactly the
    content given below. These are new files — if any already exists, stop and show me its
@@ -104,12 +107,14 @@ Do the following, **checking before overwriting anything**:
   question five times. The tell is that the list of sources grows while the answer never moves.
   When that happens, stop adding sources of that kind and change the kind — ask who else holds
   this fact, or what surface a human uses to see it.
-- Rewriting a list of claims, or implementing a design doc's technical claims — verify each
-  against its canonical source, never against sibling copies or the doc's own "verified live"
-  stamp; aligned copies end mutually consistent and all wrong. **Canonical means what produces
-  the fact, not the most official document recording it** — a designated home is still a copy;
-  if you can't name what produced a figure, you don't have a source, recompute. Using the
-  maintained copy is a trade-off — make it knowingly and say so.
+- Rewriting a list of claims, transcribing a report's cited figures, or implementing a design
+  doc's technical claims — verify each against its canonical source (the original telemetry, the
+  raw dataset, the running code — whichever actually produced the fact), never against sibling
+  copies, an earlier write-up that already cited it, or the source's own "verified live" stamp;
+  aligned copies end mutually consistent and all wrong. **Canonical means what produces the fact,
+  not the most official document recording it** — a designated home is still a copy; if you can't
+  name what produced a figure, you don't have a source, recompute. Using the maintained copy is a
+  trade-off — make it knowingly and say so.
 - **Default to a high-level answer**; spend the response on the main point and keep caveats
   short. Depth on request. Does not apply to plans, briefs or docs a cold reader must execute.
 - Surface options and decisions **one at a time**. Record the decision before presenting the
@@ -161,9 +166,10 @@ Do the following, **checking before overwriting anything**:
   data already in hand, push it into code/hooks/the deterministic path; keep prompt and doc rules
   for judgment that genuinely can't be computed. "Always remember to…" is the smell.
   → `[rule-into-code]`
-- **Run it and read the output before accepting it.** A clean diff and a green suite are
-  evidence the code is consistent, not that it is right — feed it real and adversarial input
-  and look at what comes out.
+- **Run it and read the output before accepting it.** A clean diff and a green suite, a finished
+  analysis run, or a completed intel write-up are evidence the work is internally consistent, not
+  that it is right — feed it real and adversarial input (or a known-tricky case) and look at what
+  actually comes out.
 - Before a fix or lesson becomes a standing rule, validate it against a **second real,
   contrasting case** — not synthetic, not the one that prompted it — plus a regression case in
   the opposite direction where one exists. One case is untested-but-plausible. **When you are

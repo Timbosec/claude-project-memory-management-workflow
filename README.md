@@ -63,8 +63,10 @@ Three permanent Claude Code commands/skills, plus the rule files they depend on:
 
 Underneath those three, a small set of always-loaded and on-demand rule files: a routing header
 that decides which file a new lesson belongs in, checklists for writing a prompt, editing a
-standing doc, or briefing a sub-agent, and two evidence ledgers that hold single observations
-until a second, contrasting one arrives to justify promoting them into an actual rule.
+standing doc, or briefing a sub-agent, and evidence ledgers that hold single observations until a
+second, contrasting one arrives to justify promoting them into an actual rule — one global
+(`~/.claude/lesson-candidates.md`), plus a project-scoped sibling `/bootstrap-project` creates in
+each project it sets up (see "How the global/project split works" below).
 
 One more, optional piece, not part of `/finalise` or `/memory-audit`: a `PreToolUse` hook that
 denies a delegated sub-agent from editing any of the project-record files this whole system
@@ -72,6 +74,34 @@ depends on (`CLAUDE.md`, `backlog.md`, `decisions.md`, a skill file outside its 
 directory, or a memory file). A sub-agent should only ever touch the source/test files named in
 its own brief; this makes that structural instead of just something you have to remember to say
 in every brief.
+
+## How the global/project split works
+
+Two genuinely different scopes are in play here, worth being clear on before using this on a
+machine with more than one project:
+
+- **`~/.claude/CLAUDE.md` and its sibling rule files are truly global** — loaded into every
+  session on this machine regardless of which project it's in, because Claude Code loads them
+  unconditionally from the user's home directory rather than by walking up the filesystem tree
+  from wherever the current project happens to live. One file, one piece of content, every
+  project — including two projects organised into completely unrelated folder trees.
+- **Everything else here is per-project, and inherently so.** `backlog.md`, `decisions.md`, a
+  project's own `CLAUDE.md`, its `lesson-candidates.md`, and its auto-memory directory (keyed by
+  Claude Code itself off the project's own filesystem path, not by anything this bundle adds) are
+  all local to that one project and never leak into another, no matter how many projects share the
+  machine or how they're organised into folders.
+- **The bridge between the two is the lesson-candidate ledgers, not a bigger global file.** A
+  lesson observed once in a project starts in that project's own ledger — or the global one, if it
+  already looks like it applies everywhere. It only becomes a standing rule, project-level or
+  global, once a second, genuinely contrasting case confirms it; nothing is promoted on a single
+  sighting. `/memory-audit` is what makes this work across many projects: it reads every project's
+  ledger together as one pool, so a case that looks project-specific from inside one `/finalise`
+  session can still turn out to match a case sitting in a completely different project, and get
+  promoted to a global rule that neither project's own session would ever have proposed alone.
+
+In short: facts and rules specific to one project's own domain stay there permanently unless
+something proves they generalise, and only the proven-general ones ever cost every *other*
+project anything in always-loaded context.
 
 ## Setup
 
@@ -156,10 +186,14 @@ from the rule files down to their operative statements.
 
 In a scratch/throwaway repo:
 
-1. Run `/bootstrap-project`. It should produce a clean, empty `backlog.md`, `decisions.md`, and
-   `CLAUDE.md` pointer, nothing referencing the origin project.
-2. Run `/finalise`. It should complete without crashing even against the nearly-empty backlog it
-   just created, and report zero candidates on a session that did no real work.
+1. Run `/bootstrap-project`. It should produce a clean, empty `backlog.md`, `decisions.md`,
+   `lesson-candidates.md`, and `CLAUDE.md` pointer, nothing referencing the origin project.
+2. Run `/finalise` **before making a first commit**. All three checker scripts should report a
+   clean, one-line skip for their own absence condition (no commits yet, no backlog.md if you
+   haven't run step 1, no memory directory) and exit 0 rather than crashing — this is the exact
+   state `/bootstrap-project` leaves a project in, since it writes the files and then asks before
+   committing. Then make a first commit and run `/finalise` again: it should complete normally and
+   report zero candidates on a session that did no real work.
 3. Run `/memory-audit`. It should discover the project's memory directory, audit the (mostly
    empty) rule homes without erroring, and stop to show a proposed change plan before touching
    anything.

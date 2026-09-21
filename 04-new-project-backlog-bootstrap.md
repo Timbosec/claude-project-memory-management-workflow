@@ -21,6 +21,13 @@ only means something once prompt 3 has installed it.
 
 ---
 
+### Before writing anything
+
+**Check whether `~/.claude/commands/bootstrap-project.md` already exists.** If it does, read it in
+full, diff it against the content below, and show me the differences before overwriting — same
+discipline as every other install step in this bundle. If it doesn't exist yet, create it with
+exactly the content below.
+
 ### File: ~/.claude/commands/bootstrap-project.md
 
 ````markdown
@@ -54,15 +61,29 @@ when they'd actually help decide what to work on next.
 
 1. Confirm the current directory is the project's repo root (check for `.git`; if there isn't one
    yet, ask whether to `git init` before proceeding — a backlog file with no version history
-   defeats half its purpose).
+   defeats half its purpose). If you do initialise one, pin the branch name explicitly
+   (`git init -b main`) rather than accepting whatever the local git config defaults to — left
+   unpinned, this produces a different default branch name on different machines depending on
+   each one's own `init.defaultBranch` setting.
 2. Determine `<PROJECT NAME>` from the repo directory name. If the name is generic (`repo`,
    `project`, `src`, `app`, or similar) or you're unsure, ask rather than guessing.
-3. Check whether `backlog.md` and/or `decisions.md` already exist at the repo root. If either
-   does, stop and show its content before overwriting — don't assume this is the first run here.
+3. Check whether `backlog.md`, `decisions.md`, and/or `lesson-candidates.md` already exist at the
+   repo root. If any does, stop and show its content before overwriting — don't assume this is the
+   first run here.
 4. Create `backlog.md` with the content under "File: backlog.md" below, with `<PROJECT NAME>`
-   substituted.
+   substituted. **`<DATE>` in the "Next up" heading is also a placeholder** — substitute today's
+   date in ISO 8601 (`YYYY-MM-DD`) form, the same format `decisions.md` uses. This isn't cosmetic:
+   `/finalise`'s `check_thread_state.py` parses this field with a `YYYY-MM-DD` pattern to report
+   staleness, so a different date format silently breaks that check.
 5. Create `decisions.md` with the content under "File: decisions.md" below, same substitution.
-6. **Check whether this project already has a `CLAUDE.md` at its repo root, and read the whole
+6. Create `lesson-candidates.md` with the content under "File: lesson-candidates.md" below, same
+   substitution. This is the project-scoped sibling of `~/.claude/lesson-candidates.md` — see that
+   file's own header for the schema and mechanics, which this one shares in full; the only
+   difference is scope (this ledger's "second case" gate is satisfied by a second occurrence
+   *within this project*, and its candidates promote to *this project's* `CLAUDE.md` rather than a
+   global home). `/finalise`'s routing test (its own SKILL.md, step 1) decides when a candidate
+   belongs here rather than in the global ledger or in `decisions.md`.
+7. **Check whether this project already has a `CLAUDE.md` at its repo root, and read the whole
    thing if it does** — don't just check whether it exists.
    - If it does NOT exist: create it with the content under "File: CLAUDE.md" below.
    - If it DOES exist: check whether it already points anywhere to an open-worklist or
@@ -71,11 +92,17 @@ when they'd actually help decide what to work on next.
      anything — don't silently end up with two competing worklist conventions in one project. If
      it has no such pointer, append the content under "File: CLAUDE.md" below as a new section,
      separated by a blank line, rather than overwriting anything already there.
-7. Don't invent any task entries or decisions to seed `backlog.md`/`decisions.md` with — they
-   start genuinely empty. Leave the "## Open" section with no entries and the "Next up" block as
-   the placeholder shown.
-8. Ask before committing — first commit of a new convention is worth a quick look, not an
-   auto-commit.
+8. Don't invent any task entries or decisions to seed `backlog.md`/`decisions.md`/`lesson-
+   candidates.md` with — they start genuinely empty. Leave the "## Open" section with no entries
+   and the "Next up" block as the placeholder shown.
+9. **Mention, don't silently absorb, `context_budget_log.csv`.** The first time `/finalise` runs
+   in this project it will create this file at the repo root (a growth log for the always-loaded
+   CLAUDE.md/MEMORY.md surfaces — see that script's own docstring). It isn't created by this
+   command, so there's nothing to write here, but flag to the user now that it will appear later
+   and that whether to git-track it is a one-time call worth making deliberately rather than
+   letting a later `git add -A` sweep it into an unrelated commit unannounced.
+10. Ask before committing — first commit of a new convention is worth a quick look, not an
+    auto-commit.
 
 ---
 
@@ -161,6 +188,40 @@ gets its commit hash in `backlog.md`'s Closed stub and nothing here.
 
 ---
 
+### File: lesson-candidates.md
+
+```markdown
+# <PROJECT NAME> — lesson candidates (project-scoped)
+
+The project-level sibling of `~/.claude/lesson-candidates.md` — **same schema, same Candidate/
+Origin-log mechanics, see that file's own header for the full explanation.** Only two things
+differ here:
+
+- **Scope of the gate.** A candidate here is waiting for a second, *contrasting* case from
+  **within this project** — not from anywhere on the machine. `/finalise`'s routing test (its own
+  SKILL.md, step 1) is what decides a candidate belongs in this file rather than the global one:
+  something that recurs in this project and is genuinely rule-shaped, but doesn't (yet) look like
+  it generalises past it.
+- **Where a promoted candidate lands.** A pairing found here promotes into *this project's own*
+  `CLAUDE.md`, never a global home.
+
+**This project's ledger is not read in isolation, though.** `/memory-audit` (Part 2.6) treats
+every project's ledger and the global ledger as **one shared pool** when looking for a second
+case — a candidate parked here can still turn out to match one sitting in a *different* project's
+ledger, entirely unrelated to this one. When that happens, the match promotes to a global home
+instead of this project's `CLAUDE.md`, because the pairing has shown the claim isn't actually
+scoped to this project after all. Routing a case in here is what this session could see at the
+time, not a permanent verdict.
+
+Starts empty — no entries to port, nothing to seed.
+
+## Entries
+
+(none yet — entries accumulate here as cases are captured)
+```
+
+---
+
 ### File: CLAUDE.md
 
 If creating fresh, this is the whole file. If appending to an existing one, write only the
@@ -174,6 +235,9 @@ If creating fresh, this is the whole file. If appending to an existing one, writ
   cited by `decisions.md` — never renumber, even after a task closes. Backlog items go there,
   never in a harness task list (session state — `/clear` destroys it).
 - Decision history & rationale: `decisions.md`.
+- Lessons specific to this project, awaiting a second case before becoming a project rule:
+  `lesson-candidates.md` — see its own header; a promoted candidate lands in this file, in a new
+  section named for the rule (not folded into "Where the instructions live").
 - Session-close ritual: run `/finalise` before clearing context — it sweeps for undocumented
   decisions/lessons, reconciles `backlog.md`, and runs deterministic integrity checks.
 ```
