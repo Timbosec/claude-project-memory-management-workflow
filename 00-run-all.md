@@ -72,13 +72,16 @@ Do the following, **checking before overwriting anything**:
      something about the same situation — especially around confirmation-before-acting, verbosity
      of responses, how to present options/decisions, when to ask vs. proceed, and tool/permission
      behaviour, since those are the areas most likely for a corporate default to differ from a
-     personal one. Produce a short list of every specific overlap or contradiction you find,
-     quoting both the existing text and the incoming text side by side, and show me that list
-     **before writing anything** — even if the list is empty, say so explicitly rather than
-     silently proceeding. Wait for my go-ahead on how to reconcile each item (keep existing, take
-     incoming, merge, or word it as an explicit exception) before writing the file. Once resolved,
-     append the (possibly adjusted) content below as new top-level sections, separated by a blank
-     line — never overwrite or delete existing content without my say-so on that specific content.
+     personal one. Build a short list of every specific overlap or contradiction you find, quoting
+     both the existing text and the incoming text side by side — even if the list ends up empty,
+     say so explicitly rather than silently proceeding. **Present it one item at a time, not as
+     one block** — the ruleset you're installing says decisions come to the user one at a time
+     (see "one-decision-at-a-time" in the content below), and presenting your own conflict list as
+     a single wall of text breaks that rule while installing it. Get a decision on each item (keep
+     existing, take incoming, merge, or word it as an explicit exception) before moving to the
+     next. Once every item is resolved, append the (possibly adjusted) content below as new
+     top-level sections, separated by a blank line — never overwrite or delete existing content
+     without my say-so on that specific content.
 2. Create `~/.claude/prompt-lessons.md`, `~/.claude/writing-standing-docs.md`,
    `~/.claude/writing-executor-briefs.md`, and `~/.claude/doc-test-probes.md` with exactly the
    content given below. These are new files — if any already exists, stop and show me its
@@ -141,12 +144,14 @@ Do the following, **checking before overwriting anything**:
   question five times. The tell is that the list of sources grows while the answer never moves.
   When that happens, stop adding sources of that kind and change the kind — ask who else holds
   this fact, or what surface a human uses to see it.
-- Rewriting a list of claims, or implementing a design doc's technical claims — verify each
-  against its canonical source, never against sibling copies or the doc's own "verified live"
-  stamp; aligned copies end mutually consistent and all wrong. **Canonical means what produces
-  the fact, not the most official document recording it** — a designated home is still a copy;
-  if you can't name what produced a figure, you don't have a source, recompute. Using the
-  maintained copy is a trade-off — make it knowingly and say so.
+- Rewriting a list of claims, transcribing a report's cited figures, or implementing a design
+  doc's technical claims — verify each against its canonical source (the original telemetry, the
+  raw dataset, the running code — whichever actually produced the fact), never against sibling
+  copies, an earlier write-up that already cited it, or the source's own "verified live" stamp;
+  aligned copies end mutually consistent and all wrong. **Canonical means what produces the fact,
+  not the most official document recording it** — a designated home is still a copy; if you can't
+  name what produced a figure, you don't have a source, recompute. Using the maintained copy is a
+  trade-off — make it knowingly and say so.
 - **Default to a high-level answer**; spend the response on the main point and keep caveats
   short. Depth on request. Does not apply to plans, briefs or docs a cold reader must execute.
 - Surface options and decisions **one at a time**. Record the decision before presenting the
@@ -198,9 +203,10 @@ Do the following, **checking before overwriting anything**:
   data already in hand, push it into code/hooks/the deterministic path; keep prompt and doc rules
   for judgment that genuinely can't be computed. "Always remember to…" is the smell.
   → `[rule-into-code]`
-- **Run it and read the output before accepting it.** A clean diff and a green suite are
-  evidence the code is consistent, not that it is right — feed it real and adversarial input
-  and look at what comes out.
+- **Run it and read the output before accepting it.** A clean diff and a green suite, a finished
+  analysis run, or a completed intel write-up are evidence the work is internally consistent, not
+  that it is right — feed it real and adversarial input (or a known-tricky case) and look at what
+  actually comes out.
 - Before a fix or lesson becomes a standing rule, validate it against a **second real,
   contrasting case** — not synthetic, not the one that prompted it — plus a regression case in
   the opposite direction where one exists. One case is untested-but-plausible. **When you are
@@ -854,34 +860,58 @@ substitution; write it as given.
 
 ### What to do
 
-1. Create `~/.claude/skills/finalise/scripts/` and write into it, verbatim, the four files given
-   under "Scripts" below: `check_memory_index.py`, `check_thread_state.py`,
-   `context_budget_report.py`, and their three test files.
+1. **Check before writing.** A machine with any prior Claude Code use may already have
+   `~/.claude/skills/finalise/`, possibly a locally-adapted one carrying real refinements of its
+   own. If it exists, read it in full and produce a short list of every specific difference from
+   the content below (not just "it exists") — then show me that list and wait for my say-so on how
+   to reconcile each one before writing anything. Same discipline as Step 1 above applied to its
+   own file. If it does not exist yet, create `~/.claude/skills/finalise/scripts/` and write into
+   it, verbatim, the four files given under "Scripts" below: `check_memory_index.py`,
+   `check_thread_state.py`, `context_budget_report.py`, and their three test files.
 
-2. Write `~/.claude/skills/finalise/SKILL.md` using the content under "SKILL.md" below, verbatim
-   — it already defines `<project root>` (the current session's repo) and `<memory dir>` (derived
-   from that root's path) at its top, and uses them throughout instead of any one hardcoded
-   project. Note two things it already handles: step 5's three script calls pass their paths
-   explicitly as flags, and steps 5-6 skip gracefully if `backlog.md`/`CLAUDE.md` don't exist yet
-   in the current project (i.e. before step 4 has been run there).
+2. Same check for `~/.claude/skills/finalise/SKILL.md` before writing it: read whatever's already
+   there in full, diff it against the content under "SKILL.md" below, and show me the differences
+   before overwriting. If creating fresh, it already defines `<project root>` (the current
+   session's repo) and `<memory dir>` (derived from that root's path) at its top, and uses them
+   throughout instead of any one hardcoded project. Note what it already handles: step 5's three
+   script calls pass their paths explicitly as flags, and all three scripts are designed to
+   degrade cleanly rather than crash on a brand-new project — no `backlog.md` yet, zero commits
+   yet, or no memory directory yet (i.e. before step 4 has run there, or before its first commit).
+   **Verify this yourself once installed rather than taking the previous sentence on faith** —
+   step 6 below has you do exactly that.
 
 3. Create `~/.claude/hooks/remind_finalise.py` with the content under "Hook" below — this one
    needs no changes at all, it's already generic (it fires on any Bash command containing both
-   `git` and `commit`, regardless of project). Also write its test file.
+   `git` and `commit`, regardless of project). Also write its test file. **Check the `python3` its
+   shebang resolves to before trusting the hook is live**: on a stock macOS machine, `/usr/bin/
+   python3` is an Xcode command-line-tools stub that errors out before running any code, so a
+   hook wired exactly as specified here can look correctly installed and simply never fire. Run
+   `python3 --version` (or `which python3`) and, if it's the Xcode stub, note the real
+   interpreter's path (commonly `/opt/homebrew/bin/python3` or similar via Homebrew) so step 6's
+   end-to-end test actually exercises the hook rather than silently no-op'ing.
 
 4. Edit `~/.claude/settings.json` (create it if it doesn't exist) to add the PostToolUse hook
-   entry shown under "settings.json addition" below. If the file already has a `PostToolUse`
-   array, add this as one more entry in it rather than replacing the array; if it already has a
-   hook matching `Bash` that does something else, keep both.
+   entry shown under "settings.json addition" below.
+   - If the file has no `hooks` key at all: add one, with a `PostToolUse` array containing just
+     this entry.
+   - If it has a `hooks` key but no `PostToolUse` array inside it: add the `PostToolUse` key
+     with this entry as its only array item — don't replace the rest of `hooks`.
+   - If it already has a `PostToolUse` array: add this as one more entry in it rather than
+     replacing the array; if it already has a hook matching `Bash` that does something else,
+     keep both.
 
 5. Do NOT commit/push anything in `~/.claude` yet — ask me first, per step 1's instruction.
 
 6. Report what you created and ask me to open a fresh Claude Code session in any project
-   directory and try `/finalise` (it may not have much to do yet in a brand-new project, but it
-   should at least run steps 1-2, report zero candidates, and run the three checks without
-   crashing — check_thread_state.py and context_budget_report.py will complain about a missing
-   `backlog.md`/`CLAUDE.md` gracefully if step 4 hasn't been run yet; if either crashes instead
-   of reporting cleanly, tell me rather than papering over it).
+   directory and try `/finalise`. **Actually verify the bare-project behaviour instead of
+   asserting it**: it may not have much to do yet in a brand-new project, but confirm directly —
+   before backlog.md exists, with zero commits, and with no memory directory yet — that all three
+   checker scripts report cleanly and exit 0 rather than crashing (each prints a one-line "nothing
+   to check yet" message for its own absence condition). If any of the three still crashes, tell
+   me rather than papering over it — don't relay "it degrades gracefully" as fact until you've
+   watched it do so. Also confirm the git-commit hook actually fires end to end (make a trivial
+   commit in a scratch repo, using the interpreter path confirmed in step 3, and check the
+   reminder prints) rather than trusting that wiring it in settings.json was sufficient.
 
 ---
 
@@ -924,6 +954,14 @@ from collections import Counter
 
 MD = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser(
     "~/.claude/projects/" + os.getcwd().replace("/", "-") + "/memory")
+
+# A project with no prior Claude Code session here yet -- e.g. right after
+# /bootstrap-project, before /finalise has ever run -- has no memory dir at all. That's
+# normal, not a fault: nothing to index yet, so there is nothing this check can fail on.
+if not os.path.isdir(MD) or not os.path.isfile(os.path.join(MD, "MEMORY.md")):
+    print(f"no memory index yet at {MD} -- skipping memory-index check "
+          f"(normal before the first /finalise run in this project)")
+    sys.exit(0)
 
 files = {f for f in os.listdir(MD) if f.endswith(".md") and f != "MEMORY.md"}
 with open(os.path.join(MD, "MEMORY.md"), encoding="utf-8") as f:
@@ -986,7 +1024,13 @@ KNOWN_RETIRED_LINKS = {
     name for name in os.environ.get("KNOWN_RETIRED_LINKS", "").split(",") if name
 }
 
-_LINK_RE = re.compile(r"\[\[([^\]|]+)\]\]")
+_LINK_RE = re.compile(r"\[\[([A-Za-z0-9][A-Za-z0-9_.-]*)\]\]")
+# A real citation target is an identifier-shaped slug (kebab-case, always -- see the memory
+# system's own naming convention). Requiring that shape, rather than "any run of non-]/|
+# characters", is what excludes unfenced bash test syntax like `[[ -f "$x" ]]` from being read
+# as a citation: it starts with a space, not a word character, so it never matches at all.
+# (Confirmed live: the old pattern captured ' -f "$x" ' as a dangling-link target from a doc
+# containing that exact bash snippet outside a code fence.)
 
 link_problems = []
 known_retired_hits = {}
@@ -1364,6 +1408,59 @@ class TestDocScopeLinkCheck(unittest.TestCase):
             self.assertIn("nonexistent-file", result.stdout)
             self.assertNotIn("also-nonexistent", result.stdout)
             self.assertNotIn("(docs)", result.stdout)
+
+    def test_doc_unfenced_bash_test_syntax_not_read_as_a_citation(self):
+        # Confirmed live before this fix: '[[ -f "$x" ]]' outside a code fence matched
+        # _LINK_RE (any run of non-]/| characters) and was reported as a dangling citation
+        # to a file named ' -f "$x" '.md. A real citation target is always an
+        # identifier-shaped slug, which this bash snippet is not -- it starts with a space,
+        # not a word character, so the tightened pattern never matches it at all.
+        with tempfile.TemporaryDirectory() as tmpdir, \
+                tempfile.TemporaryDirectory() as docs_root:
+            _write_fixture(tmpdir, {"a.md": "Nothing links out of here.\n"})
+            _write_docs(docs_root, {
+                "note.md": 'Run a check like: if [[ -f "$x" ]]; then echo ok; fi\n',
+            })
+            result = _run(tmpdir, docs_root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("[[link]] check (docs): 0 citation(s) in 0 file(s)", result.stdout)
+
+    def test_doc_real_citation_still_gates_alongside_bash_syntax(self):
+        # Companion to the case above: tightening the pattern to reject bash test syntax
+        # must not also reject genuine kebab-case citation targets sitting in the same repo.
+        with tempfile.TemporaryDirectory() as tmpdir, \
+                tempfile.TemporaryDirectory() as docs_root:
+            _write_fixture(tmpdir, {"a.md": "Nothing links out of here.\n"})
+            _write_docs(docs_root, {
+                "bash-snippet.md": 'if [[ -f "$x" ]]; then echo ok; fi\n',
+                "real-citation.md": "see [[nonexistent-real-citation]] for detail.\n",
+            })
+            result = _run(tmpdir, docs_root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("nonexistent-real-citation", result.stdout)
+
+
+class TestMissingMemoryDir(unittest.TestCase):
+    """A project with no prior Claude Code session has no memory dir at all yet -- exactly
+    what /bootstrap-project leaves behind before the first /finalise run. Confirmed live
+    before this fix: os.listdir(MD) raised FileNotFoundError, uncaught."""
+
+    def test_nonexistent_memory_dir_skips_cleanly_instead_of_crashing(self):
+        with tempfile.TemporaryDirectory() as parent:
+            missing_md = os.path.join(parent, "memory")  # never created
+            result = subprocess.run([sys.executable, SCRIPT, missing_md, parent],
+                                     capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("no memory index yet", result.stdout)
+
+    def test_memory_dir_present_but_no_memory_md_also_skips_cleanly(self):
+        with tempfile.TemporaryDirectory() as parent:
+            md = os.path.join(parent, "memory")
+            os.makedirs(md)  # dir exists, but MEMORY.md itself was never written
+            result = subprocess.run([sys.executable, SCRIPT, md, parent],
+                                     capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("no memory index yet", result.stdout)
 
 
 if __name__ == "__main__":
@@ -1925,11 +2022,27 @@ def main():
     parser.add_argument("--memory-dir", default=DEFAULT_MEMORY_DIR)
     args = parser.parse_args()
 
+    # Three absence cases a freshly-bootstrapped project passes through before its first
+    # commit: no backlog.md yet (bootstrap-project hasn't run here), zero commits (it has run
+    # but nothing's been committed), no memory dir yet (no prior Claude session in this
+    # project). None of these are errors -- report and exit 0, same as every other absence
+    # this script already treats as normal, rather than let the exception surface.
+    if not os.path.exists(args.backlog):
+        print(f"no backlog.md yet at {args.backlog} -- skipping thread-state check "
+              f"(run /bootstrap-project first)")
+        sys.exit(0)
+
+    try:
+        commits = run_git_log(args.repo, args.days)
+    except subprocess.CalledProcessError:
+        print("repo has no commits yet -- skipping thread-state check")
+        sys.exit(0)
+
     with open(args.backlog, encoding="utf-8") as f:
         backlog_text = f.read()
 
-    commits = run_git_log(args.repo, args.days)
-    memory_texts = read_memory_texts(args.memory_dir)
+    memory_texts = (read_memory_texts(args.memory_dir)
+                     if os.path.isdir(args.memory_dir) else {})
     did_modify_entry = make_did_modify_entry(args.repo)
 
     report = build_report(backlog_text, commits, memory_texts, did_modify_entry)
@@ -2445,20 +2558,18 @@ if __name__ == "__main__":
 
 ```python
 #!/usr/bin/env python3
-"""Context-budget growth report for /finalise (checkpoint 5, context-budget-relocation-and-
-lesson-ledger plan, 2026-08-18).
+"""Context-budget growth report for /finalise.
 
 Reports -- never gates (exit 0 always, same convention as check_thread_state.py). The problem
-this watches is growth: the always-loaded global CLAUDE.md went 6,738 -> 25,804 bytes in three
-weeks, 2.8x of that in the last eight days alone, before the relocation and ledger passes this
-checkpoint closes out. There is exactly ONE threshold anywhere in this file, and it is not new:
-MEMORY.md's 200-line / 25,600-byte load limit, already enforced by check_memory_index.py.
-Everything else here is a bare figure or a delta against logged history -- never an invented
-budget. An earlier draft of the plan this implements specified a flat 20,000-byte flag on the
-combined total; that figure had no derivation, and against the actual post-relocation total
-(~37,300 bytes) it would have gone red on its first run and stayed red every run after.
-Permanently-red checks get ignored, which is worse than no check -- so this prints numbers and
-leaves picking a line to the user, once the log has a few weeks of real observations in it.
+this watches is growth: the surfaces loaded into every session (both CLAUDE.mds, MEMORY.md) can
+balloon unnoticed over weeks of edits, with nothing else tracking it over time. There is exactly
+ONE threshold anywhere in this file, and it is not new: MEMORY.md's 200-line / 25,600-byte load
+limit, already enforced by check_memory_index.py. Everything else here is a bare figure or a
+delta against logged history -- never an invented budget. A flat byte threshold on the combined
+total was considered and rejected: picked without being derived from anything, a number like that
+risks going red on the very first real run and staying red forever. Permanently-red checks get
+ignored, which is worse than no check -- so this prints numbers and leaves picking a line to the
+user, once the log has a few weeks of real observations in it.
 
 Four things printed:
   1. Lesson candidates in lesson-candidates.md awaiting a second case -- count and the oldest
@@ -3367,25 +3478,44 @@ committed in step 7.
      `~/.claude/CLAUDE.md` § Working rules bullet it serves.
    - **Prompt-lesson opportunities**: moments where discussion arrived at a sharper,
      *generalisable* approach than the original prompt asked for or than was done intuitively —
-     a reusable rule, not a project-specific fact. Routing test:
-     (a) generalisable? — if it only makes sense in this project, it's a memory or decisions.md
-     candidate instead; (a2) **is it a rule yet?** — one real case is a candidate, not a rule:
-     append it to `~/.claude/lesson-candidates.md`, commit it (see the commit note above), and
-     write nothing to a rules file. Only a
-     candidate whose second, contrasting case has now arrived is promoted, and the promotion
-     writes the rule to its home with both cases logged in the ledger. **An amendment that
-     sharpens an existing rule needs its own second case** — it does not inherit the base
-     rule's maturity; (b) who's the actor? — four user-scope homes, per the routing test in
+     a reusable rule, not a one-off fact. Routing test, three-way:
+     (a) **generalises across projects/disciplines?** — append to `~/.claude/lesson-candidates.md`,
+     gated on a second, contrasting case from anywhere; promotes to one of the four global
+     user-scope homes below.
+     (b) **recurs within this project, and is genuinely rule-shaped** — something you'd want
+     enforced every time this project is worked on, not just known about? — append to `<project
+     root>/lesson-candidates.md` instead (same schema and mechanics as the global ledger, gate
+     scoped down to a second occurrence WITHIN this project); promotes to `<project
+     root>/CLAUDE.md`, not a global home. `/memory-audit` separately scans every project's ledger
+     together as one pool (its Part 2.6) — a case that looks project-specific from inside a single
+     session can still turn out to match a case sitting in a *different* project's ledger, which
+     promotes it globally instead. That's `/memory-audit`'s job, not this step's: from inside one
+     project, route on what this session can actually see.
+     (c) **a one-off fact or decision, not instructing future behaviour** — memory or
+     `decisions.md`, ungated: it records what happened, not a rule to apply going forward.
+     For (a) and (b) alike, **is it a rule yet?** — one real case is a candidate, not a rule: write
+     it to the ledger the test above picked, commit it (see the commit note above), and write
+     nothing to a rule file yet. Only a candidate whose second, contrasting case has arrived is
+     promoted, and the promotion writes the rule to its home with both cases logged in the ledger.
+     **An amendment that sharpens an existing rule needs its own second case** — it does not
+     inherit the base rule's maturity.
+     **Write `Case:` and `What a second case would need to show:` to name the actual mechanism,
+     not just the symptom.** This matters more than it used to: a project-level candidate can now
+     be compared by `/memory-audit` against a *different* project's ledger, potentially a very
+     different discipline — a vague symptom description risks a false match on wording alone where
+     the two cases don't actually share a mechanism. Name what's actually going on.
+     For (a) only, **who's the actor?** — four user-scope homes, per the routing test in
      `~/.claude/CLAUDE.md`'s header: the user authoring a prompt/brief → `prompt-lessons.md`; the
      agent editing a standing doc or memory → `~/.claude/writing-standing-docs.md`; the agent
      briefing an executor or verifying its checkpoint →
      `~/.claude/writing-executor-briefs.md`; the agent at
      any other moment → `~/.claude/CLAUDE.md` § Working rules. An amendment re-derives its home
-     rather than inheriting the home of the rule it extends; (c) split, don't dual-write — a
-     candidate can have BOTH a generalisable core and a project-specific residue; if (and only
-     if) the residue isn't already recorded in the repo, route each part to its own home: the
-     general rule to its user-scope home, the residue to memory/decisions.md with a one-way
-     reference naming the lesson tag (e.g. "generalised as prompt-lessons [tag]").
+     rather than inheriting the home of the rule it extends.
+     **Split, don't dual-write** — a candidate can have BOTH a rule-shaped core (global or
+     project-level) AND a one-off residue; if (and only if) the residue isn't already recorded in
+     the repo, route each part to its own home: the rule to whichever ledger it belongs in, the
+     residue to memory/decisions.md with a one-way reference naming the lesson tag (e.g.
+     "generalised as prompt-lessons [tag]", or "recorded as a project rule, see CLAUDE.md").
      prompt-lessons.md carries no links to *project* files — its origin log names the project as
      prose — but it does point to the other three user-scope homes when a rule's operative clause
      lives there, with the origin log staying canonical for rationale. Never write the full
@@ -3393,11 +3523,15 @@ committed in step 7.
      exists to prevent.
 
 2. **Cross-check each against the existing docs:**
-   - `~/.claude/lesson-candidates.md` — **check this first, and check it for every candidate.**
-     A first case is already parked here for many of them; if today's case is the *second,
-     contrasting* one, the outcome is a promotion, not a new entry. Nothing else performs this
-     match, so skipping it leaves the pair unnoticed and the gate never opens. Aging of
-     long-waiting candidates is not this step's job — `/memory-audit` owns that.
+   - `~/.claude/lesson-candidates.md` (bucket (a) candidates) or `<project root>/lesson-
+     candidates.md` (bucket (b) candidates) — **check the ledger the routing test picked first,
+     and check it for every candidate.** A first case is already parked here for many of them; if
+     today's case is the *second, contrasting* one, the outcome is a promotion, not a new entry.
+     Nothing else performs this within-session match, so skipping it leaves the pair unnoticed and
+     the gate never opens. A bucket (b) candidate is checked only against THIS project's own
+     ledger here — a match sitting in a different project's ledger is `/memory-audit`'s job, not
+     this step's, since this session has no visibility into other projects' files. Aging of
+     long-waiting candidates is not this step's job either way — `/memory-audit` owns that.
    - `<project root>/decisions.md` — any architectural/workflow decision with a rationale
    - `<memory dir>/MEMORY.md` — index of all memories
    - Relevant individual memory files (read them if the index entry suggests a match)
@@ -3684,7 +3818,10 @@ only means something once step 3 has installed it.
 
 ### What to do
 
-1. Create `~/.claude/commands/bootstrap-project.md` with exactly the content given below.
+1. **Check whether `~/.claude/commands/bootstrap-project.md` already exists first.** If it does,
+   read it in full, diff it against the content below, and show me the differences before
+   overwriting — same discipline as Step 1's own first step. If it doesn't exist yet, create it
+   with exactly the content given below.
 2. Do NOT commit/push — same reasoning as the earlier steps.
 3. Report the file's byte size so I can sanity-check nothing got truncated.
 4. Once created, tell me I can test it immediately: open a fresh Claude Code session in any repo
@@ -3725,15 +3862,29 @@ when they'd actually help decide what to work on next.
 
 1. Confirm the current directory is the project's repo root (check for `.git`; if there isn't one
    yet, ask whether to `git init` before proceeding — a backlog file with no version history
-   defeats half its purpose).
+   defeats half its purpose). If you do initialise one, pin the branch name explicitly
+   (`git init -b main`) rather than accepting whatever the local git config defaults to — left
+   unpinned, this produces a different default branch name on different machines depending on
+   each one's own `init.defaultBranch` setting.
 2. Determine `<PROJECT NAME>` from the repo directory name. If the name is generic (`repo`,
    `project`, `src`, `app`, or similar) or you're unsure, ask rather than guessing.
-3. Check whether `backlog.md` and/or `decisions.md` already exist at the repo root. If either
-   does, stop and show its content before overwriting — don't assume this is the first run here.
+3. Check whether `backlog.md`, `decisions.md`, and/or `lesson-candidates.md` already exist at the
+   repo root. If any does, stop and show its content before overwriting — don't assume this is the
+   first run here.
 4. Create `backlog.md` with the content under "File: backlog.md" below, with `<PROJECT NAME>`
-   substituted.
+   substituted. **`<DATE>` in the "Next up" heading is also a placeholder** — substitute today's
+   date in ISO 8601 (`YYYY-MM-DD`) form, the same format `decisions.md` uses. This isn't cosmetic:
+   `/finalise`'s `check_thread_state.py` parses this field with a `YYYY-MM-DD` pattern to report
+   staleness, so a different date format silently breaks that check.
 5. Create `decisions.md` with the content under "File: decisions.md" below, same substitution.
-6. **Check whether this project already has a `CLAUDE.md` at its repo root, and read the whole
+6. Create `lesson-candidates.md` with the content under "File: lesson-candidates.md" below, same
+   substitution. This is the project-scoped sibling of `~/.claude/lesson-candidates.md` — see that
+   file's own header for the schema and mechanics, which this one shares in full; the only
+   difference is scope (this ledger's "second case" gate is satisfied by a second occurrence
+   *within this project*, and its candidates promote to *this project's* `CLAUDE.md` rather than a
+   global home). `/finalise`'s routing test (its own SKILL.md, step 1) decides when a candidate
+   belongs here rather than in the global ledger or in `decisions.md`.
+7. **Check whether this project already has a `CLAUDE.md` at its repo root, and read the whole
    thing if it does** — don't just check whether it exists.
    - If it does NOT exist: create it with the content under "File: CLAUDE.md" below.
    - If it DOES exist: check whether it already points anywhere to an open-worklist or
@@ -3742,11 +3893,17 @@ when they'd actually help decide what to work on next.
      anything — don't silently end up with two competing worklist conventions in one project. If
      it has no such pointer, append the content under "File: CLAUDE.md" below as a new section,
      separated by a blank line, rather than overwriting anything already there.
-7. Don't invent any task entries or decisions to seed `backlog.md`/`decisions.md` with — they
-   start genuinely empty. Leave the "## Open" section with no entries and the "Next up" block as
-   the placeholder shown.
-8. Ask before committing — first commit of a new convention is worth a quick look, not an
-   auto-commit.
+8. Don't invent any task entries or decisions to seed `backlog.md`/`decisions.md`/`lesson-
+   candidates.md` with — they start genuinely empty. Leave the "## Open" section with no entries
+   and the "Next up" block as the placeholder shown.
+9. **Mention, don't silently absorb, `context_budget_log.csv`.** The first time `/finalise` runs
+   in this project it will create this file at the repo root (a growth log for the always-loaded
+   CLAUDE.md/MEMORY.md surfaces — see that script's own docstring). It isn't created by this
+   command, so there's nothing to write here, but flag to the user now that it will appear later
+   and that whether to git-track it is a one-time call worth making deliberately rather than
+   letting a later `git add -A` sweep it into an unrelated commit unannounced.
+10. Ask before committing — first commit of a new convention is worth a quick look, not an
+    auto-commit.
 
 ---
 
@@ -3832,6 +3989,40 @@ gets its commit hash in `backlog.md`'s Closed stub and nothing here.
 
 ---
 
+### File: lesson-candidates.md
+
+```markdown
+# <PROJECT NAME> — lesson candidates (project-scoped)
+
+The project-level sibling of `~/.claude/lesson-candidates.md` — **same schema, same Candidate/
+Origin-log mechanics, see that file's own header for the full explanation.** Only two things
+differ here:
+
+- **Scope of the gate.** A candidate here is waiting for a second, *contrasting* case from
+  **within this project** — not from anywhere on the machine. `/finalise`'s routing test (its own
+  SKILL.md, step 1) is what decides a candidate belongs in this file rather than the global one:
+  something that recurs in this project and is genuinely rule-shaped, but doesn't (yet) look like
+  it generalises past it.
+- **Where a promoted candidate lands.** A pairing found here promotes into *this project's own*
+  `CLAUDE.md`, never a global home.
+
+**This project's ledger is not read in isolation, though.** `/memory-audit` (Part 2.6) treats
+every project's ledger and the global ledger as **one shared pool** when looking for a second
+case — a candidate parked here can still turn out to match one sitting in a *different* project's
+ledger, entirely unrelated to this one. When that happens, the match promotes to a global home
+instead of this project's `CLAUDE.md`, because the pairing has shown the claim isn't actually
+scoped to this project after all. Routing a case in here is what this session could see at the
+time, not a permanent verdict.
+
+Starts empty — no entries to port, nothing to seed.
+
+## Entries
+
+(none yet — entries accumulate here as cases are captured)
+```
+
+---
+
 ### File: CLAUDE.md
 
 If creating fresh, this is the whole file. If appending to an existing one, write only the
@@ -3845,6 +4036,9 @@ If creating fresh, this is the whole file. If appending to an existing one, writ
   cited by `decisions.md` — never renumber, even after a task closes. Backlog items go there,
   never in a harness task list (session state — `/clear` destroys it).
 - Decision history & rationale: `decisions.md`.
+- Lessons specific to this project, awaiting a second case before becoming a project rule:
+  `lesson-candidates.md` — see its own header; a promoted candidate lands in this file, in a new
+  section named for the rule (not folded into "Where the instructions live").
 - Session-close ritual: run `/finalise` before clearing context — it sweeps for undocumented
   decisions/lessons, reconciles `backlog.md`, and runs deterministic integrity checks.
 ```
@@ -3889,8 +4083,10 @@ instead of the script. Port that skill separately if you want the automated vers
 
 ### What to do
 
-1. Create `~/.claude/commands/memory-audit.md` with exactly the content below — it's already
-   adapted, don't make further path substitutions.
+1. **Check whether `~/.claude/commands/memory-audit.md` already exists first.** If it does, read
+   it in full, diff it against the content below, and show me the differences before overwriting —
+   same discipline as Step 1's own first step. If it doesn't exist yet, create it with exactly the
+   content below — it's already adapted, don't make further path substitutions.
 2. Do NOT commit/push — same reasoning as the earlier steps.
 3. Report the file's byte size so I can sanity-check nothing got truncated.
 
@@ -3927,8 +4123,11 @@ User-scope rule homes — standing rules, and they go stale like any other doc:
   ~/.claude/CLAUDE.md appears twice on purpose — audited as an instruction file above, and as
   a rule home here. The actor test that assigns a rule to one of these is canonical in that
   file's header; apply it from there, don't re-derive it.
-Lesson ledger — NOT a rule home; nothing in it is in force. Audit per Part 2.6, not Part 2:
+Lesson ledgers — NOT rule homes; nothing in them is in force. Audit per Part 2.6, not Part 2:
   - ~/.claude/lesson-candidates.md    (first cases awaiting a second; origin logs of promoted rules)
+  - <repo>/lesson-candidates.md       (this project's own ledger, if it has one — same schema,
+    scoped to this project; see Part 2.6, which treats every project's ledger and the global one
+    as one pool)
 Evidence logs and repo docs — same directory, not rule homes, easy to miss:
   - ~/.claude/under-explained-cases.md  (real instances of unclear writing; carries its own
     capture + evaluation protocol — read it, don't re-derive)
@@ -4027,43 +4226,69 @@ For entries kept only for their rationale/"why we did X" (DURABLE-DECISION):
   Routing a rule into decisions.md buries it where no other project will ever read it.
 
 ### Part 2.6 — Lesson ledger: aging review
-`~/.claude/lesson-candidates.md` holds first cases awaiting a second contrasting case, plus
-origin logs for rules already promoted. **Nothing in it is in force, so the Part 2 keep/cut test
-does not apply** — a candidate is not stale for being unused; waiting is what it is for.
+Two kinds of ledger hold first cases awaiting a second contrasting case, plus origin logs for
+rules already promoted: `~/.claude/lesson-candidates.md` (global) and, per project, `<repo>/
+lesson-candidates.md` (that project's own, where one exists). **Nothing in either is in force, so
+the Part 2 keep/cut test does not apply** — a candidate is not stale for being unused; waiting is
+what it is for.
 
-Run `python3 ~/.claude/skills/finalise/scripts/context_budget_report.py --project-claude
-<repo>/CLAUDE.md --memory-index <memory-dir>/MEMORY.md --ledger ~/.claude/lesson-candidates.md
---prompt-lessons ~/.claude/prompt-lessons.md --writing-standing-docs
-~/.claude/writing-standing-docs.md --writing-executor-briefs
-~/.claude/writing-executor-briefs.md --history <repo>/context_budget_log.csv` and read its
-counts — candidates awaiting a second case with the oldest age in days, and rules still carrying
-a single-case "Provisional" marker per home. Consume that output; don't recount by hand.
-`<repo>` and `<memory-dir>` are the project root and its derived auto-memory directory for
-whichever project this audit run is scoped to (see the derivation rule in the finalise bootstrap:
-the project's absolute path with every `/` replaced by `-`).
+Run `context_budget_report.py` exactly as `/finalise`'s own SKILL.md step 5 specifies for the
+project being audited (same script, same flags — see there rather than re-deriving them here) and
+read its counts: candidates awaiting a second case with the oldest age in days, and rules still
+carrying a single-case "Provisional" marker per home. Consume that output; don't recount by hand.
+
+**Read every project's ledger, not just the one(s) chosen for this audit run.** A candidate that
+looks project-specific from inside a single `/finalise` session can turn out to match a case
+sitting in a *different* project's ledger — the only way to see that is to look across all of them
+together, which is exactly the corpus view `/finalise` doesn't have. Discover every project ledger
+the same way the Scope section above discovers auto-memory dirs: `find ~/.claude/projects -name
+MEMORY.md` gives every project path Claude Code has touched on this machine (decode each
+directory name back to a real path — reverse the `/`-to-`-` substitution), then check each
+decoded root for a `lesson-candidates.md`. **Reading these ledgers is not the same as auditing
+those projects** — this step reads only that one named file from each; it does not open, and must
+not touch, anything else in a project that wasn't chosen for full audit.
+
+Treat every waiting candidate — the global ledger and every project ledger — as **one pool** when
+looking for a pairing:
+- **Same project** — promotes into that project's own `CLAUDE.md`.
+- **Different projects, or one global candidate + one project-level candidate** — promotes to a
+  global home instead. The project-level candidate's own "Would live in" guess was made from
+  inside one session's limited view; a cross-project match is new information that supersedes it.
+- Either way, **the proposal must name the shared mechanism, not just the resemblance.** Quote
+  each candidate's `Case:` and `What a second case would need to show:` fields and state
+  specifically what the two share. A surface-similar pair that turns out to rest on different
+  underlying claims — one about verifying a single intel source, say, one about a single flaky
+  test run — is not a match, whatever their one-line headlines look like. If the shared mechanism
+  can't be named in one sentence, it isn't one: propose "still waiting" for both rather than
+  forcing a pairing.
+- **A promotion touching a project other than the one(s) chosen for this audit run still needs
+  explicit approval before writing** — show the pairing and the target file plainly; don't fold it
+  silently into this run's change plan as if it were local to the audited project.
 
 Propose one outcome per waiting candidate, and ask before writing:
-- **Promote** — a second, contrasting case has since arrived. Name it. Then follow the ledger's
-  own Promotion section (write the rule to its home, move both narratives to an origin log,
-  delete the candidate).
+- **Promote** — a second, contrasting case has arrived (same project or a different one, per
+  above). Name it and the shared mechanism. Then follow the ledger's own Promotion section (write
+  the rule to its home, move both narratives to an origin log, delete both candidates).
 - **Still waiting** — the claim is live and worth keeping parked. Age alone is not a reason to
-  act; say so and move on.
+  act, and neither is a similar-looking case that doesn't share the mechanism; say so and move on.
 - **Retire** — the project has moved past it, or the first case no longer reproduces.
 
 A rule still marked "Provisional" is the inverse case: it is in force but only one case supports
 it. Flag it for a second case or for demotion back to a candidate — don't silently drop the
 marker, and don't assume why it carries one.
 
-**Scope split, so neither side assumes the other did it:** `/finalise` owns *pairing* — matching
-a newly observed case against the waiting candidates at the moment it happens, which is when the
-new case is in hand. This audit owns *aging* only, which `/finalise` cannot see from inside one
-session.
+**Scope split, so neither side assumes the other did it:** `/finalise` owns *pairing within one
+project's own visibility* — matching a newly observed case against that project's own ledger (and
+the global one) at the moment it happens. This audit owns two things `/finalise` structurally
+cannot do from inside a single session: *aging* (how long a candidate has waited) and
+*cross-project matching* (a pairing only visible once every project's ledger is read together).
 
 ### Part 3 — Index & link integrity (after every change)
 - Every topic file has exactly one pointer line in MEMORY.md; remove dangling
   pointers for deleted files; add missing ones.
 - Add a CLAUDE.md pointer in `<repo>/CLAUDE.md`: "Decision history & rationale: decisions.md" —
-  only if this project has a project-level CLAUDE.md and the pointer isn't already there.
+  only if this project has a project-level CLAUDE.md and the pointer isn't already there. Same
+  check for a `lesson-candidates.md` pointer if the project has that file but no line naming it.
 - Keep the frontmatter FIELDS (name/description/metadata.type) on kept files, but
   UPDATE `description:` whenever it no longer matches the body — a stale description
   is what misleads the next session. Don't leave a wrong one in place as "preserved."
@@ -4110,3 +4335,17 @@ pre-authorization on this machine the way the source version did.
 Auto-memory stays local (not committed).
 Since auto-memory isn't git-tracked, this report IS its audit trail — be exact.
 ````
+
+---
+
+## After Step 5 — this directory itself
+
+All five steps above are done, but nothing so far has touched the directory this whole setup
+happened in — the four global commands/skills now exist, but *this* repo (if it is one) still has
+no `backlog.md`, `decisions.md`, `lesson-candidates.md`, or `CLAUDE.md` pointer of its own unless
+it already did. Left as-is, `/finalise` run here will permanently skip its work-tracking reconcile
+and part of its checks, in the one place this workflow was just built.
+
+**Ask me now whether to run `/bootstrap-project` on the current directory too**, rather than
+assuming either way — a genuinely scratch/throwaway directory should correctly get a "no" here,
+which is exactly why this needs to be a question and not a default.
