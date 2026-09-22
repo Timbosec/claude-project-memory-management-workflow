@@ -1024,6 +1024,28 @@ KNOWN_RETIRED_LINKS = {
     name for name in os.environ.get("KNOWN_RETIRED_LINKS", "").split(",") if name
 }
 
+_FENCE_RE = re.compile(r"^```.*?^```", re.MULTILINE | re.DOTALL)
+_SPAN_RE = re.compile(r"`+[^`]*`+")
+
+
+def _blank(text):
+    """Replace every character with a space except newlines, which are kept -- so the string's
+    length and every line boundary survive intact, and stripped[:i].count("\\n") + 1 still gives
+    the correct 1-based line number after stripping."""
+    return "".join(c if c == "\n" else " " for c in text)
+
+
+def _strip_code(text):
+    """Blank out fenced code blocks, then inline code spans (fences first, then spans -- a span
+    marker inside an already-blanked fence has nothing left to match). A backticked [[link]] or
+    one inside a fenced block is prose about the syntax, not a citation -- see the module
+    docstring. Two known limits, not built for because neither is attested in this repo: an
+    unterminated fence is not stripped, and `~~~` fences are not handled."""
+    text = _FENCE_RE.sub(lambda m: _blank(m.group(0)), text)
+    text = _SPAN_RE.sub(lambda m: _blank(m.group(0)), text)
+    return text
+
+
 _LINK_RE = re.compile(r"\[\[([A-Za-z0-9][A-Za-z0-9_.-]*)\]\]")
 # A real citation target is an identifier-shaped slug (kebab-case, always -- see the memory
 # system's own naming convention). Requiring that shape, rather than "any run of non-]/|
@@ -1036,7 +1058,8 @@ link_problems = []
 known_retired_hits = {}
 for fname in sorted(files):
     with open(os.path.join(MD, fname), encoding="utf-8") as f:
-        body = f.read()
+        raw = f.read()
+    body = _strip_code(raw)
     for m in _LINK_RE.finditer(body):
         target = m.group(1).strip()
         if (target + ".md") in files or (target + ".md") == "MEMORY.md":
@@ -1067,28 +1090,6 @@ print(f"[[link]] check: {len(files)} files scanned, all links resolve (or are kn
 # Runs after the memory-file link check above, keeping the same stop-at-first-failure sequencing
 # (a failure above exits before this code ever runs).
 DOCS_ROOT = sys.argv[2] if len(sys.argv) > 2 else os.getcwd()
-
-_FENCE_RE = re.compile(r"^```.*?^```", re.MULTILINE | re.DOTALL)
-_SPAN_RE = re.compile(r"`+[^`]*`+")
-
-
-def _blank(text):
-    """Replace every character with a space except newlines, which are kept -- so the string's
-    length and every line boundary survive intact, and stripped[:i].count("\\n") + 1 still gives
-    the correct 1-based line number after stripping."""
-    return "".join(c if c == "\n" else " " for c in text)
-
-
-def _strip_code(text):
-    """Blank out fenced code blocks, then inline code spans (fences first, then spans -- a span
-    marker inside an already-blanked fence has nothing left to match). A backticked [[link]] or
-    one inside a fenced block is prose about the syntax, not a citation -- see the module
-    docstring. Two known limits, not built for because neither is attested in this repo: an
-    unterminated fence is not stripped, and `~~~` fences are not handled."""
-    text = _FENCE_RE.sub(lambda m: _blank(m.group(0)), text)
-    text = _SPAN_RE.sub(lambda m: _blank(m.group(0)), text)
-    return text
-
 
 _SKIP_DIRS = {".git", "__pycache__", "node_modules"}
 _MD_ABS = os.path.abspath(MD)
@@ -1315,6 +1316,30 @@ class TestDanglingLinkCheck(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("NO index line", result.stdout)
             self.assertNotIn("dangling", result.stdout.lower())
+
+    def test_backticked_mention_not_flagged(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            _write_fixture(tmpdir, {
+                "a.md": "The syntax is `[[nonexistent-thing]]` -- prose, not a citation.\n",
+            })
+            result = _run(tmpdir)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertNotIn("nonexistent-thing", result.stdout)
+            self.assertIn("all links resolve", result.stdout)
+
+    def test_unfenced_dangling_link_still_gates_alongside_backticked_mention(self):
+        # Companion to the test above: proves the fix strips backticked mentions
+        # without disabling the check entirely -- a genuine, unfenced dangling link
+        # in the same file must still gate, while the backticked mention still doesn't.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            _write_fixture(tmpdir, {
+                "a.md": "The syntax is `[[nonexistent-thing]]` -- prose. "
+                        "See [[also-missing]] for detail.\n",
+            })
+            result = _run(tmpdir)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("also-missing", result.stdout)
+            self.assertNotIn("nonexistent-thing", result.stdout)
 
 
 class TestDocScopeLinkCheck(unittest.TestCase):
