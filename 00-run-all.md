@@ -1091,7 +1091,18 @@ print(f"[[link]] check: {len(files)} files scanned, all links resolve (or are kn
 # (a failure above exits before this code ever runs).
 DOCS_ROOT = sys.argv[2] if len(sys.argv) > 2 else os.getcwd()
 
-_SKIP_DIRS = {".git", "__pycache__", "node_modules"}
+_SKIP_DIRS = {
+    ".git", "__pycache__", "node_modules",
+    # Common vendored/build-output directory names across ecosystems (Python virtualenvs,
+    # Go/PHP/Ruby vendor dirs, JS/Rust/Java build output, Python packaging metadata) -- a big
+    # vendored tree's own .md files (READMEs etc, using unrelated double-bracket syntax) can trip
+    # this check on files that were never this project's own. Deliberately a fixed,
+    # dependency-free name list rather than deriving exclusions from .gitignore: many projects
+    # using this script won't have git set up yet -- running this workflow is often what prompts
+    # setting git up in the first place -- so a git-dependent check would silently do nothing in
+    # exactly that case, the opposite of a safe fallback.
+    "vendor", "venv", ".venv", "dist", "build", "site-packages", "__pypackages__",
+}
 _MD_ABS = os.path.abspath(MD)
 _DOCS_ROOT_ABS = os.path.abspath(DOCS_ROOT)
 
@@ -1414,6 +1425,37 @@ class TestDocScopeLinkCheck(unittest.TestCase):
             result = _run(tmpdir, docs_root)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("[[link]] check (docs): 1 citation(s) in 1 file(s)", result.stdout)
+
+    def test_doc_vendored_directory_is_skipped(self):
+        # A vendored/build-output directory (see _SKIP_DIRS) can carry its own .md files --
+        # e.g. an installed library's README -- using unrelated double-bracket syntax that was
+        # never meant as a citation into this project's memory. Proves such a file is never even
+        # read: its bogus link isn't counted, let alone flagged.
+        with tempfile.TemporaryDirectory() as tmpdir, \
+                tempfile.TemporaryDirectory() as docs_root:
+            _write_fixture(tmpdir, {"a.md": "Nothing links out of here.\n"})
+            _write_docs(docs_root, {
+                "vendor/some-lib/README.md": "See [[unrelated-wiki-page]] in their docs.\n",
+            })
+            result = _run(tmpdir, docs_root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("[[link]] check (docs): 0 citation(s) in 0 file(s)", result.stdout)
+
+    def test_doc_real_citation_still_gates_alongside_vendored_directory(self):
+        # Companion to the test above: proves skipping vendor/ doesn't disable the check
+        # entirely -- a genuine dangling link elsewhere in docs_root must still gate, while the
+        # vendored directory's bogus link stays silently ignored.
+        with tempfile.TemporaryDirectory() as tmpdir, \
+                tempfile.TemporaryDirectory() as docs_root:
+            _write_fixture(tmpdir, {"a.md": "Nothing links out of here.\n"})
+            _write_docs(docs_root, {
+                "vendor/some-lib/README.md": "See [[unrelated-wiki-page]] in their docs.\n",
+                "note.md": "See [[also-missing]] for detail.\n",
+            })
+            result = _run(tmpdir, docs_root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("also-missing", result.stdout)
+            self.assertNotIn("unrelated-wiki-page", result.stdout)
 
     def test_doc_empty_docs_root_passes(self):
         with tempfile.TemporaryDirectory() as tmpdir, \
