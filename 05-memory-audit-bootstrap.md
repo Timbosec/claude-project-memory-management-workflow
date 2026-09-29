@@ -285,8 +285,10 @@ If a probe surfaces wrong/conflicting memory, that entry is a deletion candidate
 After I approve: apply, then ask before committing or pushing either repo — don't assume
 pre-authorization on this machine the way the source version did.
   - `<repo>` — decisions.md, CLAUDE.md, and any skill file touched
-  - `~/.claude` — the rule homes and the ledger, which live in their own repo (if it is one on
-    this machine); edits there are lost to the next audit's baseline if left uncommitted
+  - `~/.claude` — the rule homes and the ledger, which live in their own repo (if it is one);
+    edits there are lost to the next audit's baseline if left uncommitted
+Where either isn't a git repo, say once that its edits are saved but not committed, and carry
+on. Never offer to initialise a repo.
 Auto-memory stays local (not committed).
 Since auto-memory isn't git-tracked, this report IS its audit trail — be exact.
 ````

@@ -1006,10 +1006,42 @@ _BODY_SEP = "\x01BODY\x01"
 _FILES_SEP = "\x01FILES\x01"
 
 
+def is_git_repo(repo_dir):
+    """True if `repo_dir` is inside a git work tree. A project with no git history at all is a
+    supported state (a scratch directory, or a project the user hasn't put under git), and
+    sections 1 and 3 are git-derived -- so main() checks this and skips rather than letting
+    `git log` raise. Uses git's own answer rather than looking for a `.git` entry, because a
+    worktree or submodule has a `.git` FILE, and a subdirectory of a repo has no `.git` at all
+    yet is still in the work tree."""
+    proc = subprocess.run(
+        ["git", "rev-parse", "--is-inside-work-tree"],
+        cwd=repo_dir, capture_output=True, text=True,
+    )
+    return proc.returncode == 0 and proc.stdout.strip() == "true"
+
+
+def has_commits(repo_dir):
+    """True if `repo_dir` has at least one commit reachable from HEAD. Separate from
+    is_git_repo on purpose: a freshly `git init`-ed repo IS a work tree, so is_git_repo
+    correctly answers True, but `git log` still fails there ("your current branch does not
+    have any commits yet") and run_git_log uses check=True. That state is what
+    /bootstrap-project leaves behind, since it writes backlog.md/decisions.md/CLAUDE.md and
+    then asks before committing -- so the first /finalise in a newly bootstrapped project hits
+    it unless the user committed in between."""
+    proc = subprocess.run(
+        ["git", "rev-parse", "--verify", "HEAD"],
+        cwd=repo_dir, capture_output=True, text=True,
+    )
+    return proc.returncode == 0
+
+
 def run_git_log(repo_dir, days):
     """Real commits from `repo_dir`'s history over the last `days` days,
     newest-first (git log's default order), each with its subject, body and
-    the list of files it touched."""
+    the list of files it touched. Callers must have established that repo_dir
+    is a git repo with commits (see is_git_repo and has_commits) -- git's own
+    failure here is left to raise, since at that point it means something other
+    than "no repo" or "no commits yet"."""
     fmt = f"{_COMMIT_SEP}%n%H%n%ad%n%s%n{_BODY_SEP}%n%b%n{_FILES_SEP}"
     proc = subprocess.run(
         ["git", "log", f"--since={days} days ago", "--date=short",
@@ -1051,6 +1083,12 @@ def count_commits_since(repo_dir, date_str):
 
 
 def read_memory_texts(memory_dir):
+    """{filename: text} for every memory topic file. An absent directory returns {} rather than
+    raising: auto-memory is created lazily by the harness, so a project that has not written its
+    first memory yet legitimately has no such directory, and section 4 (collisions) simply has
+    nothing to compare against."""
+    if not os.path.isdir(memory_dir):
+        return {}
     texts = {}
     for fname in os.listdir(memory_dir):
         if fname.endswith(".md") and fname != "MEMORY.md":
@@ -1250,27 +1288,35 @@ def main():
     parser.add_argument("--memory-dir", default=DEFAULT_MEMORY_DIR)
     args = parser.parse_args()
 
-    # Three absence cases a freshly-bootstrapped project passes through before its first
-    # commit: no backlog.md yet (bootstrap-project hasn't run here), zero commits (it has run
-    # but nothing's been committed), no memory dir yet (no prior Claude session in this
-    # project). None of these are errors -- report and exit 0, same as every other absence
-    # this script already treats as normal, rather than let the exception surface.
+    # Four absences are normal, not errors -- report and exit 0, since this script reports and
+    # never gates and a traceback would break that contract:
+    #   - no backlog.md yet (/bootstrap-project hasn't run here): every section needs it.
+    #   - not a git repo: sections 1 and 3 are git-derived. Rather than print a half-report
+    #     whose empty sections read as clean findings, say which input is missing and stop.
+    #   - a git repo with no commits yet: the normal state straight after /bootstrap-project.
+    #     Distinct from "not a repo" because the remedy differs: commit, then re-run.
+    #   - no memory dir yet (no prior Claude session in this project): read_memory_texts
+    #     returns {} and section 4 has nothing to compare against.
+    # Any OTHER git failure is not an absence, and is left to raise.
     if not os.path.exists(args.backlog):
         print(f"no backlog.md yet at {args.backlog} -- skipping thread-state check "
               f"(run /bootstrap-project first)")
         sys.exit(0)
-
-    try:
-        commits = run_git_log(args.repo, args.days)
-    except subprocess.CalledProcessError:
-        print("repo has no commits yet -- skipping thread-state check")
+    if not is_git_repo(args.repo):
+        print(f"{args.repo} is not a git repository -- skipping thread-state check "
+              f"(sections 1 and 3 are derived from commit history)")
         sys.exit(0)
+    if not has_commits(args.repo):
+        print(f"{args.repo} is a git repository with no commits yet -- skipping "
+              f"thread-state check (commit the bootstrapped files and re-run)")
+        sys.exit(0)
+
+    commits = run_git_log(args.repo, args.days)
 
     with open(args.backlog, encoding="utf-8") as f:
         backlog_text = f.read()
 
-    memory_texts = (read_memory_texts(args.memory_dir)
-                     if os.path.isdir(args.memory_dir) else {})
+    memory_texts = read_memory_texts(args.memory_dir)
     did_modify_entry = make_did_modify_entry(args.repo)
 
     report = build_report(backlog_text, commits, memory_texts, did_modify_entry)
@@ -1317,6 +1363,9 @@ stays exercised git-free here too; make_did_modify_entry/_git_show's real
 git-diffing behaviour is verified separately, live, against this repo's real
 history (see the checkpoint 2 report, not this file).
 """
+import os
+import subprocess
+import tempfile
 import types
 import unittest
 from unittest import mock
@@ -1766,6 +1815,85 @@ class TestCountCommitsSince(unittest.TestCase):
 
         since_args = [a for a in captured["cmd"] if a.startswith("--since=")]
         self.assertEqual(since_args, ["--since=2026-08-09T00:00:00"])
+
+
+class TestAbsenceGuards(unittest.TestCase):
+    """Absence guards: this script promises it reports and never gates (exit 0 always), so a
+    missing backlog, repo, commit history or memory directory must not raise.
+
+    These are the only tests in this file that touch the filesystem or invoke git, and only
+    because the guards themselves are filesystem/git predicates -- there is no pure-function
+    layer at which "this directory is not a repo" can be asserted. They stay hermetic by
+    building their own tmpdir and never reading repo data. read_memory_texts's absence path is
+    pure enough to test directly.
+    """
+
+    def test_read_memory_texts_returns_empty_dict_for_a_missing_dir(self):
+        with tempfile.TemporaryDirectory() as parent:
+            missing = os.path.join(parent, "no-such-memory-dir")
+            self.assertEqual(cts.read_memory_texts(missing), {})
+
+    def test_read_memory_texts_still_reads_a_populated_dir(self):
+        # Bounding case: the guard must not swallow a directory that IS present.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with open(os.path.join(tmpdir, "a.md"), "w", encoding="utf-8") as f:
+                f.write("cites task #12 here\n")
+            with open(os.path.join(tmpdir, "MEMORY.md"), "w", encoding="utf-8") as f:
+                f.write("# index\n")
+            texts = cts.read_memory_texts(tmpdir)
+            self.assertEqual(set(texts), {"a.md"})  # MEMORY.md itself is excluded
+            self.assertIn("task #12", texts["a.md"])
+
+    def test_is_git_repo_false_for_a_plain_directory(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            self.assertFalse(cts.is_git_repo(tmpdir))
+
+    def test_has_commits_false_for_a_freshly_initialised_repo(self):
+        # The state /bootstrap-project actually leaves behind: initialised, files written,
+        # nothing committed (step 8 asks before committing). is_git_repo says True here -- see
+        # the pairing test below -- so this predicate is what stops `git log` being called.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            subprocess.run(["git", "init", "-q"], cwd=tmpdir, check=True,
+                            capture_output=True)
+            self.assertFalse(cts.has_commits(tmpdir))
+
+    def test_has_commits_true_once_a_commit_exists(self):
+        # Load-bearing in the other direction: a predicate hard-coded to False would pass the
+        # test above and fail this one, and would silently disable the whole check on every
+        # real repo.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            subprocess.run(["git", "init", "-q"], cwd=tmpdir, check=True,
+                            capture_output=True)
+            subprocess.run(["git", "config", "user.email", "t@e.st"], cwd=tmpdir,
+                            check=True, capture_output=True)
+            subprocess.run(["git", "config", "user.name", "T"], cwd=tmpdir,
+                            check=True, capture_output=True)
+            with open(os.path.join(tmpdir, "f.txt"), "w", encoding="utf-8") as f:
+                f.write("x\n")
+            subprocess.run(["git", "add", "f.txt"], cwd=tmpdir, check=True,
+                            capture_output=True)
+            subprocess.run(["git", "commit", "-qm", "first"], cwd=tmpdir, check=True,
+                            capture_output=True)
+            self.assertTrue(cts.has_commits(tmpdir))
+
+    def test_a_commitless_repo_is_still_a_repo(self):
+        # Why has_commits must exist SEPARATELY from is_git_repo, asserted rather than left as
+        # a comment: the two predicates disagree on exactly this state, and checking only
+        # is_git_repo would let `git log` run, and raise, in a repo with no commits. If someone
+        # later "simplifies" by folding one into the other, this fails.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            subprocess.run(["git", "init", "-q"], cwd=tmpdir, check=True,
+                            capture_output=True)
+            self.assertTrue(cts.is_git_repo(tmpdir))
+            self.assertFalse(cts.has_commits(tmpdir))
+
+    def test_is_git_repo_true_for_a_real_repo(self):
+        # Proves the predicate is load-bearing in BOTH directions -- a function hard-coded to
+        # return False would pass the test above and fail this one.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            subprocess.run(["git", "init", "-q"], cwd=tmpdir, check=True,
+                            capture_output=True)
+            self.assertTrue(cts.is_git_repo(tmpdir))
 
 
 class TestFindNextUpDate(unittest.TestCase):
@@ -2662,15 +2790,13 @@ under-explained-cases.md). Commit in whichever repo the file lives in. **Ask bef
 either repo** — don't assume push is pre-authorized; that's a per-machine decision the user makes
 explicitly, not a default. A push can't be scoped to one subdirectory either (it sends the whole
 branch), which is a second reason to confirm rather than assume before pushing `~/.claude`.
+**Either may not be a git repo.** Where `<project root>` or `~/.claude` isn't one, its writes are
+saved to disk but not committed: say so once and carry on. Never offer to initialise a repo.
 
-**`<memory dir>` is never committed — confirm this before assuming otherwise, don't re-derive
-it.** `~/.claude`'s own `.gitignore` blanket-excludes everything under `projects/` (transcripts +
-auto-memory), with no exception carved out for the memory directory the way one exists for
-`lesson-candidates.md` or `under-explained-cases.md`. `git add` on a memory file fails loudly
-(`ignored by one of your .gitignore files... Use -f if you really want to add them`) rather than
-silently no-op-ing. So every memory write this skill makes (a new memory file, an edited one, a
-`MEMORY.md` index line) persists to disk only; skip the commit for those and don't report them as
-committed in step 7.
+**`<memory dir>` is never committed**, even where `~/.claude` is a git repo: auto-memory stays
+local. Every memory write this skill makes (a new memory file, an edited one, a `MEMORY.md` index
+line) persists to disk only; skip the commit for those and don't report them as committed in
+step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, leave it untracked.
 
 1. **Sweep the session conversation** for any of the following:
    - Architectural or workflow decisions (why X was chosen over Y, tradeoffs accepted)
@@ -2919,8 +3045,9 @@ committed in step 7.
    rejected), the reconcile result from step 4, the results of all three step-5 checks (the
    index-check result; the thread-state report together with your response to each flagged
    task; and the context-budget report), and the `Next up` block written in step 6. **Confirm every
-   non-memory write from this run was committed** (`git status` in both repos, not just recall),
-   name any memory-directory writes as filesystem-only per the commit note above, and state each
+   non-memory write from this run was committed** (`git status` in each of the two that is a git
+   repo, not just recall; for one that isn't, say its writes are saved but not committed), name
+   any memory-directory writes as filesystem-only per the commit note above, and state each
    repo's push status — pushed, or left uncommitted/unpushed for the user, per what they said
    this run.
 
