@@ -4293,7 +4293,7 @@ instead of the script. Port that skill separately if you want the automated vers
 Goal: remove stale, conflicting, and low-value content from project memory and from the
 standing-rule files; archive durable decisions+rationale to a git-tracked decisions log so
 they're recallable without polluting task-oriented memory. Verify every claim against the
-CURRENT codebase/skills before acting. Do NOT delete anything until I approve the plan.
+CURRENT codebase/skills before acting. Do NOT delete anything until the user approves the plan.
 
 ### Scope — discover, then confirm (don't hardcode paths)
 1. Discover all auto-memory dirs: `find ~/.claude/projects -name MEMORY.md`.
@@ -4349,7 +4349,7 @@ prefix with `./` or use `--`.
 1. `cp -r` each auto-memory dir to a timestamped backup before any edit. On a
    CONTINUED/resumed run, take a NEW backup of the CURRENT dir — a prior session's
    backup predates its own edits and is not a clean baseline for this run's changes.
-2. Produce the full change plan (Output section) and STOP for my approval before
+2. Produce the full change plan (Output section) and STOP for the user's approval before
    deleting/editing/committing.
 3. Work in batches: apply high-confidence changes first; defer per-file operational
    verification (checking memories against current skill code) to a focused pass —
@@ -4520,7 +4520,7 @@ If a probe surfaces wrong/conflicting memory, that entry is a deletion candidate
   retired; plus every rule whose "Provisional" marker was resolved or left standing
 - Defects found in the living spec: what and where, reported only — never edited here
 - Index/link fixes
-After I approve: apply, then ask before committing or pushing either repo — don't assume
+After the user approves: apply, then ask before committing or pushing either repo — don't assume
 pre-authorization on this machine the way the source version did.
   - `<repo>` — decisions.md, CLAUDE.md, and any skill file touched
   - `~/.claude` — the rule homes and the ledger, which live in their own repo (if it is one);
