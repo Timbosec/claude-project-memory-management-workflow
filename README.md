@@ -150,38 +150,6 @@ show you anything it would overwrite or that conflicts with content already ther
   nudges periodic re-evaluation of the under-explained-cases ledger. Both references have a
   documented fallback, so their absence doesn't break anything, they're just not automated here.
 
-## What was fixed while removing origin-specific content
-
-Scrubbing every mention of the original project and its user turned up two real bugs, not just
-naming, that would otherwise have broken quietly on a different machine:
-
-- `context_budget_report.py` imported a CSV-writing helper from a shared script library that
-  wasn't part of this bundle. It's now a small inlined function with no external dependency.
-- The hook test suite hardcoded an absolute path to the hook file on the original machine. It now
-  resolves the hook's path relative to the test file itself, so it works wherever the two files
-  are installed together.
-- `check_memory_index.py`'s known-retired-link exemption shipped with one real name from the
-  original project's history baked in as production configuration, not test data. It's now
-  configurable via `$KNOWN_RETIRED_LINKS` and empty by default, since a fresh project hasn't
-  retired anything yet; the tests that verify the exact-match logic now inject their own
-  test-specific name instead of depending on that value being present.
-- The optional sub-agent guard hook (prompt 6) derived its notion of "the project" from one
-  hardcoded absolute path. It now reads the calling session's actual working directory from the
-  hook's own payload, so it works correctly across every project on the machine, not just one.
-
-An independent audit (a separate, unprimed pass over the published repo, checking file contents
-*and* full commit history) later caught a category the first pass missed entirely: real git
-commit hashes from the original project's history, cited in `check_thread_state.py`'s docstring
-and test fixtures as "verified against this repo's real history." A full SHA is effectively a
-fingerprint of a specific repository's history, unrelated to whether the surrounding prose reads
-as generic. Those citations, one real memory filename cited as evidence of a working case, one
-literal system username in an example path, and a few residual real filenames used as test
-fixtures, are now replaced with synthetic values throughout.
-
-Everything else was text: project name, personal name, and domain-specific example content
-(store names, filenames) replaced with generic placeholders, and dated case narratives stripped
-from the rule files down to their operative statements.
-
 ## Verifying it worked
 
 In a scratch/throwaway repo:
