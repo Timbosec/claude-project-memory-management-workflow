@@ -29,13 +29,6 @@ machine — changed to ask first), and Part 4's example verification probes were
 project's own domain questions — replaced with an instruction to substitute real questions from
 whatever project is actually being audited.
 
-**One known soft-dependency, not fixed by this bootstrap:** Part 1 references a script at
-`~/.claude/skills/auditing-skill-candidates/scripts/map_surfaces.sh` for measuring where a trim
-actually saves always-loaded context budget. That skill isn't part of this bundle. The instruction
-already has a fallback for this ("if that script's output doesn't list the rule homes, measure
-them directly") — so the audit still works without it, just with a manual measurement step
-instead of the script. Port that skill separately if you want the automated version.
-
 ## Instructions for Claude
 
 1. **Check whether `~/.claude/commands/memory-audit.md` already exists first.** If it does, read
@@ -86,6 +79,8 @@ Lesson ledgers — NOT rule homes; nothing in them is in force. Audit per Part 2
 Evidence logs and repo docs — same directory, not rule homes, easy to miss:
   - ~/.claude/under-explained-cases.md  (real instances of unclear writing; carries its own
     capture + evaluation protocol — read it, don't re-derive)
+  - ~/.claude/doc-test-probes.md        (cold-reader probe inputs behind measured rule-wording
+    verdicts; re-run the probes it names after editing the rule they test)
   - ~/.claude/README.md                 (what the config repo tracks and why, if present)
   **Glob `~/.claude/*.md` and account for every result** rather than trusting this list — it has
   already been wrong once on the source machine: two files post-dated it and went unaudited.
@@ -93,11 +88,13 @@ Evidence logs and repo docs — same directory, not rule homes, easy to miss:
   say which category it falls in.
 Decisions log (git-tracked, durable):
   - <repo>/decisions.md               (create if absent)
-Read but never edit: skills' references/*.md — the "living spec", if the audited project has one.
-On any conflict with this project's own docs (memory, decisions.md, project CLAUDE.md) the
-reference WINS. Read them to decide whether a memory is still true, and report defects found in
-them; editing them would resolve a conflict by rewriting the reference instead of the copy, and
-would bypass their own gates (test runs after a constant changes, both-skills completeness).
+Read but never edit: any skill file or reference doc, wherever it lives
+(`~/.claude/skills/*/SKILL.md`, a skill's `references/` directory, or a reference doc kept in
+the project). On any conflict with this project's own docs (memory, decisions.md, project
+CLAUDE.md) the reference WINS — read them to decide whether a memory is still true, and report
+defects found in them. Editing them would resolve a conflict by rewriting the source of truth
+instead of the copy, and would bypass the reference's own gates (test runs after a constant
+changes, completeness checks).
 Out of scope entirely: unrelated projects.
 Read files directly with the Read tool. (`/memory` only lists loaded files; it
 can't open auto-memory topic files for you.)
@@ -126,13 +123,11 @@ prefix with `./` or use `--`.
 - Flag rules that contradict the current code or skills.
 - Trim persona/vague lines: not "zero effect," but they dilute adherence and cost
   context — keep only concrete, verifiable instructions.
-- **Judge a trim by WHERE the file loads, not by its size.** If a script at
-  `~/.claude/skills/auditing-skill-candidates/scripts/map_surfaces.sh` exists on this machine, run
-  `bash` on it with `<repo>` to class every surface and print the always-loaded subtotal — the
-  only budget a trim can reclaim. Bytes cut from an on-demand rule home reclaim none of it, so
-  judge those on whether the rule still fires, never on length. That script is not guaranteed to
-  be installed on every machine; if it's absent, or its output doesn't list the rule homes above,
-  measure them directly instead (byte-count each always-loaded file yourself).
+- **Judge a trim by WHERE the file loads, not by its size.** Only the always-loaded surfaces
+  (both CLAUDE.mds and MEMORY.md) cost context every session; the other rule homes load on
+  demand, so bytes cut from them reclaim none of that budget — judge those on whether the rule
+  still fires, never on length. `context_budget_report.py` (Part 2.6) prints exactly those three
+  figures plus their change since the last reading, so read its output rather than re-measuring.
 - A rule that duplicates one in another home is the same defect as a duplicate memory —
   resolve to one canonical home and leave a pointer, per canonical-plus-pointers.
 - Note empty files.
@@ -255,7 +250,9 @@ cannot do from inside a single session: *aging* (how long a candidate has waited
   spans and fenced blocks are ignored) — and prints MEMORY.md against its load limit — the first
   200 lines **or 25,600 bytes, whichever comes first**, is all that loads at session start.
   **Bytes bind first** (long index lines), so watch that percentage rather than the line count.
-  Non-zero exit = fix before finishing, not after.
+  Non-zero exit = fix before finishing, not after. A project with no memory index yet reports
+  that it is skipping the check and exits 0 — normal before its first `/finalise` run, not a
+  failure.
 - A dangling citation the check reports — inside a memory file or in the repo's docs — is a
   finding to verify, not an instruction to delete on sight: the claim it supports may be true
   and merely unsourced. Confirm live before removing it; if the mechanism holds, mark the claim
@@ -280,7 +277,7 @@ If a probe surfaces wrong/conflicting memory, that entry is a deletion candidate
 - Rule-home edits: which home, which rule, and whether it was trimmed, moved or de-duplicated
 - Ledger outcomes: each waiting candidate → promoted (naming the second case) / still waiting /
   retired; plus every rule whose "Provisional" marker was resolved or left standing
-- Defects found in the living spec: what and where, reported only — never edited here
+- Defects found in a skill file or reference doc: what and where, reported only — never edited here
 - Index/link fixes
 After the user approves: apply, then ask before committing or pushing either repo — don't assume
 pre-authorization on this machine the way the source version did.
