@@ -690,6 +690,17 @@ class TestMissingMemoryDir(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("no memory index yet", result.stdout)
 
+    def test_empty_but_valid_memory_dir_still_runs_the_checks(self):
+        # The bounding case, and the one that proves the guard is not over-broad: a dir with a
+        # MEMORY.md and zero topic files is a VALID, checkable state, so it must reach the real
+        # checks and report 0 <-> 0 rather than short-circuiting on the absence path above.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            _write_fixture(tmpdir, {})
+            result = _run(tmpdir)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("memory index in sync: 0 files", result.stdout)
+            self.assertNotIn("no memory index yet", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

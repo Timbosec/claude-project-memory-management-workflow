@@ -87,7 +87,8 @@ Do the following, **checking before overwriting anything**:
   source to the question — different sources record different KINDS of fact, and the common
   failure is querying the wrong kind and believing the silence. Before weighing removal of an
   established behaviour, establish whether it was ever designed:
-  **the project's decision log first, then git/code archaeology** — git records change, the
+  **the project's decision log first, then git/code archaeology — or, in analysis work, prior
+  reporting and the historical record before the current collection.** Git records change, the
   decision log records intent. A worklist calling a behaviour a defect is not evidence that it
   is one. "Why do we have X?" is often answered "we don't — it's an accident", which turns a
   trade-off into a bug fix. **Archaeology that finds nothing is not a green light.** Unattested
@@ -103,18 +104,19 @@ Do the following, **checking before overwriting anything**:
   thing rather than of your sample.
   **Agreement between same-kind sources is one observation repeated, not corroboration — and the
   count is what makes it convincing.** Before reporting that something is absent, ask what KIND
-  each check was: five endpoints of one service, or five files in one format, answer the same
-  question five times. The tell is that the list of sources grows while the answer never moves.
+  each check was: five endpoints of one service, five files in one format, or five write-ups all
+  citing one original advisory, answer the same question five times. The tell is that the list of
+  sources grows while the answer never moves.
   When that happens, stop adding sources of that kind and change the kind — ask who else holds
   this fact, or what surface a human uses to see it.
-- Rewriting a list of claims, transcribing a report's cited figures, or implementing a design
-  doc's technical claims — verify each against its canonical source (the original telemetry, the
-  raw dataset, the running code — whichever actually produced the fact), never against sibling
-  copies, an earlier write-up that already cited it, or the source's own "verified live" stamp;
-  aligned copies end mutually consistent and all wrong. **Canonical means what produces the fact,
-  not the most official document recording it** — a designated home is still a copy; if you can't
-  name what produced a figure, you don't have a source, recompute. Using the maintained copy is a
-  trade-off — make it knowingly and say so.
+- Rewriting a list of claims, transcribing a report's cited figures, implementing a design doc's
+  technical claims, or restating a finding in an assessment — verify each against its canonical
+  source (the original telemetry, the raw dataset, the running code — whichever actually produced
+  the fact), never against sibling copies, an earlier write-up that already cited it, or the
+  source's own "verified live" stamp; aligned copies end mutually consistent and all wrong.
+  **Canonical means what produces the fact, not the most official document recording it** — a
+  designated home is still a copy; if you can't name what produced a figure, you don't have a
+  source, recompute. Using the maintained copy is a trade-off — make it knowingly and say so.
 - **Default to a high-level answer**; spend the response on the main point and keep caveats
   short. Depth on request. Does not apply to plans, briefs or docs a cold reader must execute.
 - Surface options and decisions **one at a time**. Record the decision before presenting the
@@ -167,9 +169,9 @@ Do the following, **checking before overwriting anything**:
   for judgment that genuinely can't be computed. "Always remember to…" is the smell.
   → `[rule-into-code]`
 - **Run it and read the output before accepting it.** A clean diff and a green suite, a finished
-  analysis run, or a completed intel write-up are evidence the work is internally consistent, not
-  that it is right — feed it real and adversarial input (or a known-tricky case) and look at what
-  actually comes out.
+  analysis run, a completed intel write-up — or a source that merely agrees with the one beside
+  it — are evidence the work is internally consistent, not that it is right. Feed it real and
+  adversarial input (or a known-tricky case) and look at what actually comes out.
 - Before a fix or lesson becomes a standing rule, validate it against a **second real,
   contrasting case** — not synthetic, not the one that prompted it — plus a regression case in
   the opposite direction where one exists. One case is untested-but-plausible. **When you are
