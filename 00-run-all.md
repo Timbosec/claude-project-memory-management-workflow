@@ -3693,7 +3693,9 @@ committed in step 7.
      the preview. **State what you checked and what you found, including "nothing outside the
      backlog" — silence here is indistinguishable from not looking.**
      (A skill step rather than a hook because this state is held in the session, not on disk —
-     no script can read it.)
+     no script can read it. **Deliberately names no tool**: a tool named here can be removed
+     from the harness, and the step would then fail on every run without anyone noticing. The
+     survives-`/clear` test below is the version that cannot go stale.)
    - Check the session scratchpad directory for work-product rather than throwaway — a plan, a
      measurement, a recovered list. Propose moving it into the repo, or state that it's
      disposable.
