@@ -1592,8 +1592,13 @@ Four report sections:
   2. Declared blockers: any Open task whose body contains "blocked by #N",
      printed with #N's current section for human review. This is what surfaces a
      blocking task quietly going stale without anyone noticing.
-  3. Next-up staleness: the date on backlog.md's "Next up" block and how many
-     commits have landed since.
+  3. Next-up staleness: how many commits have landed since backlog.md's "Next up"
+     block was written. Counted after the commit its basis line names ("Basis:
+     commits through `<hash>`"), not counting commits that only rewrote the block
+     itself -- the basis can never name the commit that writes the block, so
+     without that exclusion the count would never read 0. Falls back to counting
+     from midnight of the block's date when the basis line names no commit, or
+     names one this repo's history doesn't have.
   4. Task-number collisions: any task number defined in backlog.md that is ALSO
      cited in a memory file under this project's auto-memory directory.
      Memories only ever used the retired numbering scheme, so an overlap means a
@@ -1639,7 +1644,8 @@ Design constraints:
     is needed for section 1.
   - Pure functions + I/O at the edges, so tests never read mutable repo data or
     call git: parse_backlog_sections/parse_task_bodies/extract_task_refs/
-    find_declared_blockers/find_task_collisions/find_next_up_date/build_report
+    find_declared_blockers/find_task_collisions/find_next_up_date/
+    find_next_up_basis/is_next_up_only_rewrite/build_report
     all take pre-fetched text, Commit tuples, or (build_report only) an
     injected `did_modify_entry(commit_hash, task_no) -> bool` callable -- never
     git or the filesystem directly. The real, git-backed implementation lives
@@ -1710,6 +1716,7 @@ _BLOCKED_BY_RE = re.compile(r'blocked by #(\d+)', re.IGNORECASE)
 _NEXT_UP_DATE_RE = re.compile(
     r'^##\s+Next up\s*—\s*recommended\s+(\d{4}-\d{2}-\d{2})',
     re.MULTILINE)
+_NEXT_UP_BASIS_RE = re.compile(r'Basis:\s*commits through\s*`([0-9a-f]{7,40})`')
 
 
 def extract_numeric_refs(text):
@@ -1811,6 +1818,40 @@ def find_next_up_date(backlog_text):
     until that ships)."""
     m = _NEXT_UP_DATE_RE.search(backlog_text)
     return m.group(1) if m else None
+
+
+def split_next_up(backlog_text):
+    """(block, rest): the 'Next up' block -- its heading line up to, not
+    including, the next '## ' heading -- and the file with that block cut out.
+    ('', backlog_text) when there is no block."""
+    m = _NEXT_UP_DATE_RE.search(backlog_text)
+    if not m:
+        return "", backlog_text
+    start = m.start()
+    nxt = re.search(r'^## ', backlog_text[m.end():], re.MULTILINE)
+    end = m.end() + nxt.start() if nxt else len(backlog_text)
+    return backlog_text[start:end], backlog_text[:start] + backlog_text[end:]
+
+
+def find_next_up_basis(backlog_text):
+    """The commit hash the 'Next up' block's basis line names ("Basis: commits
+    through `<hash>`"), or None if there is no block, no basis line, or the
+    line names no commit (a new project's template reads `<none yet>`). Only
+    the block itself is searched."""
+    block, _ = split_next_up(backlog_text)
+    m = _NEXT_UP_BASIS_RE.search(block)
+    return m.group(1) if m else None
+
+
+def is_next_up_only_rewrite(files, old_backlog, new_backlog):
+    """True if a commit did nothing but rewrite the 'Next up' block: backlog.md
+    is the only file it touched and everything outside the block is identical,
+    so the block is what changed. Such a commit is the block being written, not
+    work that makes it stale. None for either text (backlog.md absent at that
+    revision) is never a rewrite."""
+    if set(files) != {"backlog.md"} or old_backlog is None or new_backlog is None:
+        return False
+    return split_next_up(old_backlog)[1] == split_next_up(new_backlog)[1]
 
 
 def find_task_collisions(sections, memory_texts):
@@ -1925,13 +1966,48 @@ def count_commits_since(repo_dir, date_str):
     over-counting fails loudly (an inflated-but-visible number) while
     under-counting fails silently (a staleness count that quietly reads low
     forever). Do not invent a timestamp format for the 'Next up' block to make
-    this exact -- out of scope for this fix."""
+    this exact. Used only as the fallback when the block's basis line names no
+    usable commit -- see count_commits_after_basis."""
     proc = subprocess.run(
         ["git", "log", f"--since={date_str}T00:00:00", "--oneline"],
         cwd=repo_dir, capture_output=True, text=True, check=True,
     )
     lines = [l for l in proc.stdout.splitlines() if l.strip()]
     return len(lines)
+
+
+def count_commits_after_basis(repo_dir, basis):
+    """(counted, skipped) for commits after `basis` up to HEAD: `skipped` is
+    how many only rewrote the 'Next up' block (see is_next_up_only_rewrite)
+    and `counted` is the rest. None if `basis` is not a commit in this repo's
+    history (a typo, or history rewritten since the block was written), so the
+    caller can fall back to the date. A failure reading a commit's backlog.md
+    counts that commit rather than skipping it: over-counting shows up,
+    under-counting doesn't."""
+    proc = subprocess.run(
+        ["git", "log", "--format=" + _COMMIT_SEP + "%n%H", "--name-only",
+         f"{basis}..HEAD"],
+        cwd=repo_dir, capture_output=True, text=True,
+    )
+    if proc.returncode != 0:
+        return None
+    counted = skipped = 0
+    for chunk in proc.stdout.split(_COMMIT_SEP)[1:]:
+        lines = [l for l in chunk.splitlines() if l.strip()]
+        commit_hash, files = lines[0], lines[1:]
+        try:
+            rewrite = is_next_up_only_rewrite(
+                files,
+                _git_show(repo_dir, f"{commit_hash}^", "backlog.md"),
+                _git_show(repo_dir, commit_hash, "backlog.md"),
+            ) if set(files) == {"backlog.md"} else False
+        except RuntimeError:
+            rewrite = False
+        if rewrite:
+            skipped += 1
+        else:
+            counted += 1
+    return counted, skipped
 
 
 def read_memory_texts(memory_dir):
@@ -2078,7 +2154,7 @@ def build_report(backlog_text, commits, memory_texts, did_modify_entry):
     }
 
 
-def print_report(report, next_up_date, commits_since_next_up, days):
+def print_report(report, next_up_line, days):
     print(f"=== 1. Task refs in the last {days} day(s) vs. backlog.md ===")
     if not report["task_refs"]:
         print("  (no #N / task N references in this window)")
@@ -2108,11 +2184,7 @@ def print_report(report, next_up_date, commits_since_next_up, days):
 
     print()
     print("=== 3. Next-up staleness ===")
-    if next_up_date is None:
-        print("  No 'Next up' block found in backlog.md.")
-    else:
-        print(f"  Next up dated {next_up_date}; {commits_since_next_up} "
-              f"commit(s) since.")
+    print(f"  {next_up_line}")
 
     print()
     print("=== 4. Task-number collisions (backlog.md vs. retired-scheme memories) ===")
@@ -2129,6 +2201,29 @@ def print_report(report, next_up_date, commits_since_next_up, days):
     for task_no, filenames in report["closed_collisions"]:
         print(f"  #{task_no} resolves to a Closed stub, also cited in: "
               f"{', '.join(filenames)} -- expected, no action needed")
+
+
+def next_up_staleness(repo_dir, backlog_text):
+    """The one-line section-3 report for backlog_text's 'Next up' block."""
+    next_up_date = find_next_up_date(backlog_text)
+    if next_up_date is None:
+        return "No 'Next up' block found in backlog.md."
+    basis = find_next_up_basis(backlog_text)
+    if basis is not None:
+        after = count_commits_after_basis(repo_dir, basis)
+        if after is not None:
+            counted, skipped = after
+            note = (f" (not counting {skipped} that only rewrote the block)"
+                    if skipped else "")
+            return (f"Next up dated {next_up_date}, basis `{basis}`; {counted} "
+                    f"commit(s) since{note}.")
+        reason = f"basis `{basis}` is not in this repo's history"
+    else:
+        reason = "the basis line names no commit"
+    since = count_commits_since(repo_dir, next_up_date)
+    return (f"Next up dated {next_up_date}; {reason}, so counting from midnight "
+            f"of that date: {since} commit(s) since (includes any made earlier "
+            f"that day).")
 
 
 def main():
@@ -2173,11 +2268,7 @@ def main():
 
     report = build_report(backlog_text, commits, memory_texts, did_modify_entry)
 
-    next_up_date = find_next_up_date(backlog_text)
-    commits_since = (count_commits_since(args.repo, next_up_date)
-                      if next_up_date else None)
-
-    print_report(report, next_up_date, commits_since, args.days)
+    print_report(report, next_up_staleness(args.repo, backlog_text), args.days)
 
     # Reports, never gates -- see module docstring.
     sys.exit(0)
@@ -2746,6 +2837,123 @@ class TestAbsenceGuards(unittest.TestCase):
             subprocess.run(["git", "init", "-q"], cwd=tmpdir, check=True,
                             capture_output=True)
             self.assertTrue(cts.is_git_repo(tmpdir))
+
+
+class TestNextUpBasis(unittest.TestCase):
+    BLOCK = ("## Next up — recommended 2026-09-25\n\n"
+             "Snapshot. Basis: commits through `c0ffee1`; Open threads as of 2026-09-25.\n\n"
+             "1. **#1**: something.\n\n---\n\n")
+    REST = "# Backlog\n\nintro\n\n"
+    OPEN = "## Open\n\n### #1 — a task\n\nbody\n"
+
+    def _backlog(self, block=None, open_=None):
+        return self.REST + (self.BLOCK if block is None else block) + (open_ or self.OPEN)
+
+    def test_basis_hash_found(self):
+        self.assertEqual(cts.find_next_up_basis(self._backlog()), "c0ffee1")
+
+    def test_template_placeholder_is_no_basis(self):
+        block = self.BLOCK.replace("`c0ffee1`", "`<none yet>`")
+        self.assertIsNone(cts.find_next_up_basis(self._backlog(block)))
+
+    def test_basis_line_outside_the_block_is_ignored(self):
+        open_ = self.OPEN + "\nBasis: commits through `abcdef0` quoted in a task body.\n"
+        block = self.BLOCK.replace("Basis: commits through `c0ffee1`; ", "")
+        self.assertIsNone(cts.find_next_up_basis(self._backlog(block, open_)))
+
+    def test_no_block_is_no_basis(self):
+        # A basis-shaped line elsewhere in the file must not stand in for a missing block.
+        text = self.REST + self.OPEN + "\nBasis: commits through `abcdef0` in a task body.\n"
+        self.assertIsNone(cts.find_next_up_basis(text))
+
+    def test_block_ends_at_the_next_heading(self):
+        block, rest = cts.split_next_up(self._backlog())
+        self.assertTrue(block.startswith("## Next up"))
+        self.assertNotIn("## Open", block)
+        self.assertEqual(rest, self.REST + self.OPEN)
+
+    def test_pure_block_rewrite_is_skipped(self):
+        new = self._backlog(self.BLOCK.replace("c0ffee1", "1234abc").replace("#1", "#2"))
+        self.assertTrue(cts.is_next_up_only_rewrite(["backlog.md"], self._backlog(), new))
+
+    def test_rewrite_plus_a_change_outside_the_block_counts(self):
+        new = self._backlog(self.BLOCK.replace("c0ffee1", "1234abc"),
+                            self.OPEN.replace("body", "body, now closed"))
+        self.assertFalse(cts.is_next_up_only_rewrite(["backlog.md"], self._backlog(), new))
+
+    def test_rewrite_plus_another_file_counts(self):
+        new = self._backlog(self.BLOCK.replace("c0ffee1", "1234abc"))
+        self.assertFalse(cts.is_next_up_only_rewrite(
+            ["backlog.md", "decisions.md"], self._backlog(), new))
+
+    def test_change_outside_an_unchanged_block_counts(self):
+        new = self._backlog(open_=self.OPEN.replace("body", "other body"))
+        self.assertFalse(cts.is_next_up_only_rewrite(["backlog.md"], self._backlog(), new))
+
+    def test_backlog_absent_before_counts(self):
+        self.assertFalse(cts.is_next_up_only_rewrite(["backlog.md"], None, self._backlog()))
+
+
+class TestNextUpStalenessLive(unittest.TestCase):
+    """Section 3 end to end against a throwaway git repo, since the count is git-derived.
+    Hermetic: builds its own tmpdir repo and never reads this project's history."""
+
+    def _git(self, repo, *args):
+        return subprocess.run(["git", "-c", "user.name=T", "-c", "user.email=t@e.st", *args],
+                              cwd=repo, check=True, capture_output=True, text=True).stdout.strip()
+
+    def _commit(self, repo, files, msg):
+        for name, text in files.items():
+            with open(os.path.join(repo, name), "w", encoding="utf-8") as f:
+                f.write(text)
+        self._git(repo, "add", *files)
+        self._git(repo, "commit", "-qm", msg)
+        return self._git(repo, "rev-parse", "--short", "HEAD")
+
+    def _backlog(self, basis, open_body="body"):
+        return ("# Backlog\n\n## Next up — recommended 2026-09-25\n\n"
+                f"Basis: commits through `{basis}`.\n\n---\n\n"
+                f"## Open\n\n### #1 — a task\n\n{open_body}\n")
+
+    def test_same_day_block_reads_zero(self):
+        # The #8 case: work committed earlier the same day, then the block written naming
+        # the latest commit as its basis. Counting from midnight reported those earlier
+        # commits as landing after the block; the true figure is 0.
+        with tempfile.TemporaryDirectory() as repo:
+            self._git(repo, "init", "-q")
+            self._commit(repo, {"backlog.md": self._backlog("<none yet>")}, "bootstrap")
+            self._commit(repo, {"a.txt": "1\n"}, "earlier work")
+            basis = self._commit(repo, {"a.txt": "2\n"}, "more earlier work")
+            self._commit(repo, {"backlog.md": self._backlog(basis)}, "write Next up")
+            line = cts.next_up_staleness(repo, self._backlog(basis))
+            self.assertIn(f"basis `{basis}`; 0 commit(s) since", line)
+            self.assertIn("not counting 1 that only rewrote the block", line)
+
+    def test_real_work_after_the_block_is_counted(self):
+        with tempfile.TemporaryDirectory() as repo:
+            self._git(repo, "init", "-q")
+            self._commit(repo, {"backlog.md": self._backlog("<none yet>")}, "bootstrap")
+            basis = self._commit(repo, {"a.txt": "1\n"}, "work")
+            self._commit(repo, {"backlog.md": self._backlog(basis)}, "write Next up")
+            self._commit(repo, {"a.txt": "2\n"}, "later work")
+            self._commit(repo, {"backlog.md": self._backlog(basis, "closed")}, "close #1")
+            line = cts.next_up_staleness(repo, self._backlog(basis, "closed"))
+            self.assertIn("; 2 commit(s) since", line)
+
+    def test_unknown_basis_falls_back_to_the_date(self):
+        with tempfile.TemporaryDirectory() as repo:
+            self._git(repo, "init", "-q")
+            self._commit(repo, {"a.txt": "1\n"}, "work")
+            line = cts.next_up_staleness(repo, self._backlog("deadbee"))
+            self.assertIn("basis `deadbee` is not in this repo's history", line)
+            self.assertIn("counting from midnight", line)
+
+    def test_placeholder_basis_falls_back_to_the_date(self):
+        with tempfile.TemporaryDirectory() as repo:
+            self._git(repo, "init", "-q")
+            self._commit(repo, {"a.txt": "1\n"}, "work")
+            line = cts.next_up_staleness(repo, self._backlog("<none yet>"))
+            self.assertIn("the basis line names no commit", line)
 
 
 class TestFindNextUpDate(unittest.TestCase):
@@ -3859,13 +4067,13 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      --backlog <project root>/backlog.md --memory-dir <memory dir>`
      It **reports and never gates — it always exits 0**. It prints four sections: task refs found
      in recent commits against each task's current `backlog.md` section, declared `blocked by #N`
-     dependencies for review, `Next up` block staleness (date + commits since), and task-number
-     collisions with retired-scheme memory citations (split into a live-task bucket that needs a
-     decision and a "resolves to a Closed stub — expected" bucket that doesn't). **Every flagged
-     task requires an explicit response — "still correct" is a valid response, silence is not.**
-     That requirement is the forcing function here, chosen deliberately instead of a non-zero
-     exit: a crying-wolf gate on a heuristic just trains the reader to ignore it. Skip this step
-     if `<project root>/backlog.md` doesn't exist yet.
+     dependencies for review, `Next up` block staleness (commits since its basis commit), and
+     task-number collisions with retired-scheme memory citations (split into a live-task bucket
+     that needs a decision and a "resolves to a Closed stub — expected" bucket that doesn't).
+     **Every flagged task requires an explicit response — "still correct" is a valid response,
+     silence is not.** That requirement is the forcing function here, chosen deliberately instead
+     of a non-zero exit: a crying-wolf gate on a heuristic just trains the reader to ignore it.
+     Skip this step if `<project root>/backlog.md` doesn't exist yet.
    - `python3 ~/.claude/skills/finalise/scripts/context_budget_report.py --project-claude
      <project root>/CLAUDE.md --memory-index <memory dir>/MEMORY.md --ledger
      ~/.claude/lesson-candidates.md --prompt-lessons ~/.claude/prompt-lessons.md
@@ -3887,11 +4095,13 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
    (after the intro, before `## Open`) is the worked example of the shape — read it rather than
    restating the template here; two copies of one format is a drift site. Requirements: name 1–3
    threads, each with a one-line rationale for why it is next; list decisions awaiting the user;
-   carry today's date and a basis line (commits through, Open threads as of); and **replace the
-   block in full, never append** — appending turns it into the append-only ledger this file
-   exists to avoid. Commit it (see the commit note above) — this is a `<project root>` write,
-   push included once you've confirmed pushing is wanted. Skip this step if `backlog.md` doesn't
-   exist yet.
+   carry today's date and a basis line that names the latest commit as "Basis: commits through
+   `<hash>`" (step 5's staleness check reads exactly that form) and lists the Open threads as of
+   today; and **replace the block in full, never append** — appending turns it into the append-only
+   ledger this file exists to avoid. The block runs from its `## Next up` heading to the next `## `
+   heading; replace all of it. Commit it (see the commit note above) — this is a `<project root>`
+   write, push included once you've confirmed pushing is wanted. Skip this step if `backlog.md`
+   doesn't exist yet.
 
 7. **Report what you did** — list each candidate and its outcome (applied + file touched, or
    rejected), the reconcile result from step 4, the results of all three step-5 checks (the
