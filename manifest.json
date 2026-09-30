@@ -1,0 +1,197 @@
+{
+  "_comment": "Targets are relative to ~/.claude. Sources are relative to the repo root. Tests are target paths, run with the file's directory as working directory.",
+  "files": [
+    {
+      "source": "payload/user-CLAUDE.md",
+      "target": "CLAUDE.md",
+      "kind": "shared",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/prompt-lessons.md",
+      "target": "prompt-lessons.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/writing-standing-docs.md",
+      "target": "writing-standing-docs.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/writing-executor-briefs.md",
+      "target": "writing-executor-briefs.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/doc-test-probes.md",
+      "target": "doc-test-probes.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/finalise/scripts/check_memory_index.py",
+      "target": "skills/finalise/scripts/check_memory_index.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/finalise/scripts/test_check_memory_index.py",
+      "target": "skills/finalise/scripts/test_check_memory_index.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/finalise/scripts/check_thread_state.py",
+      "target": "skills/finalise/scripts/check_thread_state.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/finalise/scripts/test_check_thread_state.py",
+      "target": "skills/finalise/scripts/test_check_thread_state.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/finalise/scripts/context_budget_report.py",
+      "target": "skills/finalise/scripts/context_budget_report.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/finalise/scripts/test_context_budget_report.py",
+      "target": "skills/finalise/scripts/test_context_budget_report.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/finalise/SKILL.md",
+      "target": "skills/finalise/SKILL.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/commands/bootstrap-project.md",
+      "target": "commands/bootstrap-project.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/commands/memory-audit.md",
+      "target": "commands/memory-audit.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/hooks/remind_finalise.py",
+      "target": "hooks/remind_finalise.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": true
+    },
+    {
+      "source": "payload/hooks/test_remind_finalise.py",
+      "target": "hooks/test_remind_finalise.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/lesson-candidates.md",
+      "target": "lesson-candidates.md",
+      "kind": "seed",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/under-explained-cases.md",
+      "target": "under-explained-cases.md",
+      "kind": "seed",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/hooks/block_subagent_record_edit.py",
+      "target": "hooks/block_subagent_record_edit.py",
+      "kind": "owned",
+      "component": "subagent-guard",
+      "executable": true
+    },
+    {
+      "source": "payload/hooks/test_block_subagent_record_edit.py",
+      "target": "hooks/test_block_subagent_record_edit.py",
+      "kind": "owned",
+      "component": "subagent-guard",
+      "executable": false
+    }
+  ],
+  "settings": [
+    {
+      "component": "core",
+      "event": "PostToolUse",
+      "entry": {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/remind_finalise.py",
+            "timeout": 5
+          }
+        ]
+      }
+    },
+    {
+      "component": "subagent-guard",
+      "event": "PreToolUse",
+      "entry": {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/block_subagent_record_edit.py",
+            "timeout": 5
+          }
+        ]
+      }
+    }
+  ],
+  "tests": [
+    {
+      "component": "core",
+      "file": "skills/finalise/scripts/test_check_memory_index.py"
+    },
+    {
+      "component": "core",
+      "file": "skills/finalise/scripts/test_check_thread_state.py"
+    },
+    {
+      "component": "core",
+      "file": "skills/finalise/scripts/test_context_budget_report.py"
+    },
+    {
+      "component": "core",
+      "file": "hooks/test_remind_finalise.py"
+    },
+    {
+      "component": "subagent-guard",
+      "file": "hooks/test_block_subagent_record_edit.py"
+    }
+  ]
+}
