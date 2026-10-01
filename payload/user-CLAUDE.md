@@ -75,15 +75,15 @@
   the carrier of the fact.** The test is on your own text, never on the reader: if replacing the
   identifier with what it *does* loses nothing, it was never doing the work. "The classifier now
   warns on a single confirmed disagreement instead of waiting for three (`DISAGREEMENT_MIN`)",
-  not `DISAGREEMENT_MIN = 1`. Code symbols, and jargon that did not reach him from his own side:
-  filenames and terms he coined are his vocabulary, but one YOU minted — in a doc he skims, or in
-  the message you sent twenty minutes ago — is yours, and both read as settled prose from the
-  inside. The tell is what the coinage does: one that describes itself survives, one that LABELS a
-  distinction does not; defining it once does not make it shared. Bites hardest in summaries and
-  verdicts, where a symbol looks like the efficient
-  choice. **The cost is a broken gate, not a slower read:** he approves on these summaries, so a
-  decision he can't parse costs a turn to re-ask — or gets waved through, which looks exactly
-  like approval. Usually costs a clause, not a paragraph.
+  not `DISAGREEMENT_MIN = 1`. Code symbols, and jargon that did not reach the user from their own
+  side: filenames and terms they coined are their vocabulary, but one YOU minted — in a doc they
+  skim, or in the message you sent twenty minutes ago — is yours, and both read as settled prose
+  from the inside. The tell is what the coinage does: one that describes itself survives, one that
+  LABELS a distinction does not; defining it once does not make it shared. Bites hardest in
+  summaries and verdicts, where a symbol looks like the efficient choice. **The cost is a broken
+  gate, not a slower read:** the user approves on these summaries, so a decision they can't parse
+  costs a turn to re-ask — or gets waved through, which looks exactly like approval. Usually costs
+  a clause, not a paragraph.
 - When introspecting on your own behaviour, separate the observable from the inferred and say
   which is which. The transcript shows what you wrote and did, not why — a fluent causal account
   of your own reasoning is a hypothesis, and the danger is that the fix you build next targets
