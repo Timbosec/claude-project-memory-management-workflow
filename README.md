@@ -1,8 +1,8 @@
 # Claude Code project memory & session-close workflow
 
-A set of six one-time bootstrap prompts (five core, one optional) that install a cross-project
-working-rules and session-close system into any [Claude Code](https://claude.com/claude-code)
-setup. Originally built up over months on one personal project, then generalised here so it can
+A set of rule files, commands, a skill and hooks, with an install script, that installs a
+cross-project working-rules and session-close system into any
+[Claude Code](https://claude.com/claude-code) setup. Originally built up over months on one personal project, then generalised here so it can
 be dropped onto a different machine and reused across every project on it, not just the one it
 came from.
 
@@ -105,37 +105,22 @@ project anything in always-loaded context.
 
 ## Setup
 
-Everything below installs into `~/.claude/...` (global, not per-project) and only needs doing
-once per machine. **After that**, starting a new project is just: open Claude Code inside the
-repo and run `/bootstrap-project`. Nothing in this repository gets touched again.
+Everything installs into `~/.claude/...` (global, not per-project) and only needs doing once per
+machine. After that, starting a new project is just: open Claude Code inside the repo and run
+`/bootstrap-project`.
 
-**Quickest way:** open `00-run-all.md` and copy everything from its marked line down (the file
-itself has a short human-only explanation above that line, don't paste that part). One paste,
-but not one uninterrupted pass: the agent stops and reports after each of the five steps and
-waits for you to say "continue" before starting the next, so a problem at one step gets caught
-before the rest build on it. Every individual step's own "stop and ask" instructions still apply
-on top of that.
+You need `python3` and `git`.
 
-**Step-by-step way**, if you'd rather review each install before moving to the next, or you're
-resuming after stopping partway through: paste each file below as its own message, in order:
+1. Clone this repository, and keep the clone: you re-run the install from it.
+2. Open Claude Code inside the clone and ask it to install the bundle.
+3. Claude follows `INSTALL.md` and runs `install.py`. The script copies in every file you
+   don't have yet, adds its hooks to `~/.claude/settings.json`, and runs the bundle's tests.
+   Where you already have a file that differs from the bundle's, it leaves the file alone, and
+   Claude goes through those files with you one at a time. Claude also asks whether you want
+   the optional sub-agent guard.
 
-| Order | File | Installs |
-|---|---|---|
-| 1 | `01-global-rules-bootstrap.md` | `~/.claude/CLAUDE.md` (routing header + working rules), `prompt-lessons.md`, `writing-standing-docs.md`, `writing-executor-briefs.md`, `doc-test-probes.md` |
-| 2 | `02-empty-ledgers-bootstrap.md` | `lesson-candidates.md`, `under-explained-cases.md` |
-| 3 | `03-finalise-skill-bootstrap.md` | the `/finalise` skill, its three checker scripts, and the git-commit reminder hook |
-| 4 | `04-new-project-backlog-bootstrap.md` | the `/bootstrap-project` command |
-| 5 | `05-memory-audit-bootstrap.md` | the `/memory-audit` command |
-| 6 *(optional)* | `06-subagent-record-guard-bootstrap.md` | a `PreToolUse` hook that blocks a delegated sub-agent from editing project-record files |
-
-Order mostly doesn't matter, except that 3 should run before 4 (the `/bootstrap-project`
-command's own `CLAUDE.md` template references `/finalise` by name). Prompt 6 is independent of
-the others and only worth running if you delegate work to sub-agents via the `Agent` tool; it's
-not included in `00-run-all.md`, since unlike 1-5 it isn't something everyone using this bundle
-wants.
-
-Either way, they're idempotent-ish but not blind: each step reads before it writes and stops to
-show you anything it would overwrite or that conflicts with content already there.
+Re-running the install is safe. It never overwrites a file you have changed, and it doesn't ask
+again about a file you've already decided on unless you edit it or the bundle's version changes.
 
 ## What's deliberately not included
 
