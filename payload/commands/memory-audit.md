@@ -197,10 +197,10 @@ cannot do from inside a single session: *aging* (how long a candidate has waited
 - Keep the frontmatter FIELDS (name/description/metadata.type) on kept files, but
   UPDATE `description:` whenever it no longer matches the body — a stale description
   is what misleads the next session. Don't leave a wrong one in place as "preserved."
-- Fix or remove [[wikilinks]] orphaned by deletions/renames.
+- Fix or remove `[[wikilinks]]` orphaned by deletions/renames.
 - **Run the check rather than eyeballing it:**
   `python3 ~/.claude/skills/finalise/scripts/check_memory_index.py <memory-dir> <repo>`. It
-  verifies the every-file↔exactly-one-index-line invariant, resolves [[links]] against the memory
+  verifies the every-file↔exactly-one-index-line invariant, resolves `[[links]]` against the memory
   dir's slugs — inside memory-file bodies and inside every `*.md` in the repo (citations in code
   spans and fenced blocks are ignored) — and prints MEMORY.md against its load limit — the first
   200 lines **or 25,600 bytes, whichever comes first**, is all that loads at session start.
