@@ -35,6 +35,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -183,7 +184,73 @@ def bundle_commands(entry):
     hooks = entry.get("hooks") if isinstance(entry, dict) else None
     if not isinstance(hooks, list):
         return set()
-    return {h.get("command") for h in hooks if isinstance(h, dict) and h.get("command")}
+    return {h.get("command") for h in hooks
+            if isinstance(h, dict) and isinstance(h.get("command"), str) and h.get("command")}
+
+
+HOME_CLAUDE = "~/.claude/"
+INTERPRETER = re.compile(r"^python[0-9.]*$")
+
+
+def hook_file(command):
+    """The file a hook command runs, as an absolute path, or None.
+
+    Accepts a leading interpreter (python3, /usr/bin/python3, env python3, /usr/bin/env
+    python3) and expands ~, $HOME and ${HOME}. Anything else (extra arguments, a relative
+    path, unparseable quoting) isn't recognised.
+    """
+    try:
+        words = shlex.split(command)
+    except ValueError:
+        return None
+    if len(words) > 1 and os.path.basename(words[0]) == "env":
+        words = words[1:]
+    if len(words) > 1 and INTERPRETER.match(os.path.basename(words[0])):
+        words = words[1:]
+    if len(words) != 1:
+        return None
+    path = words[0]
+    home = os.path.expanduser("~")
+    for prefix in ("${HOME}", "$HOME"):
+        if path == prefix or path.startswith(prefix + "/"):
+            path = home + path[len(prefix):]
+            break
+    path = os.path.expanduser(path)
+    if not os.path.isabs(path):
+        return None
+    return os.path.realpath(path)
+
+
+def command_aliases(entries, target):
+    """Map each file a bundle command could be written as to that bundle command.
+
+    The bundle writes ~/.claude/<rel>. The same file is found in two places: <rel> under the
+    install target (the file this run installs), and <rel> under the real ~/.claude (what the
+    command says, and what an install that expanded ~ by hand would hold). Both count.
+    """
+    aliases = {}
+    for s in entries:
+        for command in bundle_commands(s["entry"]):
+            path = hook_file(command)
+            if path:
+                aliases[path] = command
+            if command.startswith(HOME_CLAUDE):
+                rel = command[len(HOME_CLAUDE):]
+                aliases[os.path.realpath(os.path.join(target, rel))] = command
+    return aliases
+
+
+def normalised(entry, aliases):
+    """A copy of a settings entry with each command that runs a bundle file written the
+    bundle's way, so path form alone never makes two entries differ."""
+    if not isinstance(entry, dict):
+        return entry
+    out = copy.deepcopy(entry)
+    if isinstance(out.get("hooks"), list):
+        for h in out["hooks"]:
+            if isinstance(h, dict) and isinstance(h.get("command"), str):
+                h["command"] = aliases.get(hook_file(h["command"]), h["command"])
+    return out
 
 
 def load_settings(target):
@@ -203,13 +270,15 @@ def load_settings(target):
     return settings, True
 
 
-def plan_settings(settings, entries):
+def plan_settings(settings, entries, target):
     """Sort the bundle's entries into (to_add, present, differing).
 
     Only entries holding one of the bundle's own commands are looked at; hooks the user made
-    are neither reported nor touched.
+    are neither reported nor touched. A command counts as the bundle's when it runs the same
+    file, whatever form the path is written in (see command_aliases).
     """
     hooks = settings.get("hooks", {})
+    aliases = command_aliases(entries, target)
     to_add, present, differing = [], [], []
     for s in entries:
         existing = hooks.get(s["event"], [])
@@ -217,7 +286,8 @@ def plan_settings(settings, entries):
             raise SetupError("can't read %s: 'hooks.%s' is not a list"
                              % (SETTINGS_FILE, s["event"]))
         ours = bundle_commands(s["entry"])
-        matches = [e for e in existing if bundle_commands(e) & ours]
+        matches = [normalised(e, aliases) for e in existing]
+        matches = [e for e in matches if bundle_commands(e) & ours]
         if not matches:
             to_add.append(s)
         elif s["entry"] in matches:
@@ -297,7 +367,8 @@ def cmd_install(args, manifest, record, target):
     # parsed stops the run with nothing changed.
     settings, settings_existed = load_settings(target)
     to_add, present, differing = plan_settings(
-        settings, [s for s in manifest.get("settings", []) if s["component"] in components])
+        settings, [s for s in manifest.get("settings", []) if s["component"] in components],
+        target)
 
     installed, unchanged, needs_decision = [], [], []
     seeds_kept, earlier_decision, exec_fixed = [], [], []
@@ -405,6 +476,15 @@ def cmd_install(args, manifest, record, target):
     not_selected = [name for name in optional if name not in components]
     declined = [name for name in not_selected if states[name] == "declined"]
     offered = [name for name in not_selected if states[name] != "declined"]
+    # Installed by the old prompts, so present but never recorded: say so rather than offer
+    # it as if it were absent.
+    untracked = [name for name in offered
+                 if any(os.path.exists(os.path.join(target, e["target"]))
+                        for e in manifest["files"] if e["component"] == name)]
+    offered = [name for name in offered if name not in untracked]
+    for name in untracked:
+        print("Optional component %s: its files are present but not in the install record; "
+              "re-running with --with-%s will start tracking it." % (name, name))
     if offered:
         print("Optional components not installed: %s" % ", ".join(
             "%s (add with --with-%s)" % (name, name) for name in offered))

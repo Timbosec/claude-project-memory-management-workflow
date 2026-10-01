@@ -335,6 +335,86 @@ class SettingsTest(TargetCase):
         self.assertNotIn("settings.json: created", r.stdout)
         self.assertNotIn("rewritten", r.stdout)
 
+    # --- the same hook file written another way ------------------------------
+
+    HOOK_REL = "hooks/remind_finalise.py"
+
+    def entry_with(self, command, **changes):
+        e = copy.deepcopy(POST)
+        e["hooks"][0]["command"] = command
+        e["hooks"][0].update(changes)
+        return e
+
+    def equivalent_forms(self, target):
+        home = os.path.expanduser("~")
+        hook = os.path.join(target, self.HOOK_REL)
+        return [
+            home + "/.claude/" + self.HOOK_REL,
+            "$HOME/.claude/" + self.HOOK_REL,
+            "${HOME}/.claude/" + self.HOOK_REL,
+            "python3 ~/.claude/" + self.HOOK_REL,
+            "/usr/bin/env python3 $HOME/.claude/" + self.HOOK_REL,
+            hook,
+            "/usr/bin/python3 " + hook,
+        ]
+
+    def test_bundle_hook_in_another_path_form_counts_as_present(self):
+        root = self.target
+        for i in range(len(self.equivalent_forms(root))):
+            self.target = os.path.join(root, "t%d" % i)
+            command = self.equivalent_forms(self.target)[i]
+            with self.subTest(command=command):
+                self.write_settings({"hooks": {"PostToolUse": [self.entry_with(command)]}})
+                r = self.install_ok("--dry-run")
+                self.assertIn("settings.json: already has 1 of the bundle's hook entries",
+                              r.stdout)
+                self.assertNotIn("would add", r.stdout)
+                self.assertNotIn("differ from the bundle", r.stdout)
+        self.target = root
+
+    def test_other_path_form_is_not_rewritten_on_a_real_run(self):
+        self.write_settings({"hooks": {"PostToolUse": [
+            self.entry_with("$HOME/.claude/" + self.HOOK_REL)]}})
+        before = read_bytes(self.t("settings.json"))
+        self.install_ok()
+        self.assertEqual(read_bytes(self.t("settings.json")), before)
+        self.assertEqual(self.backups(), [])
+        self.assertEqual(self.record()["settings_added"], [])
+
+    def test_other_path_form_with_a_different_timeout_is_reported(self):
+        self.write_settings({"hooks": {"PostToolUse": [
+            self.entry_with("$HOME/.claude/" + self.HOOK_REL, timeout=30)]}})
+        r = self.install_ok("--dry-run")
+        self.assertIn("settings.json: entries that differ from the bundle's, left as they are: 1",
+                      r.stdout)
+        self.assertNotIn("would add", r.stdout)
+
+    def test_a_different_command_on_the_same_file_is_not_the_bundle_hook(self):
+        root = self.target
+        commands = ["~/.claude/" + self.HOOK_REL + " --verbose",
+                    "~/.claude/hooks/remind_finalise_v2.py",
+                    "bash ~/.claude/" + self.HOOK_REL,
+                    "hooks/remind_finalise.py"]
+        for i, command in enumerate(commands):
+            with self.subTest(command=command):
+                self.target = os.path.join(root, "n%d" % i)
+                self.write_settings({"hooks": {"PostToolUse": [self.entry_with(command)]}})
+                r = self.install_ok("--dry-run")
+                self.assertIn("settings.json: would add PostToolUse hook", r.stdout)
+                self.assertNotIn("already has", r.stdout)
+                self.assertNotIn("differ from the bundle", r.stdout)
+        self.target = root
+
+    def test_guard_present_but_not_recorded_is_named_not_offered(self):
+        self.install_ok()
+        for e in GUARD_FILES:
+            shutil.copyfile(os.path.join(REPO, e["source"]), self.t(e["target"]))
+        r = self.install_ok("--dry-run")
+        self.assertIn("Optional component subagent-guard: its files are present but not in "
+                      "the install record; re-running with --with-subagent-guard will start "
+                      "tracking it.", r.stdout)
+        self.assertNotIn("Optional components not installed", r.stdout)
+
     # --- the optional hook --------------------------------------------------
 
     def test_with_guard_adds_pretooluse_entry_and_records_it(self):
