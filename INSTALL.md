@@ -4,8 +4,9 @@ You follow these steps when the user asks you to install this bundle. `install.p
 copying, the `settings.json` changes and the tests. Your part is the decisions it leaves to the
 user, which you take with them one at a time.
 
-Run every command from the clone root, the directory holding this file. If the user names a
-config directory other than `~/.claude`, add `--target DIR` to every `install.py` command.
+Run every command from the clone root, the directory holding this file. The install always goes
+into `~/.claude`. `--target DIR` exists only for testing in a scratch directory: the hook
+commands it writes still run files under `~/.claude/hooks/`.
 
 Install bundle files as they are. Don't generalise, adapt or add to them, and don't edit files
 in this clone. A bundle file changes only where the user decides it does, on a file the summary
@@ -14,7 +15,9 @@ lists.
 ## 1. Run the script
 
 Run `python3 install.py` and show the user its summary. If it exits non-zero, show the user the
-output (failing tests are printed under `Tests:`) and stop.
+output (failing tests are printed under `Tests:`) and stop. The tests run against the files as
+they are on disk, so if any files are listed under "Needs a decision", tell the user that a pass
+covers their own copies of those, not the bundle's.
 
 ## 2. Resolve each listed file
 
@@ -37,12 +40,17 @@ next.
    differs.
 3. List every overlap or contradiction, quoting the existing text and the bundle text side by
    side. If the list is empty, tell the user so.
-4. Raise the items one at a time. Get a decision on each before raising the next: keep the
-   existing text, take the bundle's, merge them, or word the bundle rule as an explicit
-   exception.
-5. Append the bundle content, adjusted by those decisions, as new top-level sections after a
+4. Raise the items one at a time. Get a decision on each before raising the next:
+   - keep the existing text: leave the bundle rule out;
+   - take the bundle's: drop the existing text and keep the bundle rule;
+   - merge them into one rule, worded with the user;
+   - keep both, with the bundle rule worded as an explicit exception.
+5. A bundle rule left out may end with a tag such as `→ [one-decision-at-a-time]`. Search
+   `payload/` for the tag's name without brackets (`one-decision-at-a-time`) and tell the user
+   which installed files cite it, since those citations will now point at nothing.
+6. Append the bundle content, adjusted by those decisions, as new top-level sections after a
    blank line. Delete or change existing content only where the user has said so for that
-   specific content.
+   specific content. Record `CLAUDE.md` as `merged`, whatever the individual decisions were.
 
 **Any other file** (kind `owned`): read both versions in full and show the user the specific
 differences, not just that the file differs. Ask whether to keep theirs, take the bundle's or
@@ -87,14 +95,14 @@ entry stay in place until they remove them.
    but never firing. If that happens, find the real interpreter (often
    `/opt/homebrew/bin/python3`) and offer to prefix each bundle hook's `settings.json` command
    with its absolute path.
-2. Check that the reminder fires end to end. In a scratch git repo under a temp directory, make a
-   trivial commit with your Bash tool, and check that the reminder line appears in the tool
-   result. If it doesn't, ask the user to repeat the commit in a fresh session before treating
-   the hook as broken.
-3. Ask the user to open a fresh Claude Code session in a new scratch git repo with no commits and
-   run `/finalise`. Each of its three checker scripts should print a one-line skip and exit 0.
-   Until the user reports that it did, don't tell them it works on a new project. The README's
-   "Verifying it worked" section has the remaining checks.
+2. This session's hooks may not include the ones just installed, so the end-to-end checks happen
+   in a new session. Ask the user to open a fresh Claude Code session in a new scratch git repo
+   with no commits, and there:
+   - run `/finalise`: each of its three checker scripts should print a one-line skip and exit 0;
+   - ask Claude to make a trivial commit: the reminder to run `/finalise` should appear.
+
+   Until the user reports both, don't tell them the install works. The README's "Verifying it
+   worked" section has the remaining checks.
 
 ## 5. Git
 
