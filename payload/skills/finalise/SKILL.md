@@ -227,7 +227,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
    `/clear`?", asked of anything that records outstanding work.
 
 5. **Run the deterministic checks** — three scripts; one gates, two report:
-   - `python3 ~/.claude/skills/finalise/scripts/check_memory_index.py <memory dir> <project root>`
+   - `python3 ${CLAUDE_SKILL_DIR}/scripts/check_memory_index.py <memory dir> <project root>`
      It checks the "every memory file ↔ exactly one MEMORY.md index line" invariant
      deterministically (this used to rely on the writer remembering it), reports MEMORY.md
      against its load limits — only the first 200 lines **or 25 KB, whichever comes first**, is
@@ -238,7 +238,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      ignored, so writing about the syntax never trips it. All of it gates: non-zero exit = fix
      the listed mismatches, over-limit bytes, or dangling citations now, before ending the
      session, then re-run it.
-   - `python3 ~/.claude/skills/finalise/scripts/check_thread_state.py --repo <project root>
+   - `python3 ${CLAUDE_SKILL_DIR}/scripts/check_thread_state.py --repo <project root>
      --backlog <project root>/backlog.md --memory-dir <memory dir>`
      It **reports and never gates — it always exits 0**. It prints four sections: task refs found
      in recent commits against each task's current `backlog.md` section, declared `blocked by #N`
@@ -249,7 +249,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      silence is not.** That requirement is the forcing function here, chosen deliberately instead
      of a non-zero exit: a crying-wolf gate on a heuristic just trains the reader to ignore it.
      Skip this step if `<project root>/backlog.md` doesn't exist yet.
-   - `python3 ~/.claude/skills/finalise/scripts/context_budget_report.py --project-claude
+   - `python3 ${CLAUDE_SKILL_DIR}/scripts/context_budget_report.py --project-claude
      <project root>/CLAUDE.md --memory-index <memory dir>/MEMORY.md --ledger
      ~/.claude/lesson-candidates.md --prompt-lessons ~/.claude/prompt-lessons.md
      --writing-standing-docs ~/.claude/writing-standing-docs.md --writing-executor-briefs

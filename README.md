@@ -116,8 +116,10 @@ You need `python3` and `git`.
 3. Claude follows `INSTALL.md` and runs `install.py`. The script copies in every file you
    don't have yet, adds its hooks to `~/.claude/settings.json`, and runs the bundle's tests.
    Where you already have a file that differs from the bundle's, it leaves the file alone, and
-   Claude goes through those files with you one at a time. Claude also asks whether you want
-   the optional sub-agent guard.
+   Claude goes through those files with you one at a time. Where one of your projects already
+   has its own `/finalise`, which a user-level one would override, the script holds the
+   bundle's back and Claude asks you whether to install it anyway. Claude also asks whether you
+   want the optional sub-agent guard.
 
 Re-running the install is safe. It never overwrites a file you have changed, and it doesn't ask
 again about a file you've already decided on unless you edit it or the bundle's version changes.

@@ -69,7 +69,32 @@ edited or the bundle version changes.
 If the summary lists `settings.json` entries that differ from the bundle's, show the user both
 and change an entry only if they say so.
 
-## 3. Ask about the optional sub-agent guard
+## 3. Resolve each held-back skill or command
+
+A skill or command installed in `~/.claude` overrides a project's own skill or command of the
+same name, in every session in that project. So when a project already has its own copy, the
+script doesn't install the bundle's. It lists the file under "Held back", with the projects that
+have their own. It finds projects from the folders Claude Code keeps for each directory it has
+been used in, so a project never opened in Claude Code isn't checked.
+
+Take the held-back files one at a time. For each, tell the user which projects have their own
+copy, and that installing the bundle's means those projects run the bundle's version instead of
+their own from then on. Ask whether to install it anyway or leave it out:
+- install it: `python3 install.py project-override PATH --decision install`, then run
+  `python3 install.py` again and resolve anything it newly lists as in step 2;
+- leave it out: `python3 install.py project-override PATH --decision hold`.
+
+Either decision holds until another project turns up with its own copy, when the file is listed
+again.
+
+If the summary lists a file under "Installed at user level and overriding a project's own", it
+was installed before that project had its own copy, and that project's copy isn't running. Tell
+the user, and ask whether to keep the user-level one or remove it. Keep:
+`python3 install.py project-override PATH --decision install`. Remove: delete only that one file
+from `~/.claude` once the user has said yes, then
+`python3 install.py project-override PATH --decision hold`.
+
+## 4. Ask about the optional sub-agent guard
 
 Ask only if the summary lists `subagent-guard` under "Optional components not installed". Tell
 the user that it adds a `PreToolUse` hook, which runs on every file edit, and that it stops a
@@ -85,7 +110,7 @@ user whether to keep tracking it. Yes: run `python3 install.py --with-subagent-g
 `python3 install.py decline subagent-guard`, and tell them its files and any `settings.json`
 entry stay in place until they remove them.
 
-## 4. Verify
+## 5. Verify
 
 1. Check that the hooks' `python3` runs. Pipe a commit payload into the installed hook
    directly: `echo '{"tool_input":{"command":"git commit"}}' | ~/.claude/hooks/remind_finalise.py`
@@ -98,12 +123,14 @@ entry stay in place until they remove them.
 2. This session's hooks may not include the ones just installed, so the end-to-end checks happen
    in a new session. Ask the user to open a fresh Claude Code session in a new scratch git repo
    with no commits, and there:
-   - run `/finalise`: each of its three checker scripts should print a one-line skip and exit 0;
+   - run `/finalise`: each of its three checker scripts should print a one-line skip and exit 0.
+     If `/finalise` was left out at user level in step 3, the scratch repo has no `/finalise`,
+     so skip this check and tell the user it wasn't run;
    - ask Claude to make a trivial commit: the reminder to run `/finalise` should appear.
 
    Until the user reports both, don't tell them the install works. The README's "Verifying it
    worked" section has the remaining checks.
 
-## 5. Git
+## 6. Git
 
 Ask the user before committing anything in `~/.claude` to git.

@@ -7,6 +7,7 @@ import copy
 import hashlib
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -25,9 +26,11 @@ CORE_TESTS = [t["file"] for t in MANIFEST["tests"] if t["component"] == "core"]
 GUARD_TESTS = [t["file"] for t in MANIFEST["tests"] if t["component"] == "subagent-guard"]
 
 
-def run_install(target, *extra, script=INSTALL):
+def run_install(target, *extra, script=INSTALL, home=None):
     assert target, "every run must pass --target"
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+    if home:
+        env["HOME"] = home
     return subprocess.run([sys.executable, script, "--target", target, *extra],
                           capture_output=True, text=True, env=env)
 
@@ -568,6 +571,137 @@ class SettingsTest(TargetCase):
 
 def sha256(path):
     return hashlib.sha256(read_bytes(path)).hexdigest()
+
+
+class ProjectOverrideTest(TargetCase):
+    """A user-level skill or command overrides a project's own of the same name."""
+
+    SKILL = "skills/finalise/SKILL.md"
+    HELD = "Held back, because a project has its own and a user-level copy would override it: "
+
+    def setUp(self):
+        super().setUp()
+        self.home = os.path.join(self._tmp.name, "home")
+        os.makedirs(self.home)
+
+    def project(self, name, own="skill"):
+        """A project directory with its own /finalise, known to Claude Code by its folder."""
+        d = os.path.realpath(os.path.join(self.home, name))
+        os.makedirs(d, exist_ok=True)
+        self.give_own(d, own)
+        os.makedirs(self.t("projects/" + re.sub(r"[^A-Za-z0-9]", "-", d)), exist_ok=True)
+        return d
+
+    def give_own(self, d, own="skill"):
+        path = (os.path.join(d, ".claude/skills/finalise/SKILL.md") if own == "skill"
+                else os.path.join(d, ".claude/commands/finalise.md"))
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("the project's own\n")
+
+    def test_project_skill_holds_back_only_the_skill_file(self):
+        d = self.project("my.proj_x")
+        r = self.install_ok()
+        self.assertIn(self.HELD + "1", r.stdout)
+        self.assertIn("  %s (/finalise), own copy in: %s" % (self.SKILL, d), r.stdout)
+        self.assertFalse(os.path.exists(self.t(self.SKILL)))
+        self.assertTrue(os.path.exists(self.t("skills/finalise/scripts/check_memory_index.py")))
+        self.assertIn("Installed: %d" % (len(CORE_FILES) - 1), r.stdout)
+        self.assert_tests_passed(r.stdout, CORE_TESTS)
+
+    def test_project_command_file_counts_as_its_own(self):
+        d = self.project("cmdproj", own="command")
+        r = self.install_ok()
+        self.assertIn("  %s (/finalise), own copy in: %s" % (self.SKILL, d), r.stdout)
+
+    def test_project_found_from_a_session_log_when_the_folder_name_fits_no_path(self):
+        d = os.path.realpath(os.path.join(self.home, "elsewhere"))
+        os.makedirs(d)
+        self.give_own(d)
+        folder = self.t("projects/-no-such-path")
+        os.makedirs(folder)
+        with open(os.path.join(folder, "s.jsonl"), "w", encoding="utf-8") as f:
+            f.write(json.dumps({"type": "queue-operation"}) + "\n")
+            f.write(json.dumps({"type": "user", "cwd": d}) + "\n")
+        r = self.install_ok()
+        self.assertIn("  %s (/finalise), own copy in: %s" % (self.SKILL, d), r.stdout)
+
+    def test_project_without_its_own_changes_nothing(self):
+        d = os.path.realpath(os.path.join(self.home, "plain"))
+        os.makedirs(d)
+        os.makedirs(self.t("projects/" + re.sub(r"[^A-Za-z0-9]", "-", d)))
+        r = self.install_ok()
+        self.assertIn(self.HELD + "0", r.stdout)
+        self.assertTrue(os.path.exists(self.t(self.SKILL)))
+
+    def test_the_user_level_directory_is_not_taken_for_a_project(self):
+        # The home directory's project folder: its .claude is the install target itself.
+        self.target = os.path.join(self.home, ".claude")
+        self.install_ok()
+        os.makedirs(self.t("projects/" + re.sub(r"[^A-Za-z0-9]", "-",
+                                                os.path.realpath(self.home))))
+        r = self.install_ok()
+        self.assertIn(self.HELD + "0", r.stdout)
+        self.assertNotIn("overriding", r.stdout)
+
+    def test_the_real_user_level_directory_is_not_taken_for_a_project_either(self):
+        # With --target elsewhere, the home directory's .claude is still the user level.
+        self.give_own(self.home, own="command")
+        os.makedirs(self.t("projects/" + re.sub(r"[^A-Za-z0-9]", "-",
+                                                os.path.realpath(self.home))))
+        r = run_install(self.target, home=self.home)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn(self.HELD + "0", r.stdout)
+
+    def test_decision_install_puts_it_in_on_the_next_run(self):
+        self.project("p1")
+        self.install_ok()
+        r = self.install_ok("project-override", self.SKILL, "--decision", "install")
+        self.assertIn("Recorded: /finalise goes in at user level", r.stdout)
+        r = self.install_ok()
+        self.assertIn(self.HELD + "0", r.stdout)
+        self.assertNotIn("overriding", r.stdout)
+        self.assertEqual(read_bytes(self.t(self.SKILL)),
+                         read_bytes(os.path.join(REPO, "payload", self.SKILL)))
+
+    def test_decision_hold_is_kept_until_another_project_gets_its_own(self):
+        self.project("p1")
+        self.install_ok()
+        self.install_ok("project-override", self.SKILL, "--decision", "hold")
+        r = self.install_ok()
+        self.assertIn(self.HELD + "0", r.stdout)
+        self.assertIn("Held back by an earlier decision: 1\n  %s\n" % self.SKILL, r.stdout)
+        d2 = self.project("p2")
+        r = self.install_ok()
+        self.assertIn(self.HELD + "1", r.stdout)
+        self.assertIn(d2, r.stdout)
+        self.assertFalse(os.path.exists(self.t(self.SKILL)))
+
+    def test_already_installed_copy_is_reported_as_overriding_and_left(self):
+        self.install_ok()
+        before = read_bytes(self.t(self.SKILL))
+        d = self.project("late")
+        r = self.install_ok()
+        self.assertIn("Installed at user level and overriding a project's own: 1\n"
+                      "  %s (/finalise), own copy in: %s" % (self.SKILL, d), r.stdout)
+        self.assertEqual(read_bytes(self.t(self.SKILL)), before)
+
+    def test_project_override_refused_when_no_project_has_its_own(self):
+        r = self.install("project-override", self.SKILL, "--decision", "install")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("no project has its own /finalise", r.stderr)
+
+    def test_project_override_refused_for_a_file_that_is_not_a_skill_or_command(self):
+        self.project("p1")
+        r = self.install("project-override", "CLAUDE.md", "--decision", "install")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("not a skill or command this bundle installs", r.stderr)
+
+    def test_dry_run_reports_held_back_and_writes_nothing(self):
+        self.project("p1")
+        r = self.install_ok("--dry-run")
+        self.assertIn(self.HELD + "1", r.stdout)
+        self.assertEqual(sorted(os.listdir(self.target)), ["projects"])
 
 
 if __name__ == "__main__":

@@ -5,13 +5,16 @@ Usage:
   python3 install.py [--target DIR] [--dry-run] [--with-subagent-guard]
   python3 install.py [--target DIR] decline subagent-guard
   python3 install.py [--target DIR] record PATH --decision kept|merged|replaced
+  python3 install.py [--target DIR] project-override PATH --decision install|hold
 
 Reads manifest.json and payload/ from this script's own directory.
 
 Install (no subcommand): for each file in the selected components it copies the file if
 missing, skips it if identical, and otherwise leaves the existing file alone: a seed ledger is
 kept silently, a file whose recorded decision still holds is skipped, and any other file is
-listed as needing a decision. It adds the bundle's hook entries to settings.json, runs the
+listed as needing a decision. A skill or command that a project already has its own copy of
+is held back, because the user-level one would override it, unless a recorded decision says to
+install it; one already installed is reported as overriding the project's copy. It adds the bundle's hook entries to settings.json, runs the
 installed tests and prints a short summary. An optional component is selected when its
 --with-... flag is given or when the install record shows it installed earlier.
 
@@ -20,6 +23,10 @@ offering it.
 
 record: the agent calls this after resolving a listed file with the user. It records the
 decision so that later runs skip the file until it is edited again or the bundle changes.
+
+project-override: the agent calls this after asking the user about a held-back skill or
+command. install puts it in at user level on the next run; hold keeps it out. Either holds until
+another project turns up with its own copy.
 
 It never overwrites an existing file that differs from the bundle, and never changes a
 settings.json hook entry that already exists.
@@ -44,10 +51,16 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CORE = "core"
 RECORD_DIR = "workflow-bundle"
 RECORD_FILE = "install-record.json"
-RECORD_FORMAT = 2
+RECORD_FORMAT = 3
 BASE_SUFFIX = ".base"
 SETTINGS_FILE = "settings.json"
 DECISIONS = ("kept", "merged", "replaced")
+OVERRIDE_DECISIONS = ("install", "hold")
+PROJECTS_DIR = "projects"
+SKILL_FILE = re.compile(r"^skills/([^/]+)/SKILL\.md$")
+COMMAND_FILE = re.compile(r"^commands/([^/]+)\.md$")
+NOT_ALNUM = re.compile(r"[^A-Za-z0-9]")
+SESSION_LINES_READ = 50
 
 
 class SetupError(Exception):
@@ -96,7 +109,8 @@ def optional_components(manifest):
 def load_record(target):
     path = os.path.join(target, RECORD_DIR, RECORD_FILE)
     if not os.path.exists(path):
-        return {"format": RECORD_FORMAT, "files": {}, "components": {}, "settings_added": []}
+        return {"format": RECORD_FORMAT, "files": {}, "components": {}, "settings_added": [],
+                "project_overrides": {}}
     try:
         with open(path, encoding="utf-8") as f:
             record = json.load(f)
@@ -106,8 +120,11 @@ def load_record(target):
             raise ValueError("written by a newer install.py (format %s)" % record["format"])
         record.setdefault("components", {})
         record.setdefault("settings_added", [])
+        record.setdefault("project_overrides", {})
         if not isinstance(record["components"], dict):
             raise ValueError("'components' is not an object")
+        if not isinstance(record["project_overrides"], dict):
+            raise ValueError("'project_overrides' is not an object")
         if not isinstance(record["settings_added"], list):
             raise ValueError("'settings_added' is not a list")
         record["format"] = RECORD_FORMAT
@@ -176,6 +193,115 @@ def previously_decided(record, entry, bundle_sha, current_sha):
     return (isinstance(seen, dict)
             and seen.get("bundle_sha256") == bundle_sha
             and seen.get("current_sha256") == current_sha)
+
+
+# --- projects with their own command -------------------------------------------------------
+#
+# A user-level skill or command overrides a project's own of the same name, so installing one
+# silently replaces it in that project. The projects are found from <target>/projects/, which
+# has a folder for each directory Claude Code has been used in.
+
+def slash_name(rel):
+    """The /name a skill or command file defines, or None for any other file."""
+    m = SKILL_FILE.match(rel) or COMMAND_FILE.match(rel)
+    return m.group(1) if m else None
+
+
+def decode_project_folder(name):
+    """Every existing directory Claude Code would name its project folder `name` after.
+
+    Claude Code replaces each character other than a letter or digit with '-', so a name can
+    fit more than one path; each one that exists is returned.
+    """
+    found = []
+
+    def walk(path, rest):
+        if not rest:
+            found.append(path)
+            return
+        try:
+            entries = os.listdir(path)
+        except OSError:
+            return
+        for entry in entries:
+            encoded = "-" + NOT_ALNUM.sub("-", entry)
+            if rest == encoded or rest.startswith(encoded + "-"):
+                full = os.path.join(path, entry)
+                if os.path.isdir(full):
+                    walk(full, rest[len(encoded):])
+
+    walk(os.sep, name)
+    return found
+
+
+def session_dirs(folder):
+    """The working directories recorded near the top of the folder's session logs."""
+    dirs = set()
+    try:
+        logs = [n for n in os.listdir(folder) if n.endswith(".jsonl")]
+    except OSError:
+        return dirs
+    for log in logs:
+        try:
+            with open(os.path.join(folder, log), encoding="utf-8", errors="replace") as f:
+                for _ in range(SESSION_LINES_READ):
+                    line = f.readline()
+                    if not line:
+                        break
+                    try:
+                        cwd = json.loads(line).get("cwd")
+                    except (ValueError, AttributeError):
+                        continue
+                    if isinstance(cwd, str) and cwd:
+                        dirs.add(cwd)
+                        break
+        except OSError:
+            continue
+    return dirs
+
+
+def project_dirs(target):
+    """Directories Claude Code has been used in, as far as <target>/projects/ shows."""
+    root = os.path.join(target, PROJECTS_DIR)
+    try:
+        folders = sorted(os.listdir(root))
+    except OSError:
+        return []
+    dirs = set()
+    for name in folders:
+        folder = os.path.join(root, name)
+        if not os.path.isdir(folder):
+            continue
+        dirs.update(decode_project_folder(name))
+        dirs.update(session_dirs(folder))
+    return sorted({os.path.realpath(d) for d in dirs if os.path.isdir(d)})
+
+
+def projects_with_own(target, names):
+    """Map each /name to the projects that have their own skill or command of that name."""
+    own = {name: [] for name in names}
+    if not own:
+        return own
+    # The home directory is a project too, and its .claude is the user-level directory: the
+    # install target, or the real one when --target points elsewhere.
+    user_level = {os.path.realpath(target), os.path.realpath(os.path.expanduser("~/.claude"))}
+    for d in project_dirs(target):
+        config = os.path.join(d, ".claude")
+        if os.path.realpath(config) in user_level:
+            continue
+        for name in own:
+            if (os.path.isfile(os.path.join(config, "skills", name, "SKILL.md"))
+                    or os.path.isfile(os.path.join(config, "commands", name + ".md"))):
+                own[name].append(d)
+    return own
+
+
+def override_covered(record, rel, decision, projects):
+    """A recorded decision for this file covers every project that now has its own."""
+    seen = record["project_overrides"].get(rel)
+    return (isinstance(seen, dict) and seen.get("decision") == decision
+            and isinstance(seen.get("projects"), list)
+            and set(projects) <= set(seen["projects"]))
 
 
 # --- settings.json -------------------------------------------------------------------------
@@ -372,13 +498,28 @@ def cmd_install(args, manifest, record, target):
 
     installed, unchanged, needs_decision = [], [], []
     seeds_kept, earlier_decision, exec_fixed = [], [], []
+    held_back, held_earlier, overriding = [], [], []
 
-    for entry in manifest["files"]:
-        if entry["component"] not in components:
-            continue
+    selected = [e for e in manifest["files"] if e["component"] in components]
+    own = projects_with_own(target, {n for n in map(slash_name, (e["target"] for e in selected))
+                                     if n})
+
+    for entry in selected:
         src = os.path.join(HERE, entry["source"])
         dst = os.path.join(target, entry["target"])
         bundle_sha = sha256_of(src)
+
+        name = slash_name(entry["target"])
+        projects = own.get(name) or []
+        if projects and not override_covered(record, entry["target"], "install", projects):
+            if os.path.exists(dst):
+                overriding.append((entry["target"], name, projects))
+            elif override_covered(record, entry["target"], "hold", projects):
+                held_earlier.append(entry["target"])
+                continue
+            else:
+                held_back.append((entry["target"], name, projects))
+                continue
 
         if not os.path.exists(dst):
             installed.append(entry["target"])
@@ -439,6 +580,18 @@ def cmd_install(args, manifest, record, target):
     print("Needs a decision (existing file differs, left as it is): %d" % len(needs_decision))
     for path, kind in needs_decision:
         print("  %s (%s)" % (path, kind))
+    print("Held back, because a project has its own and a user-level copy would override it: %d"
+          % len(held_back))
+    for path, name, projects in held_back:
+        print("  %s (/%s), own copy in: %s" % (path, name, ", ".join(projects)))
+    if held_earlier:
+        print("Held back by an earlier decision: %d" % len(held_earlier))
+        for path in held_earlier:
+            print("  %s" % path)
+    if overriding:
+        print("Installed at user level and overriding a project's own: %d" % len(overriding))
+        for path, name, projects in overriding:
+            print("  %s (/%s), own copy in: %s" % (path, name, ", ".join(projects)))
     if exec_fixed:
         print("Executable bit %s (content not changed): %d" % (
             "would be restored" if args.dry_run else "restored", len(exec_fixed)))
@@ -550,6 +703,31 @@ def cmd_record(args, manifest, record, target):
     return 0
 
 
+def cmd_project_override(args, manifest, record, target):
+    entry = manifest_entry_for(manifest, target, args.path)
+    name = slash_name(entry["target"]) if entry else None
+    if name is None:
+        print("install.py: %s is not a skill or command this bundle installs. Use a path as the "
+              "install summary lists it, relative to %s." % (args.path, target), file=sys.stderr)
+        return 2
+    projects = projects_with_own(target, {name})[name]
+    if not projects:
+        print("install.py: no project has its own /%s, so there is no decision to record."
+              % name, file=sys.stderr)
+        return 2
+    record["project_overrides"][entry["target"]] = {
+        "decision": args.decision, "projects": projects, "bundle_commit": bundle_commit(),
+        "date": datetime.date.today().isoformat()}
+    save_record(target, record)
+    if args.decision == "install":
+        print("Recorded: /%s goes in at user level, overriding the copy in %s. Run install.py "
+              "again to install it." % (name, ", ".join(projects)))
+    else:
+        print("Recorded: /%s held back. Later runs skip it until another project gets its own."
+              % name)
+    return 0
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Install the workflow bundle.")
     parser.add_argument("--target", default=os.path.expanduser("~/.claude"),
@@ -568,6 +746,13 @@ def main(argv=None):
     p_record.add_argument("path", help="the file's path as the install summary lists it")
     p_record.add_argument("--decision", required=True, choices=DECISIONS)
     p_record.add_argument("--target", default=argparse.SUPPRESS)
+    p_override = sub.add_parser(
+        "project-override",
+        help="record whether a skill or command a project has its own copy of goes in at "
+             "user level")
+    p_override.add_argument("path", help="the file's path as the install summary lists it")
+    p_override.add_argument("--decision", required=True, choices=OVERRIDE_DECISIONS)
+    p_override.add_argument("--target", default=argparse.SUPPRESS)
     args = parser.parse_args(argv)
 
     if args.command and (args.dry_run or args.with_subagent_guard):
@@ -582,6 +767,8 @@ def main(argv=None):
             return cmd_decline(args, manifest, record, target)
         if args.command == "record":
             return cmd_record(args, manifest, record, target)
+        if args.command == "project-override":
+            return cmd_project_override(args, manifest, record, target)
         return cmd_install(args, manifest, record, target)
     except SetupError as e:
         print("install.py: %s. Nothing was written." % e, file=sys.stderr)
