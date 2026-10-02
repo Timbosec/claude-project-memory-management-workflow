@@ -8,10 +8,14 @@ Run every command from the clone root, the directory holding this file. The inst
 into `~/.claude`. `--target DIR` exists only for testing in a scratch directory: the hook
 commands it writes still run files under `~/.claude/hooks/`.
 
+To upgrade an existing install, run `git pull` in the clone first, then follow these same steps.
+The script works out from its install record what the bundle has changed since.
+
 Install bundle files as they are. Don't generalise, adapt or add to them, and don't edit files
 in this clone. The script updates a file the user never edited to the bundle's newer version on
-its own, and lists it under "Updated". Any other file changes only where the user decides it
-does, on a file the summary lists.
+its own, and lists it under "Updated". It deletes a file the bundle no longer ships if the user
+never edited it, and lists it under "Removed". Any other file changes only where the user decides
+it does, on a file the summary lists.
 
 ## 1. Run the script
 
@@ -31,7 +35,15 @@ file, relative to the clone root. The user-level `CLAUDE.md` is stored as
 Take the files one at a time. Finish one, including its `record` command, before raising the
 next.
 
-**`CLAUDE.md`** (kind `shared`):
+A listed file may end with `bundle change: <path>`. That diff holds only what the bundle changed
+since the version the user last had, never the user's own edits. Work from it rather than from
+the whole files: show the user each change and carry the ones they agree to into their file. A
+file listed without one has no earlier bundle version to compare against, so compare the whole
+files as below.
+
+**`CLAUDE.md`** (kind `shared`). With a bundle change: take each rule the diff adds, removes or
+rewords, find what the user's file says about the same situation, and raise them one at a time as
+in step 4 below; then record `merged`. Without one:
 1. Read the whole existing file, not just its headings. A rule can cover the same ground under a
    different heading or as an unheaded paragraph.
 2. Go through the bundle version bullet by bullet. For each, check whether the existing file
@@ -48,14 +60,17 @@ next.
    - keep both, with the bundle rule worded as an explicit exception.
 5. A bundle rule left out may end with a tag such as `→ [one-decision-at-a-time]`. Search
    `payload/` for the tag's name without brackets (`one-decision-at-a-time`) and tell the user
-   which installed files cite it, since those citations will now point at nothing.
+   which installed files cite it, since those citations will now point at nothing. If the rule
+   left out is the paragraph on routing a new lesson, or the rule that a lesson needs a second
+   real case before it becomes a rule, tell the user that `/finalise` and `/memory-audit` carry
+   their own copy and still route lessons that way.
 6. Append the bundle content, adjusted by those decisions, as new top-level sections after a
    blank line. Delete or change existing content only where the user has said so for that
    specific content. Record `CLAUDE.md` as `merged`, whatever the individual decisions were.
 
-**Any other file** (kind `owned`): read both versions in full and show the user the specific
-differences, not just that the file differs. Ask whether to keep theirs, take the bundle's or
-merge. For a merge, agree each difference with the user, then write the result to the target.
+**Any other file** (kind `owned`): with a bundle change, work from the diff as above. Without
+one, read both versions in full and show the user the specific differences, not just that the
+file differs. Ask whether to keep theirs, take the bundle's or merge. For a merge, agree each difference with the user, then write the result to the target.
 
 Then record the decision:
 - kept theirs: `python3 install.py record PATH --decision kept`
@@ -69,6 +84,14 @@ edited or the bundle version changes.
 
 If the summary lists `settings.json` entries that differ from the bundle's, show the user both
 and change an entry only if they say so.
+
+**Files no longer in the bundle.** The summary lists, under "No longer in the bundle, you edited
+it or it isn't in the record", each file the bundle used to install and now doesn't, with what
+replaced it. Show the user the file and ask whether to remove it or keep it:
+- remove: delete only that file once the user has said yes, then
+  `python3 install.py record PATH --decision removed`;
+- keep: `python3 install.py record PATH --decision kept`. It isn't listed again until it is
+  edited.
 
 ## 3. Resolve each held-back skill or command
 
