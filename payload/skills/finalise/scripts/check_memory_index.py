@@ -10,8 +10,7 @@ writer remembering them:
   3. Every `[[link]]` inside a memory file's body resolves to a real memory filename
      (`<name>.md` next to it). Link resolution is an exact invariant, not a heuristic -- a
      wrong call here breaks resolution in every future session, so this gates like the rest of
-     this script. One name is a KNOWN, recorded exception (see KNOWN_RETIRED_LINKS below):
-     reported separately, never gated on.
+     this script.
   4. Every `[[link]]` inside the repo's Markdown docs (DOCS_ROOT, recursive, `*.md` only)
      resolves the same way. Reference docs, decisions.md and backlog.md cite memories in the
      same `[[name]]` syntax but were never checked (backlog #39) -- a dead citation there is
@@ -19,7 +18,7 @@ writer remembering them:
      code spans are stripped first, length-preserving so reported line numbers stay correct: a
      backticked `` `[[link]]` `` is prose ABOUT the syntax, not a citation, and matching it would
      produce false hard failures on a check that is only permitted to gate because link
-     resolution is exact. Same KNOWN_RETIRED_LINKS exemption applies.
+     resolution is exact.
 
 Exit 0 = all four hold; exit 1 = problems printed (fix them before ending the session, then
 re-run). Each check is sequential and stops at the first failure -- fix what's printed and
@@ -91,16 +90,8 @@ if over:
 # scanned for [[links]] -- it has none today (pure index lines), so adding that complexity
 # isn't justified.
 #
-# A memory whose content moves elsewhere (e.g. into backlog.md) leaves dangling citations to its
-# old name behind ON PURPOSE -- repointing them would manufacture references to things that never
-# existed in the new location, so they're deliberately left dangling and reported here instead of
-# gated on. This project hasn't retired one yet, so the set starts empty; when it happens, add the
-# retired name via $KNOWN_RETIRED_LINKS (comma-separated) or edit the default below. The count of
-# files still citing a retired name is derived live every run, never hard-coded, since that count
-# can drift as unrelated edits touch the citing files.
-KNOWN_RETIRED_LINKS = {
-    name for name in os.environ.get("KNOWN_RETIRED_LINKS", "").split(",") if name
-}
+# There is no exemption for a retired memory's name: when a memory is removed, links to it are
+# resolved at the time (made plain text, or repointed where the content really moved).
 
 _FENCE_RE = re.compile(r"^```.*?^```", re.MULTILINE | re.DOTALL)
 _SPAN_RE = re.compile(r"`+[^`]*`+")
@@ -133,7 +124,6 @@ _LINK_RE = re.compile(r"\[\[([A-Za-z0-9][A-Za-z0-9_.-]*)\]\]")
 # containing that exact bash snippet outside a code fence.)
 
 link_problems = []
-known_retired_hits = {}
 for fname in sorted(files):
     with open(os.path.join(MD, fname), encoding="utf-8") as f:
         raw = f.read()
@@ -142,17 +132,7 @@ for fname in sorted(files):
         target = m.group(1).strip()
         if (target + ".md") in files or (target + ".md") == "MEMORY.md":
             continue
-        if target in KNOWN_RETIRED_LINKS:
-            known_retired_hits.setdefault(target, []).append(fname)
-        else:
-            link_problems.append(f"{fname}: dangling [[{target}]] (no {target}.md on disk)")
-
-if known_retired_hits:
-    n_citations = sum(len(v) for v in known_retired_hits.values())
-    print(f"KNOWN-RETIRED [[links]] ({n_citations} citation(s), expected -- not gated on; see "
-          f"backlog.md Records):")
-    for name, fnames in sorted(known_retired_hits.items()):
-        print(f"  [[{name}]] cited by {len(fnames)} file(s): {', '.join(fnames)}")
+        link_problems.append(f"{fname}: dangling [[{target}]] (no {target}.md on disk)")
 
 if link_problems:
     print(f"DANGLING [[link]] TARGETS ({len(link_problems)} problem(s)):")
@@ -160,10 +140,9 @@ if link_problems:
         print(f"  - {p}")
     sys.exit(1)
 
-print(f"[[link]] check: {len(files)} files scanned, all links resolve (or are known-retired)")
+print(f"[[link]] check: {len(files)} files scanned, all links resolve")
 
-# Doc-scope [[link]] check. Same citation syntax, same slug set (files) and the same
-# KNOWN_RETIRED_LINKS allowlist as above, but scanning the repo's Markdown docs instead of the
+# Doc-scope [[link]] check. Same citation syntax and same slug set (files) as above, but scanning the repo's Markdown docs instead of the
 # memory dir -- reference docs, decisions.md and backlog.md cite memories in [[name]] form too.
 # Runs after the memory-file link check above, keeping the same stop-at-first-failure sequencing
 # (a failure above exits before this code ever runs).
@@ -196,8 +175,7 @@ for dirpath, dirnames, filenames in os.walk(_DOCS_ROOT_ABS):
         doc_files.append(abspath)
 doc_files.sort()
 
-doc_link_problems = []       # list of (relpath, line, target)
-doc_known_retired_hits = {}  # target -> [relpath, ...]
+doc_link_problems = []  # list of (relpath, line, target)
 doc_citation_count = 0
 doc_files_with_citations = set()
 
@@ -213,17 +191,7 @@ for abspath in doc_files:
         doc_files_with_citations.add(relpath)
         if (target + ".md") in files or (target + ".md") == "MEMORY.md":
             continue
-        if target in KNOWN_RETIRED_LINKS:
-            doc_known_retired_hits.setdefault(target, []).append(relpath)
-        else:
-            doc_link_problems.append((relpath, line, target))
-
-if doc_known_retired_hits:
-    n_citations = sum(len(v) for v in doc_known_retired_hits.values())
-    print(f"KNOWN-RETIRED [[links]] IN DOCS ({n_citations} citation(s), expected -- not gated "
-          f"on; see backlog.md Records):")
-    for name, relpaths in sorted(doc_known_retired_hits.items()):
-        print(f"  [[{name}]] cited by {len(relpaths)} file(s): {', '.join(relpaths)}")
+        doc_link_problems.append((relpath, line, target))
 
 if doc_link_problems:
     print(f"DANGLING [[link]] TARGETS IN DOCS ({len(doc_link_problems)} problem(s)):")
@@ -232,5 +200,5 @@ if doc_link_problems:
     sys.exit(1)
 
 print(f"[[link]] check (docs): {doc_citation_count} citation(s) in "
-      f"{len(doc_files_with_citations)} file(s), all resolve (or are known-retired)")
+      f"{len(doc_files_with_citations)} file(s), all resolve")
 

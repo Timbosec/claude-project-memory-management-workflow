@@ -58,10 +58,9 @@ def _run(tmpdir, docs_root=None, known_retired_links=None):
     script's real current-directory default, which would resolve the doc check against
     whatever real, mutable Markdown files happen to be there and drift as they churn.
 
-    known_retired_links: names to inject via $KNOWN_RETIRED_LINKS, kept OUT of the process's
-    real environment by default -- production ships with an empty set, so any test exercising
-    the exemption must supply its own test-specific name(s) rather than depending on a
-    hard-coded production value that no longer exists."""
+    known_retired_links: names to set in $KNOWN_RETIRED_LINKS, which the script used to read as
+    an exemption list and no longer does. Kept OUT of the process's real environment by default;
+    only the tests proving the variable is now ignored set it."""
     env = dict(os.environ)
     if known_retired_links is None:
         env.pop("KNOWN_RETIRED_LINKS", None)
@@ -96,57 +95,16 @@ class TestDanglingLinkCheck(unittest.TestCase):
             self.assertIn("dangling", result.stdout.lower())
             self.assertIn("nonexistent-file", result.stdout)
 
-    def test_known_retired_name_does_not_gate(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            _write_fixture(tmpdir, {
-                "a.md": "This came out of the old worklist -- see "
-                        "[[project-status-open-threads]] for context.\n",
-            })
-            result = _run(tmpdir, known_retired_links=["project-status-open-threads"])
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("KNOWN-RETIRED", result.stdout)
-            self.assertIn("project-status-open-threads", result.stdout)
-
-    def test_unconfigured_retired_name_gates_like_any_other_dangling_link(self):
-        # With no $KNOWN_RETIRED_LINKS set (production's real default -- a fresh project
-        # hasn't retired anything yet), a name that WOULD be exempt if configured is just
-        # an ordinary dangling link.
+    def test_retired_links_variable_no_longer_exempts_a_name(self):
+        # The $KNOWN_RETIRED_LINKS exemption was removed. A value left set in
+        # someone's shell must not quietly bring it back: the named link gates like any other.
         with tempfile.TemporaryDirectory() as tmpdir:
             _write_fixture(tmpdir, {
                 "a.md": "see [[project-status-open-threads]] for context.\n",
             })
-            result = _run(tmpdir)
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn("project-status-open-threads", result.stdout)
-
-    def test_a_different_retired_looking_name_still_gates(self):
-        # Mutate the VALUE, not just the guard: with one specific name configured as
-        # known-retired, a name that looks like a plausible retired memory (same shape,
-        # different string) must NOT get the known-retired pass -- only an exact match is
-        # exempt. Catches a check that accidentally matches on shape/prefix rather than the
-        # exact string.
-        with tempfile.TemporaryDirectory() as tmpdir:
-            _write_fixture(tmpdir, {
-                "a.md": "see [[project-status-closed-threads]] for context.\n",
-            })
             result = _run(tmpdir, known_retired_links=["project-status-open-threads"])
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("project-status-closed-threads", result.stdout)
-
-    def test_known_retired_citation_count_is_derived_not_hardcoded(self):
-        # Two fixture files cite the known-retired name; the printed count must
-        # reflect the fixture's actual citation count (2), not any hard-coded number
-        # (the brief is explicit: "HARD-CODE NO COUNT" -- the real count already
-        # drifted from eight to seven within one day once).
-        with tempfile.TemporaryDirectory() as tmpdir:
-            _write_fixture(tmpdir, {
-                "a.md": "see [[project-status-open-threads]] here.\n",
-                "b.md": "and again [[project-status-open-threads]] here.\n",
-            })
-            result = _run(tmpdir, known_retired_links=["project-status-open-threads"])
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("2 citation(s)", result.stdout)
-            self.assertIn("cited by 2 file(s)", result.stdout)
+            self.assertIn("dangling [[project-status-open-threads]]", result.stdout)
 
     def test_dangling_link_check_does_not_run_when_index_is_out_of_sync(self):
         # An earlier check (index-sync) failing must stop the script before the link
@@ -192,7 +150,7 @@ class TestDanglingLinkCheck(unittest.TestCase):
 
 class TestDocScopeLinkCheck(unittest.TestCase):
     """The doc-scope [[link]] check (backlog #39, 2026-08-22): same citation syntax, same slug
-    set and known-retired allowlist as TestDanglingLinkCheck above, but scanning a second,
+    set as TestDanglingLinkCheck above, but scanning a second,
     independent docs-root tree instead of the memory dir. Every fixture here gives the memory
     side a single trivial file (`a.md`, no outgoing links) purely to clear the two earlier
     gates and reach the doc check -- the memory-side content itself is not under test."""
@@ -242,7 +200,7 @@ class TestDocScopeLinkCheck(unittest.TestCase):
             self.assertNotIn("nonexistent-thing", result.stdout)
             self.assertIn("[[link]] check (docs): 0 citation(s) in 0 file(s)", result.stdout)
 
-    def test_doc_known_retired_name_reports_without_gating(self):
+    def test_doc_retired_links_variable_no_longer_exempts_a_name(self):
         with tempfile.TemporaryDirectory() as tmpdir, \
                 tempfile.TemporaryDirectory() as docs_root:
             _write_fixture(tmpdir, {"a.md": "Nothing links out of here.\n"})
@@ -250,9 +208,8 @@ class TestDocScopeLinkCheck(unittest.TestCase):
                 "note.md": "see [[project-status-open-threads]] here.\n",
             })
             result = _run(tmpdir, docs_root, known_retired_links=["project-status-open-threads"])
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("KNOWN-RETIRED [[links]] IN DOCS", result.stdout)
-            self.assertIn("project-status-open-threads", result.stdout)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("dangling [[project-status-open-threads]]", result.stdout)
 
     def test_doc_nested_subdirectory_citation_is_found(self):
         with tempfile.TemporaryDirectory() as tmpdir, \
