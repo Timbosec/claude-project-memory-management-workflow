@@ -9,8 +9,9 @@ into `~/.claude`. `--target DIR` exists only for testing in a scratch directory:
 commands it writes still run files under `~/.claude/hooks/`.
 
 Install bundle files as they are. Don't generalise, adapt or add to them, and don't edit files
-in this clone. A bundle file changes only where the user decides it does, on a file the summary
-lists.
+in this clone. The script updates a file the user never edited to the bundle's newer version on
+its own, and lists it under "Updated". Any other file changes only where the user decides it
+does, on a file the summary lists.
 
 ## 1. Run the script
 

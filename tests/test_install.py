@@ -561,9 +561,11 @@ class SettingsTest(TargetCase):
         with open(self.t("prompt-lessons.md"), "ab") as f:
             f.write(b"- mine\n")
         os.remove(self.t("commands/memory-audit.md"))
+        install_old_version(self, OLD_DOC)
         r = self.install_ok()
         self.assertIn("Installed: 1\n", r.stdout)
-        self.assertIn("Unchanged: %d\n" % (len(CORE_FILES) - 4), r.stdout)
+        self.assertIn("Unchanged: %d\n" % (len(CORE_FILES) - 5), r.stdout)
+        self.assertIn("Updated: 1\n  %s\n" % OLD_DOC, r.stdout)
         self.assertIn("Left as you have them: 2 (seed ledgers kept: 1; "
                       "skipped by an earlier decision: 1)", r.stdout)
         self.assertIn("Needs a decision (existing file differs, left as it is): 1", r.stdout)
@@ -571,6 +573,90 @@ class SettingsTest(TargetCase):
 
 def sha256(path):
     return hashlib.sha256(read_bytes(path)).hexdigest()
+
+
+# A file no shipped test reads, so an old or edited copy of it doesn't fail the install's tests.
+OLD_DOC = "writing-standing-docs.md"
+OLD_CONTENT = b"# An older bundle version of this file\n"
+
+
+def install_old_version(case, rel, decision="installed", now=None, recorded_current=None):
+    """Make an installed file look as if an older bundle had installed it.
+
+    The file, its base copy and the record's bundle hash are set to an "old version" that the
+    payload no longer matches, so the bundle has changed since. The record's current hash is
+    `recorded_current` (default: the old version's), and the file on disk ends up as `now`
+    (default: the old version).
+    """
+    old_sha = hashlib.sha256(OLD_CONTENT).hexdigest()
+    with open(case.t("workflow-bundle/base/" + rel + ".base"), "wb") as f:
+        f.write(OLD_CONTENT)
+    with open(case.t(rel), "wb") as f:
+        f.write(OLD_CONTENT if now is None else now)
+    path = case.t("workflow-bundle/install-record.json")
+    record = case.record()
+    record["files"][rel].update({
+        "bundle_sha256": old_sha, "decision": decision,
+        "current_sha256": (old_sha if recorded_current is None
+                           else hashlib.sha256(recorded_current).hexdigest())})
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(record, f)
+
+
+class UpgradeTest(TargetCase):
+    """After the bundle changes, a file the user never edited is brought up to date."""
+
+    EDITED = OLD_CONTENT + b"- a rule of my own\n"
+
+    def setUp(self):
+        super().setUp()
+        self.install_ok()
+        self.bundle = read_bytes(os.path.join(REPO, "payload", OLD_DOC))
+
+    def test_untouched_file_is_updated(self):
+        install_old_version(self, OLD_DOC)
+        r = self.install_ok()
+        self.assertEqual(read_bytes(self.t(OLD_DOC)), self.bundle)
+        rec = self.record()["files"][OLD_DOC]
+        self.assertEqual(rec["decision"], "updated")
+        self.assertEqual(rec["bundle_sha256"], hashlib.sha256(self.bundle).hexdigest())
+        self.assertEqual(rec["current_sha256"], rec["bundle_sha256"])
+        self.assertEqual(read_bytes(self.t("workflow-bundle/base/" + OLD_DOC + ".base")),
+                         self.bundle)
+        self.assertIn("Updated: 1\n  %s\n" % OLD_DOC, r.stdout)
+        self.assertIn("Needs a decision (existing file differs, left as it is): 0", r.stdout)
+        # Settled now: the next run finds it identical.
+        r = self.install_ok()
+        self.assertIn("Updated: 0\n", r.stdout)
+        self.assertIn("Unchanged: %d\n" % len(CORE_FILES), r.stdout)
+
+    def test_file_edited_since_install_is_not_updated(self):
+        # Installed by the older bundle, then edited, never recorded: the recorded hashes
+        # agree with each other but not with the file.
+        install_old_version(self, OLD_DOC, now=self.EDITED)
+        r = self.install_ok()
+        self.assertEqual(read_bytes(self.t(OLD_DOC)), self.EDITED)
+        self.assertIn("Updated: 0\n", r.stdout)
+        self.assertIn("Needs a decision (existing file differs, left as it is): 1", r.stdout)
+        self.assertIn("  %s (owned)" % OLD_DOC, r.stdout)
+
+    def test_kept_file_left_alone_since_its_decision_is_not_updated(self):
+        # Recorded as kept while it differed from the older bundle, and not touched since:
+        # the file matches the recorded current hash, which differs from the recorded bundle.
+        install_old_version(self, OLD_DOC, decision="kept", now=self.EDITED,
+                            recorded_current=self.EDITED)
+        r = self.install_ok()
+        self.assertEqual(read_bytes(self.t(OLD_DOC)), self.EDITED)
+        self.assertIn("Updated: 0\n", r.stdout)
+        self.assertIn("Needs a decision (existing file differs, left as it is): 1", r.stdout)
+        self.assertIn("  %s (owned)" % OLD_DOC, r.stdout)
+
+    def test_dry_run_lists_the_update_and_writes_nothing(self):
+        install_old_version(self, OLD_DOC)
+        before = snapshot(self.target)
+        r = self.install_ok("--dry-run")
+        self.assertEqual(snapshot(self.target), before)
+        self.assertIn("Would update: 1\n  %s\n" % OLD_DOC, r.stdout)
 
 
 class ProjectOverrideTest(TargetCase):

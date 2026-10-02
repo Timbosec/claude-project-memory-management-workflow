@@ -10,9 +10,11 @@ Usage:
 Reads manifest.json and payload/ from this script's own directory.
 
 Install (no subcommand): for each file in the selected components it copies the file if
-missing, skips it if identical, and otherwise leaves the existing file alone: a seed ledger is
-kept silently, a file whose recorded decision still holds is skipped, and any other file is
-listed as needing a decision. A skill or command that a project already has its own copy of
+missing, skips it if identical, and updates it to the bundle version if the install record
+proves the user never edited it (the file still is the bundle version last installed or
+decided on). Otherwise it leaves the existing file alone: a seed ledger is kept silently, a file
+whose recorded decision still holds is skipped, and any other file is listed as needing a
+decision. A skill or command that a project already has its own copy of
 is held back, because the user-level one would override it, unless a recorded decision says to
 install it; one already installed is reported as overriding the project's copy. It adds the bundle's hook entries to settings.json, runs the
 installed tests and prints a short summary. An optional component is selected when its
@@ -28,8 +30,8 @@ project-override: the agent calls this after asking the user about a held-back s
 command. install puts it in at user level on the next run; hold keeps it out. Either holds until
 another project turns up with its own copy.
 
-It never overwrites an existing file that differs from the bundle, and never changes a
-settings.json hook entry that already exists.
+It never overwrites a file the user has edited, and never changes a settings.json hook entry
+that already exists.
 
 Exit codes: 0 when all is well (files needing a decision count as fine), 1 when an installed
 test fails, 2 when the manifest, the payload, the install record or settings.json can't be
@@ -193,6 +195,17 @@ def previously_decided(record, entry, bundle_sha, current_sha):
     return (isinstance(seen, dict)
             and seen.get("bundle_sha256") == bundle_sha
             and seen.get("current_sha256") == current_sha)
+
+
+def untouched(record, entry, current_sha):
+    """The user had the bundle version exactly when it was last recorded, and still has it.
+
+    Decided by hashes only, never by the recorded decision's label.
+    """
+    seen = record["files"].get(entry["target"])
+    return (isinstance(seen, dict)
+            and seen.get("current_sha256") == current_sha
+            and seen.get("bundle_sha256") == seen.get("current_sha256"))
 
 
 # --- projects with their own command -------------------------------------------------------
@@ -497,7 +510,7 @@ def cmd_install(args, manifest, record, target):
         target)
 
     installed, unchanged, needs_decision = [], [], []
-    seeds_kept, earlier_decision, exec_fixed = [], [], []
+    seeds_kept, earlier_decision, exec_fixed, updated = [], [], [], []
     held_back, held_earlier, overriding = [], [], []
 
     selected = [e for e in manifest["files"] if e["component"] in components]
@@ -541,6 +554,14 @@ def cmd_install(args, manifest, record, target):
             continue
         elif previously_decided(record, entry, bundle_sha, current_sha):
             earlier_decision.append(entry["target"])
+        elif untouched(record, entry, current_sha):
+            # Reached only when the bundle version differs from the file, so from the
+            # recorded one too: the bundle has changed since, and the user never edited it.
+            updated.append(entry["target"])
+            if write:
+                copy_file(src, dst, entry["executable"])
+                note_in_record(record, target, entry, src, dst, "updated", commit, today)
+            continue
         else:
             needs_decision.append((entry["target"], entry["kind"]))
             continue
@@ -575,6 +596,9 @@ def cmd_install(args, manifest, record, target):
                                                   if args.dry_run else ""))
     print("Installed: %d" % len(installed))
     print("Unchanged: %d" % len(unchanged))
+    print("%s: %d" % ("Would update" if args.dry_run else "Updated", len(updated)))
+    for path in updated:
+        print("  %s" % path)
     print("Left as you have them: %d (seed ledgers kept: %d; skipped by an earlier decision: %d)"
           % (len(seeds_kept) + len(earlier_decision), len(seeds_kept), len(earlier_decision)))
     print("Needs a decision (existing file differs, left as it is): %d" % len(needs_decision))
