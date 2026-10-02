@@ -59,7 +59,8 @@ Three permanent Claude Code commands/skills, plus the rule files they depend on:
   commands above: a `backlog.md`/`decisions.md` pair with the conventions that make them useful
   (stable task numbers, an append-only decision log, a dated "what's next" summary that gets
   replaced rather than appended to), plus a `CLAUDE.md` pointer so a fresh session actually knows
-  these files exist.
+  these files exist. If the project's memory already holds open work, it offers to move each
+  item into the backlog as a task.
 
 Underneath those three, a small set of always-loaded and on-demand rule files: a routing header
 that decides which file a new lesson belongs in, checklists for writing a prompt, editing a

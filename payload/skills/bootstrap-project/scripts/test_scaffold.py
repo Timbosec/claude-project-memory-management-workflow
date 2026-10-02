@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+"""Tests for scaffold.py. Each runs the script as a subprocess against a temporary project root,
+so nothing reads or writes a real project."""
+import datetime
+import os
+import subprocess
+import sys
+import tempfile
+import unittest
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+SCRIPT = os.path.join(HERE, "scaffold.py")
+TEMPLATES = os.path.join(HERE, os.pardir, "templates")
+WRITTEN = ["backlog.md", "decisions.md", "lesson-candidates.md", "CLAUDE.md"]
+
+
+def _run(root, *args):
+    return subprocess.run([sys.executable, SCRIPT, root, *args], capture_output=True, text=True)
+
+
+def _read(path):
+    with open(path, encoding="utf-8") as f:
+        return f.read()
+
+
+class TestScaffold(unittest.TestCase):
+    def test_empty_project_gets_all_four_files_filled_in(self):
+        with tempfile.TemporaryDirectory() as root:
+            r = _run(root, "widget-shop", "--date", "2026-01-15")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(sorted(os.listdir(root)), sorted(WRITTEN))
+            for name in WRITTEN:
+                self.assertIn(f"created  {name}", r.stdout)
+                text = _read(os.path.join(root, name))
+                self.assertNotIn("<PROJECT NAME>", text, name)
+                self.assertNotIn("<DATE>", text, name)
+                self.assertIn("widget-shop", text.splitlines()[0], name)
+
+    def test_next_up_heading_carries_the_date_in_the_form_finalise_parses(self):
+        with tempfile.TemporaryDirectory() as root:
+            _run(root, "widget-shop", "--date", "2026-01-15")
+            self.assertIn("\n## Next up — recommended 2026-01-15 (first revision)\n",
+                          _read(os.path.join(root, "backlog.md")))
+
+    def test_date_defaults_to_today(self):
+        with tempfile.TemporaryDirectory() as root:
+            _run(root, "widget-shop")
+            self.assertIn(f"recommended {datetime.date.today().isoformat()} ",
+                          _read(os.path.join(root, "backlog.md")))
+
+    def test_claude_md_is_written_from_the_differently_named_template(self):
+        with tempfile.TemporaryDirectory() as root:
+            _run(root, "widget-shop", "--date", "2026-01-15")
+            expected = _read(os.path.join(TEMPLATES, "project-CLAUDE.md")).replace(
+                "<PROJECT NAME>", "widget-shop")
+            self.assertEqual(_read(os.path.join(root, "CLAUDE.md")), expected)
+
+    def test_existing_files_are_left_byte_for_byte_and_reported(self):
+        with tempfile.TemporaryDirectory() as root:
+            for name in ("backlog.md", "CLAUDE.md"):
+                with open(os.path.join(root, name), "w", encoding="utf-8") as f:
+                    f.write(f"the project's own {name}\n")
+            r = _run(root, "widget-shop", "--date", "2026-01-15")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            for name in ("backlog.md", "CLAUDE.md"):
+                self.assertEqual(_read(os.path.join(root, name)), f"the project's own {name}\n")
+                self.assertIn(f"exists   {name}", r.stdout)
+            for name in ("decisions.md", "lesson-candidates.md"):
+                self.assertIn(f"created  {name}", r.stdout)
+
+    def test_dry_run_reports_without_writing(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "backlog.md"), "w", encoding="utf-8") as f:
+                f.write("the project's own backlog\n")
+            r = _run(root, "widget-shop", "--dry-run")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(os.listdir(root), ["backlog.md"])
+            self.assertIn("exists   backlog.md", r.stdout)
+            self.assertIn("would create  decisions.md", r.stdout)
+
+    def test_bad_date_and_empty_name_write_nothing(self):
+        for args in (["widget-shop", "--date", "15/01/2026"], ["  ", "--date", "2026-01-15"]):
+            with tempfile.TemporaryDirectory() as root:
+                r = _run(root, *args)
+                self.assertNotEqual(r.returncode, 0, args)
+                self.assertEqual(os.listdir(root), [], args)
+
+
+if __name__ == "__main__":
+    unittest.main()

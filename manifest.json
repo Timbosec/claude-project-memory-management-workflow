@@ -86,8 +86,50 @@
       "executable": false
     },
     {
-      "source": "payload/commands/bootstrap-project.md",
-      "target": "commands/bootstrap-project.md",
+      "source": "payload/skills/bootstrap-project/SKILL.md",
+      "target": "skills/bootstrap-project/SKILL.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/bootstrap-project/scripts/scaffold.py",
+      "target": "skills/bootstrap-project/scripts/scaffold.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/bootstrap-project/scripts/test_scaffold.py",
+      "target": "skills/bootstrap-project/scripts/test_scaffold.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/bootstrap-project/templates/backlog.md",
+      "target": "skills/bootstrap-project/templates/backlog.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/bootstrap-project/templates/decisions.md",
+      "target": "skills/bootstrap-project/templates/decisions.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/bootstrap-project/templates/lesson-candidates.md",
+      "target": "skills/bootstrap-project/templates/lesson-candidates.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/bootstrap-project/templates/project-CLAUDE.md",
+      "target": "skills/bootstrap-project/templates/project-CLAUDE.md",
       "kind": "owned",
       "component": "core",
       "executable": false
@@ -184,6 +226,10 @@
     {
       "component": "core",
       "file": "skills/finalise/scripts/test_context_budget_report.py"
+    },
+    {
+      "component": "core",
+      "file": "skills/bootstrap-project/scripts/test_scaffold.py"
     },
     {
       "component": "core",
