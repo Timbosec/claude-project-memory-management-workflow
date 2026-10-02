@@ -1,5 +1,5 @@
 {
-  "_comment": "Targets are relative to ~/.claude. Sources are relative to the repo root. Tests are target paths, run with the file's directory as working directory.",
+  "_comment": "Targets are relative to ~/.claude. Sources are relative to the repo root. Tests are target paths, run with the file's directory as working directory. Retired targets are files the bundle used to install and no longer ships; the installer removes them where the user never edited them.",
   "files": [
     {
       "source": "payload/user-CLAUDE.md",
@@ -219,6 +219,12 @@
           }
         ]
       }
+    }
+  ],
+  "retired": [
+    {
+      "target": "commands/bootstrap-project.md",
+      "note": "replaced by the bootstrap-project skill"
     }
   ],
   "tests": [

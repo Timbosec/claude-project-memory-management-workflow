@@ -4,7 +4,7 @@
 Usage:
   python3 install.py [--target DIR] [--dry-run] [--with-subagent-guard]
   python3 install.py [--target DIR] decline subagent-guard
-  python3 install.py [--target DIR] record PATH --decision kept|merged|replaced
+  python3 install.py [--target DIR] record PATH --decision kept|merged|replaced|removed
   python3 install.py [--target DIR] project-override PATH --decision install|hold
 
 Reads manifest.json and payload/ from this script's own directory.
@@ -16,7 +16,10 @@ decided on). Otherwise it leaves the existing file alone: a seed ledger is kept 
 whose recorded decision still holds is skipped, and any other file is listed as needing a
 decision. When the bundle has changed since the version recorded for a listed file, that change
 alone (recorded version to current bundle version) is written as a diff under
-workflow-bundle/changes/ and its path printed with the file. A skill or command that a project already has its own copy of
+workflow-bundle/changes/ and its path printed with the file. A file the bundle no longer
+ships (the manifest's "retired" list) is deleted if the install record proves the user never
+edited it, dropped from the record silently if it is already gone, and otherwise listed and
+left. A skill or command that a project already has its own copy of
 is held back, because the user-level one would override it, unless a recorded decision says to
 install it; one already installed is reported as overriding the project's copy. It adds the bundle's hook entries to settings.json, runs the
 installed tests and prints a short summary. An optional component is selected when its
@@ -26,7 +29,10 @@ decline: records that the user doesn't want an optional component, so the summar
 offering it.
 
 record: the agent calls this after resolving a listed file with the user. It records the
-decision so that later runs skip the file until it is edited again or the bundle changes.
+decision (kept, merged or replaced) so that later runs skip the file until it is edited again
+or the bundle changes. For a file the bundle no longer ships it takes only kept, which leaves
+the file alone until it is edited again, or removed, once the file has been deleted, which
+stops tracking it.
 
 project-override: the agent calls this after asking the user about a held-back skill or
 command. install puts it in at user level on the next run; hold keeps it out. Either holds until
@@ -63,6 +69,8 @@ CHANGES_DIR = "changes"
 CHANGE_SUFFIX = ".diff"
 SETTINGS_FILE = "settings.json"
 DECISIONS = ("kept", "merged", "replaced")
+# The only decisions on a file the bundle no longer ships.
+RETIRED_DECISIONS = ("kept", "removed")
 OVERRIDE_DECISIONS = ("install", "hold")
 PROJECTS_DIR = "projects"
 SKILL_FILE = re.compile(r"^skills/([^/]+)/SKILL\.md$")
@@ -97,6 +105,13 @@ def load_manifest():
                 raise ValueError("unknown kind %r for %s" % (entry["kind"], entry["target"]))
             if not os.path.isfile(os.path.join(HERE, entry["source"])):
                 raise ValueError("payload file missing: %s" % entry["source"])
+        live = {entry["target"] for entry in files}
+        for entry in manifest.setdefault("retired", []):
+            if not isinstance(entry.get("target"), str) or not entry["target"]:
+                raise ValueError("retired entry has no target")
+            if entry["target"] in live:
+                raise ValueError("%s is listed both as installed and as retired"
+                                 % entry["target"])
         for entry in tests:
             entry["component"], entry["file"]
         for entry in manifest.get("settings", []):
@@ -118,7 +133,7 @@ def load_record(target):
     path = os.path.join(target, RECORD_DIR, RECORD_FILE)
     if not os.path.exists(path):
         return {"format": RECORD_FORMAT, "files": {}, "components": {}, "settings_added": [],
-                "project_overrides": {}}
+                "project_overrides": {}, "retired_kept": {}}
     try:
         with open(path, encoding="utf-8") as f:
             record = json.load(f)
@@ -129,10 +144,13 @@ def load_record(target):
         record.setdefault("components", {})
         record.setdefault("settings_added", [])
         record.setdefault("project_overrides", {})
+        record.setdefault("retired_kept", {})
         if not isinstance(record["components"], dict):
             raise ValueError("'components' is not an object")
         if not isinstance(record["project_overrides"], dict):
             raise ValueError("'project_overrides' is not an object")
+        if not isinstance(record["retired_kept"], dict):
+            raise ValueError("'retired_kept' is not an object")
         if not isinstance(record["settings_added"], list):
             raise ValueError("'settings_added' is not a list")
         record["format"] = RECORD_FORMAT
@@ -242,6 +260,15 @@ def write_change(target, rel, text):
     with open(path, "w", encoding="utf-8", newline="") as f:
         f.write(text)
     return path
+
+
+def drop_tracking(record, target, rel):
+    """Forget a file: its record entry, its base copy and any kept-while-retired hash."""
+    record["files"].pop(rel, None)
+    record["retired_kept"].pop(rel, None)
+    base = base_path(target, rel)
+    if os.path.isfile(base):
+        os.remove(base)
 
 
 def untouched(record, entry, current_sha):
@@ -626,6 +653,29 @@ def cmd_install(args, manifest, record, target):
             if write:
                 os.chmod(dst, os.stat(dst).st_mode | 0o111)
 
+    # Files the bundle used to install and no longer ships.
+    removed, retired_listed = [], []
+    for entry in manifest["retired"]:
+        rel = entry["target"]
+        dst = os.path.join(target, rel)
+        if not os.path.isfile(dst):
+            # Already gone: stop tracking it, without a word.
+            if write:
+                drop_tracking(record, target, rel)
+            continue
+        current_sha = sha256_of(dst)
+        if record["retired_kept"].get(rel) == current_sha:
+            # The user chose to keep it and hasn't edited it since. The label is honoured
+            # here, unlike for a live file: there is no bundle version to bring it up to.
+            earlier_decision.append(rel)
+        elif untouched(record, entry, current_sha):
+            removed.append(rel)
+            if write:
+                os.remove(dst)
+                drop_tracking(record, target, rel)
+        else:
+            retired_listed.append((rel, entry.get("note")))
+
     backup = None
     if write:
         if to_add:
@@ -657,6 +707,14 @@ def cmd_install(args, manifest, record, target):
     print("Needs a decision (existing file differs, left as it is): %d" % len(needs_decision))
     for path, kind, diff in needs_decision:
         print("  %s (%s)%s" % (path, kind, ", bundle change: %s" % diff if diff else ""))
+    print("%s (no longer in the bundle): %d" % ("Would remove" if args.dry_run else "Removed",
+                                               len(removed)))
+    for path in removed:
+        print("  %s" % path)
+    print("No longer in the bundle, you edited it or it isn't in the record: %d"
+          % len(retired_listed))
+    for path, note in retired_listed:
+        print("  %s%s" % (path, " (%s)" % note if note else ""))
     print("Held back, because a project has its own and a user-level copy would override it: %d"
           % len(held_back))
     for path, name, projects in held_back:
@@ -744,22 +802,78 @@ def cmd_decline(args, manifest, record, target):
     return 0
 
 
-def manifest_entry_for(manifest, target, path):
+def target_rel(target, path):
+    """A path as the user gave it, as a target path relative to the install target."""
     path = os.path.expanduser(path)
     if os.path.isabs(path):
         path = os.path.relpath(path, target)
-    rel = os.path.normpath(path).replace(os.sep, "/")
+    return os.path.normpath(path).replace(os.sep, "/")
+
+
+def manifest_entry_for(manifest, target, path):
+    """The entry for a file the bundle installs. Never a retired one: see retired_entry_for."""
+    rel = target_rel(target, path)
     for entry in manifest["files"]:
         if entry["target"] == rel:
             return entry
     return None
 
 
+def retired_entry_for(manifest, target, path):
+    """The retired-list entry for a file the bundle no longer ships, or None.
+
+    Kept apart from manifest_entry_for so that project-override, which uses that, never accepts
+    a retired file.
+    """
+    rel = target_rel(target, path)
+    for entry in manifest["retired"]:
+        if entry["target"] == rel:
+            return entry
+    return None
+
+
+def record_retired(args, record, target, entry):
+    """record on a file the bundle no longer ships: kept or removed only."""
+    rel = entry["target"]
+    dst = os.path.join(target, rel)
+    if args.decision not in RETIRED_DECISIONS:
+        print("install.py: %s is no longer in the bundle, so it can only be recorded as kept or "
+              "removed." % rel, file=sys.stderr)
+        return 2
+    if args.decision == "removed":
+        if os.path.lexists(dst):
+            print("install.py: %s still exists. Delete it first, once the user has said to, then "
+                  "record it as removed." % dst, file=sys.stderr)
+            return 2
+        drop_tracking(record, target, rel)
+        save_record(target, record)
+        print("Recorded: %s removed. Later runs no longer track it." % rel)
+        return 0
+    if not os.path.isfile(dst):
+        print("install.py: %s doesn't exist, so there is no decision to record." % dst,
+              file=sys.stderr)
+        return 2
+    # Kept: there is no bundle version to compare with any more, so the file's own hash is all
+    # that is recorded, apart from record["files"].
+    drop_tracking(record, target, rel)
+    record["retired_kept"][rel] = sha256_of(dst)
+    save_record(target, record)
+    print("Recorded: %s kept. Later runs leave it alone until it is edited again." % rel)
+    return 0
+
+
 def cmd_record(args, manifest, record, target):
+    retired = retired_entry_for(manifest, target, args.path)
+    if retired is not None:
+        return record_retired(args, record, target, retired)
     entry = manifest_entry_for(manifest, target, args.path)
     if entry is None:
         print("install.py: %s is not a file this bundle installs. Use a path as the install "
               "summary lists it, relative to %s." % (args.path, target), file=sys.stderr)
+        return 2
+    if args.decision == "removed":
+        print("install.py: %s is still in the bundle, so it can't be recorded as removed. "
+              "Record kept, merged or replaced." % entry["target"], file=sys.stderr)
         return 2
     src = os.path.join(HERE, entry["source"])
     dst = os.path.join(target, entry["target"])
@@ -821,7 +935,7 @@ def main(argv=None):
     p_decline.add_argument("--target", default=argparse.SUPPRESS)
     p_record = sub.add_parser("record", help="record the decision on a listed file")
     p_record.add_argument("path", help="the file's path as the install summary lists it")
-    p_record.add_argument("--decision", required=True, choices=DECISIONS)
+    p_record.add_argument("--decision", required=True, choices=DECISIONS + ("removed",))
     p_record.add_argument("--target", default=argparse.SUPPRESS)
     p_override = sub.add_parser(
         "project-override",

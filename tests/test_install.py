@@ -763,6 +763,164 @@ class BundleChangeTest(TargetCase):
         self.assertFalse(os.path.exists(self.diff))
 
 
+RETIRED = MANIFEST["retired"][0]["target"]
+
+
+class RetiredTest(TargetCase):
+    """A file the bundle no longer ships is removed if never edited, otherwise raised."""
+
+    OLD = b"# The command the bundle used to ship\n"
+    MINE = b"- my own addition\n"
+    REMOVED = "Removed (no longer in the bundle): "
+    LISTED = "No longer in the bundle, you edited it or it isn't in the record: "
+
+    def setUp(self):
+        super().setUp()
+        self.install_ok()
+        self.base = self.t("workflow-bundle/base/" + RETIRED + ".base")
+
+    def plant(self, now=None, recorded=True):
+        """Put the retired file back as an older bundle installed it, and as `now` on disk.
+
+        The record is rewritten without "retired_kept", as an install from before it existed.
+        """
+        os.makedirs(os.path.dirname(self.t(RETIRED)), exist_ok=True)
+        with open(self.t(RETIRED), "wb") as f:
+            f.write(self.OLD if now is None else now)
+        record = self.record()
+        record.pop("retired_kept", None)
+        if recorded:
+            os.makedirs(os.path.dirname(self.base), exist_ok=True)
+            with open(self.base, "wb") as f:
+                f.write(self.OLD)
+            old_sha = hashlib.sha256(self.OLD).hexdigest()
+            record["files"][RETIRED] = {
+                "kind": "owned", "bundle_sha256": old_sha, "current_sha256": old_sha,
+                "decision": "installed", "bundle_commit": None, "date": "2026-01-01",
+                "base": "workflow-bundle/base/" + RETIRED + ".base"}
+        with open(self.t("workflow-bundle/install-record.json"), "w", encoding="utf-8") as f:
+            json.dump(record, f)
+
+    def test_untouched_retired_file_is_removed_with_its_record_and_base(self):
+        self.plant()
+        r = self.install_ok()
+        self.assertFalse(os.path.exists(self.t(RETIRED)))
+        self.assertNotIn(RETIRED, self.record()["files"])
+        self.assertFalse(os.path.exists(self.base))
+        self.assertIn(self.REMOVED + "1\n  %s\n" % RETIRED, r.stdout)
+        self.assertIn(self.LISTED + "0\n", r.stdout)
+
+    def test_edited_retired_file_is_listed_and_left(self):
+        self.plant(now=self.OLD + self.MINE)
+        r = self.install_ok()
+        self.assertEqual(read_bytes(self.t(RETIRED)), self.OLD + self.MINE)
+        self.assertIn(RETIRED, self.record()["files"])
+        self.assertIn(self.REMOVED + "0\n", r.stdout)
+        self.assertIn(self.LISTED + "1\n  %s (" % RETIRED, r.stdout)
+
+    def test_retired_file_not_in_the_record_is_listed_and_left(self):
+        self.plant(recorded=False)
+        r = self.install_ok()
+        self.assertEqual(read_bytes(self.t(RETIRED)), self.OLD)
+        self.assertIn(self.REMOVED + "0\n", r.stdout)
+        self.assertIn(self.LISTED + "1\n  %s (" % RETIRED, r.stdout)
+
+    def test_absent_retired_file_is_dropped_from_the_record_silently(self):
+        self.plant()
+        os.remove(self.t(RETIRED))
+        r = self.install_ok()
+        self.assertNotIn(RETIRED, self.record()["files"])
+        self.assertFalse(os.path.exists(self.base))
+        self.assertNotIn(RETIRED, r.stdout)
+        self.assertIn(self.REMOVED + "0\n", r.stdout)
+
+    def test_dry_run_writes_nothing(self):
+        self.plant()
+        before = snapshot(self.target)
+        r = self.install_ok("--dry-run")
+        self.assertIn("Would remove (no longer in the bundle): 1\n  %s\n" % RETIRED, r.stdout)
+        self.assertEqual(snapshot(self.target), before)
+        # Absent: a real run would drop its entry; a dry run leaves the record as it is.
+        os.remove(self.t(RETIRED))
+        before = snapshot(self.target)
+        self.install_ok("--dry-run")
+        self.assertEqual(snapshot(self.target), before)
+
+    def test_kept_retired_file_is_left_on_later_runs_even_as_the_old_bundle_version(self):
+        # Content equal to the old bundle version would be "untouched" by its hashes alone.
+        self.plant()
+        r = self.install_ok("record", RETIRED, "--decision", "kept")
+        self.assertIn("Recorded: %s kept." % RETIRED, r.stdout)
+        self.assertNotIn("bundle version changes", r.stdout)
+        record = self.record()
+        self.assertNotIn(RETIRED, record["files"])
+        self.assertEqual(record["retired_kept"], {RETIRED: sha256(self.t(RETIRED))})
+        r = self.install_ok()
+        self.assertEqual(read_bytes(self.t(RETIRED)), self.OLD)
+        self.assertNotIn(RETIRED, r.stdout)
+        self.assertIn("skipped by an earlier decision: 1)", r.stdout)
+        # Edited after keeping: raised again, and still never deleted.
+        with open(self.t(RETIRED), "ab") as f:
+            f.write(self.MINE)
+        r = self.install_ok()
+        self.assertIn(self.LISTED + "1\n", r.stdout)
+        self.assertTrue(os.path.exists(self.t(RETIRED)))
+
+    def test_record_removed_is_refused_while_the_file_exists(self):
+        self.plant(now=self.OLD + self.MINE)
+        r = self.install("record", RETIRED, "--decision", "removed")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("still exists", r.stderr)
+        self.assertIn(RETIRED, self.record()["files"])
+        self.assertTrue(os.path.exists(self.base))
+
+    def test_record_removed_after_deleting_stops_tracking_it(self):
+        self.plant(now=self.OLD + self.MINE)
+        os.remove(self.t(RETIRED))
+        r = self.install_ok("record", RETIRED, "--decision", "removed")
+        self.assertIn("Recorded: %s removed." % RETIRED, r.stdout)
+        self.assertNotIn(RETIRED, self.record()["files"])
+        self.assertNotIn(RETIRED, self.record()["retired_kept"])
+        self.assertFalse(os.path.exists(self.base))
+
+    def test_record_removed_is_refused_for_a_file_the_bundle_still_ships(self):
+        r = self.install("record", OLD_DOC, "--decision", "removed")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("still in the bundle", r.stderr)
+        self.assertTrue(os.path.exists(self.t(OLD_DOC)))
+        self.assertIn(OLD_DOC, self.record()["files"])
+
+    def test_record_replaced_or_merged_is_refused_for_a_retired_file(self):
+        self.plant(now=self.OLD + self.MINE)
+        before = self.record()
+        for decision in ("replaced", "merged"):
+            r = self.install("record", RETIRED, "--decision", decision)
+            self.assertEqual(r.returncode, 2, decision)
+            self.assertIn("can only be recorded as kept or removed", r.stderr, decision)
+        self.assertEqual(self.record(), before)
+
+    def test_project_override_refuses_a_retired_file(self):
+        self.plant()
+        r = self.install("project-override", RETIRED, "--decision", "install")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("not a skill or command this bundle installs", r.stderr)
+
+    def test_retired_target_that_is_also_live_exits_2(self):
+        repo_copy = os.path.join(self._tmp.name, "repo")
+        os.makedirs(repo_copy)
+        shutil.copy(INSTALL, repo_copy)
+        shutil.copytree(os.path.join(REPO, "payload"), os.path.join(repo_copy, "payload"))
+        manifest = copy.deepcopy(MANIFEST)
+        manifest["retired"].append({"target": OLD_DOC, "note": "both"})
+        with open(os.path.join(repo_copy, "manifest.json"), "w", encoding="utf-8") as f:
+            json.dump(manifest, f)
+        before = snapshot(self.target)
+        r = run_install(self.target, script=os.path.join(repo_copy, "install.py"))
+        self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
+        self.assertIn("both as installed and as retired", r.stderr)
+        self.assertEqual(snapshot(self.target), before)
+
+
 class ProjectOverrideTest(TargetCase):
     """A user-level skill or command overrides a project's own of the same name."""
 
