@@ -135,6 +135,13 @@
       "executable": false
     },
     {
+      "source": "payload/skills/next/SKILL.md",
+      "target": "skills/next/SKILL.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
       "source": "payload/commands/memory-audit.md",
       "target": "commands/memory-audit.md",
       "kind": "owned",
