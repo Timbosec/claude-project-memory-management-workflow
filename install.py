@@ -14,7 +14,9 @@ missing, skips it if identical, and updates it to the bundle version if the inst
 proves the user never edited it (the file still is the bundle version last installed or
 decided on). Otherwise it leaves the existing file alone: a seed ledger is kept silently, a file
 whose recorded decision still holds is skipped, and any other file is listed as needing a
-decision. A skill or command that a project already has its own copy of
+decision. When the bundle has changed since the version recorded for a listed file, that change
+alone (recorded version to current bundle version) is written as a diff under
+workflow-bundle/changes/ and its path printed with the file. A skill or command that a project already has its own copy of
 is held back, because the user-level one would override it, unless a recorded decision says to
 install it; one already installed is reported as overriding the project's copy. It adds the bundle's hook entries to settings.json, runs the
 installed tests and prints a short summary. An optional component is selected when its
@@ -40,6 +42,7 @@ read, or a subcommand's arguments are wrong.
 import argparse
 import copy
 import datetime
+import difflib
 import hashlib
 import json
 import os
@@ -55,6 +58,9 @@ RECORD_DIR = "workflow-bundle"
 RECORD_FILE = "install-record.json"
 RECORD_FORMAT = 3
 BASE_SUFFIX = ".base"
+# Each real run's bundle changes for files the user edited; emptied at the start of the run.
+CHANGES_DIR = "changes"
+CHANGE_SUFFIX = ".diff"
 SETTINGS_FILE = "settings.json"
 DECISIONS = ("kept", "merged", "replaced")
 OVERRIDE_DECISIONS = ("install", "hold")
@@ -195,6 +201,47 @@ def previously_decided(record, entry, bundle_sha, current_sha):
     return (isinstance(seen, dict)
             and seen.get("bundle_sha256") == bundle_sha
             and seen.get("current_sha256") == current_sha)
+
+
+def changes_dir(target):
+    return os.path.join(target, RECORD_DIR, CHANGES_DIR)
+
+
+def bundle_change(record, target, entry, bundle_sha):
+    """The bundle's own change since the version the user last had, as unified-diff text.
+
+    None when there is nothing to compare against (no record entry, or its base copy is
+    missing or no longer the recorded bundle version) or when the bundle hasn't changed since.
+    The diff runs from the base copy to the bundle version and never reads the user's file, so
+    it holds none of the user's edits.
+    """
+    seen = record["files"].get(entry["target"])
+    if not isinstance(seen, dict) or seen.get("bundle_sha256") == bundle_sha:
+        return None
+    base = base_path(target, entry["target"])
+    if not os.path.isfile(base) or sha256_of(base) != seen.get("bundle_sha256"):
+        return None
+    with open(base, encoding="utf-8", errors="replace", newline="") as f:
+        old = f.read().splitlines(keepends=True)
+    with open(os.path.join(HERE, entry["source"]), encoding="utf-8", errors="replace",
+              newline="") as f:
+        new = f.read().splitlines(keepends=True)
+    rel = entry["target"]
+    lines = []
+    for line in difflib.unified_diff(old, new, "a/" + rel + " (bundle version you last had)",
+                                     "b/" + rel + " (bundle version now)"):
+        if not line.endswith("\n"):
+            line += "\n\\ No newline at end of file\n"
+        lines.append(line)
+    return "".join(lines)
+
+
+def write_change(target, rel, text):
+    path = os.path.join(changes_dir(target), rel + CHANGE_SUFFIX)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        f.write(text)
+    return path
 
 
 def untouched(record, entry, current_sha):
@@ -509,6 +556,10 @@ def cmd_install(args, manifest, record, target):
         settings, [s for s in manifest.get("settings", []) if s["component"] in components],
         target)
 
+    # Only after settings.json has passed, so a run that stops on it has written nothing.
+    if write and os.path.isdir(changes_dir(target)):
+        shutil.rmtree(changes_dir(target))
+
     installed, unchanged, needs_decision = [], [], []
     seeds_kept, earlier_decision, exec_fixed, updated = [], [], [], []
     held_back, held_earlier, overriding = [], [], []
@@ -563,7 +614,9 @@ def cmd_install(args, manifest, record, target):
                 note_in_record(record, target, entry, src, dst, "updated", commit, today)
             continue
         else:
-            needs_decision.append((entry["target"], entry["kind"]))
+            change = bundle_change(record, target, entry, bundle_sha) if write else None
+            diff = write_change(target, entry["target"], change) if change else None
+            needs_decision.append((entry["target"], entry["kind"], diff))
             continue
 
         # A file the bundle's content is settled for: restore a lost executable bit. This
@@ -602,8 +655,8 @@ def cmd_install(args, manifest, record, target):
     print("Left as you have them: %d (seed ledgers kept: %d; skipped by an earlier decision: %d)"
           % (len(seeds_kept) + len(earlier_decision), len(seeds_kept), len(earlier_decision)))
     print("Needs a decision (existing file differs, left as it is): %d" % len(needs_decision))
-    for path, kind in needs_decision:
-        print("  %s (%s)" % (path, kind))
+    for path, kind, diff in needs_decision:
+        print("  %s (%s)%s" % (path, kind, ", bundle change: %s" % diff if diff else ""))
     print("Held back, because a project has its own and a user-level copy would override it: %d"
           % len(held_back))
     for path, name, projects in held_back:

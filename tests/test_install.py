@@ -580,7 +580,8 @@ OLD_DOC = "writing-standing-docs.md"
 OLD_CONTENT = b"# An older bundle version of this file\n"
 
 
-def install_old_version(case, rel, decision="installed", now=None, recorded_current=None):
+def install_old_version(case, rel, decision="installed", now=None, recorded_current=None,
+                        old=OLD_CONTENT):
     """Make an installed file look as if an older bundle had installed it.
 
     The file, its base copy and the record's bundle hash are set to an "old version" that the
@@ -588,11 +589,11 @@ def install_old_version(case, rel, decision="installed", now=None, recorded_curr
     `recorded_current` (default: the old version's), and the file on disk ends up as `now`
     (default: the old version).
     """
-    old_sha = hashlib.sha256(OLD_CONTENT).hexdigest()
+    old_sha = hashlib.sha256(old).hexdigest()
     with open(case.t("workflow-bundle/base/" + rel + ".base"), "wb") as f:
-        f.write(OLD_CONTENT)
+        f.write(old)
     with open(case.t(rel), "wb") as f:
-        f.write(OLD_CONTENT if now is None else now)
+        f.write(old if now is None else now)
     path = case.t("workflow-bundle/install-record.json")
     record = case.record()
     record["files"][rel].update({
@@ -657,6 +658,109 @@ class UpgradeTest(TargetCase):
         r = self.install_ok("--dry-run")
         self.assertEqual(snapshot(self.target), before)
         self.assertIn("Would update: 1\n  %s\n" % OLD_DOC, r.stdout)
+
+
+class BundleChangeTest(TargetCase):
+    """A file the user edited is listed with only the bundle's own change, as a diff file."""
+
+    LISTED = "Needs a decision (existing file differs, left as it is): "
+    MINE = b"- a rule of my own\n"
+
+    def setUp(self):
+        super().setUp()
+        self.install_ok()
+        lines = read_bytes(os.path.join(REPO, "payload", OLD_DOC)).splitlines(keepends=True)
+        # The older bundle lacked one line that the bundle has now.
+        self.added = lines[10]
+        self.old = b"".join(lines[:10] + lines[11:])
+        self.diff = self.t("workflow-bundle/changes/" + OLD_DOC + ".diff")
+
+    def edited_after_old_install(self):
+        install_old_version(self, OLD_DOC, old=self.old, now=self.old + self.MINE)
+
+    def stale_change(self):
+        stale = self.t("workflow-bundle/changes/from-an-earlier-run.diff")
+        os.makedirs(os.path.dirname(stale), exist_ok=True)
+        with open(stale, "w", encoding="utf-8") as f:
+            f.write("stale\n")
+        return stale
+
+    def test_diff_holds_the_bundle_change_and_none_of_the_users_edit(self):
+        self.edited_after_old_install()
+        r = self.install_ok()
+        self.assertIn(self.LISTED + "1", r.stdout)
+        self.assertIn("  %s (owned), bundle change: %s\n" % (OLD_DOC, self.diff), r.stdout)
+        text = read_bytes(self.diff).decode("utf-8")
+        body = [l for l in text.splitlines(keepends=True)
+                if not l.startswith(("---", "+++", "@@"))]
+        self.assertEqual([l for l in body if l.startswith("+")],
+                         ["+" + self.added.decode("utf-8")])
+        self.assertEqual([l for l in body if l.startswith("-")], [])
+        self.assertNotIn(self.MINE.decode("utf-8").strip(), text)
+        self.assertEqual(read_bytes(self.t(OLD_DOC)), self.old + self.MINE)
+
+    def test_no_record_lists_the_file_without_a_diff(self):
+        os.remove(self.t("workflow-bundle/install-record.json"))
+        with open(self.t(OLD_DOC), "ab") as f:
+            f.write(self.MINE)
+        r = self.install_ok()
+        self.assertIn(self.LISTED + "1", r.stdout)
+        self.assertIn("  %s (owned)\n" % OLD_DOC, r.stdout)
+        self.assertNotIn("bundle change", r.stdout)
+        self.assertFalse(os.path.exists(self.t("workflow-bundle/changes")))
+
+    def test_base_copy_that_is_not_the_recorded_version_gives_no_diff(self):
+        self.edited_after_old_install()
+        with open(self.t("workflow-bundle/base/" + OLD_DOC + ".base"), "ab") as f:
+            f.write(b"- not what the record says was installed\n")
+        r = self.install_ok()
+        self.assertIn("  %s (owned)\n" % OLD_DOC, r.stdout)
+        self.assertNotIn("bundle change", r.stdout)
+        self.assertFalse(os.path.exists(self.diff))
+
+    def test_edit_while_the_bundle_is_unchanged_lists_it_without_a_diff(self):
+        with open(self.t(OLD_DOC), "ab") as f:
+            f.write(self.MINE)
+        r = self.install_ok()
+        self.assertIn("  %s (owned)\n" % OLD_DOC, r.stdout)
+        self.assertNotIn("bundle change", r.stdout)
+        self.assertFalse(os.path.exists(self.diff))
+
+    def test_changes_from_an_earlier_run_are_emptied(self):
+        stale = self.stale_change()
+        self.edited_after_old_install()
+        self.install_ok()
+        self.assertFalse(os.path.exists(stale))
+        self.assertTrue(os.path.exists(self.diff))
+
+    def test_dry_run_lists_the_file_without_a_diff_and_writes_nothing(self):
+        self.stale_change()
+        self.edited_after_old_install()
+        before = snapshot(self.target)
+        r = self.install_ok("--dry-run")
+        self.assertEqual(snapshot(self.target), before)
+        self.assertIn("  %s (owned)\n" % OLD_DOC, r.stdout)
+        self.assertNotIn("bundle change", r.stdout)
+
+    def test_unreadable_settings_leaves_earlier_changes_in_place(self):
+        self.stale_change()
+        with open(self.t("settings.json"), "w", encoding="utf-8") as f:
+            f.write('{"hooks": [}')
+        before = snapshot(self.target)
+        r = self.install()
+        self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
+        self.assertIn("Nothing was written", r.stderr)
+        self.assertEqual(snapshot(self.target), before)
+
+    def test_recording_a_decision_refreshes_the_base_so_it_is_not_listed_again(self):
+        self.edited_after_old_install()
+        self.install_ok()
+        self.install_ok("record", OLD_DOC, "--decision", "merged")
+        self.assertEqual(read_bytes(self.t("workflow-bundle/base/" + OLD_DOC + ".base")),
+                         read_bytes(os.path.join(REPO, "payload", OLD_DOC)))
+        r = self.install_ok()
+        self.assertNotIn(OLD_DOC, r.stdout)
+        self.assertFalse(os.path.exists(self.diff))
 
 
 class ProjectOverrideTest(TargetCase):
