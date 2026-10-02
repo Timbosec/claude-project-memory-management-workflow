@@ -128,7 +128,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      it carries the operative rules for editing standing docs and memory bodies
      (contract-vs-snapshot, canonical-plus-pointers, replace-not-join, audience-referent)
 
-3. **Propose each candidate one at a time — write nothing until the user approves it.**
+3. **Propose each candidate for its own approval — write nothing until the user approves it.**
    Build the list of undocumented decisions/updates from steps 1-2.
 
    **Then triage it — most of it should not reach the user.** For each candidate, name the future
@@ -139,10 +139,8 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
    mistake inverted. Having a valid home is not the same as being worth a decision: steps 1-2
    settled *where* a candidate goes, and a candidate can pass that and still fail here.
 
-   Then go through what survives sequentially, one candidate per turn. The entire candidate lives
-   INSIDE a single `AskUserQuestion` call — never present it as prose and then ask in the same
-   turn (many clients collapse same-turn prose before a question; see prompt-lessons
-   `one-decision-at-a-time`):
+   Then go through what survives. Each candidate is asked in a question panel, laid out as
+   follows:
    - **The question field opens with these labelled lines, in this order, with nothing before
      them:**
 
@@ -192,10 +190,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      the line and let the user decide.
    - The apply option's `preview` pane carries the exact text you'd write. Option labels say
      what will happen (apply / reject), not what the candidate is — the question field has
-     already said that. One apply/reject question per candidate — never batch candidates.
-   - Only if a candidate is too large for a preview pane: two-turn split — full context as
-     prose ending the turn, closing with "I'll need your decision on how to proceed. Tell me
-     when you're ready.", then the bare question next turn.
+     already said that. One apply/reject decision per candidate.
    - If applied: write it immediately (append to `decisions.md`, or create/update the memory
      file + index line per the memory-writing convention), commit it if it's not a
      memory-directory write (see the commit note above), then move to the next candidate. When
@@ -211,9 +206,9 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      there now.** That means a harness task list, a numbered plan held only in conversation, a
      "still to do" list written into a message — anything a reader could mistake for a record.
      Every item must end up under Open or Closed; anything that exists only in session state is
-     unsaved work, so propose it exactly as step 3 does, one candidate per turn with the text in
-     the preview. **State what you checked and what you found, including "nothing outside the
-     backlog" — silence here is indistinguishable from not looking.**
+     unsaved work, so propose it exactly as step 3 does, with the text in the preview. **State
+     what you checked and what you found, including "nothing outside the backlog" — silence
+     here is indistinguishable from not looking.**
      (A skill step rather than a hook because this state is held in the session, not on disk —
      no script can read it. **Deliberately names no tool**: a tool named here can be removed
      from the harness, and the step would then fail on every run without anyone noticing. The
