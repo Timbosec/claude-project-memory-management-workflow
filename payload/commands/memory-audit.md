@@ -24,8 +24,9 @@ User-scope rule homes — standing rules, and they go stale like any other doc:
   - ~/.claude/writing-standing-docs.md   (the agent editing a standing doc or memory)
   - ~/.claude/writing-executor-briefs.md (the agent briefing an executor or verifying it)
   ~/.claude/CLAUDE.md appears twice on purpose — audited as an instruction file above, and as
-  a rule home here. The actor test that assigns a rule to one of these is canonical in that
-  file's header; apply it from there, don't re-derive it.
+  a rule home here. The actor test that assigns a rule to one of these is stated in `/finalise`
+  step 2 (`~/.claude/skills/finalise/SKILL.md`, "who's the actor?"); apply it from there, don't
+  re-derive it.
 Lesson ledgers — NOT rule homes; nothing in them is in force. Audit per Part 2.6, not Part 2:
   - ~/.claude/lesson-candidates.md    (first cases awaiting a second; origin logs of promoted rules)
   - <repo>/lesson-candidates.md       (this project's own ledger, if it has one — same schema,

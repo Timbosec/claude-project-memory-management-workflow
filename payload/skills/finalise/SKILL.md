@@ -90,12 +90,12 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      be compared by `/memory-audit` against a *different* project's ledger, potentially a very
      different discipline — a vague symptom description risks a false match on wording alone where
      the two cases don't actually share a mechanism. Name what's actually going on.
-     For (a) only, **who's the actor?** — four user-scope homes, per the routing test in
-     `~/.claude/CLAUDE.md`'s header: the user authoring a prompt/brief → `prompt-lessons.md`; the
-     agent editing a standing doc or memory → `~/.claude/writing-standing-docs.md`; the agent
-     briefing an executor or verifying its checkpoint →
-     `~/.claude/writing-executor-briefs.md`; the agent at
-     any other moment → `~/.claude/CLAUDE.md` § Working rules. An amendment re-derives its home
+     For (a) only, **who's the actor?** — four user-scope homes (`/memory-audit` applies this
+     test from here, so it holds whatever the user's `CLAUDE.md` says): the user authoring a
+     prompt/brief → `prompt-lessons.md`; the agent editing a standing doc or memory →
+     `~/.claude/writing-standing-docs.md`; the agent briefing an executor or verifying its
+     checkpoint → `~/.claude/writing-executor-briefs.md`; the agent at any other moment →
+     `~/.claude/CLAUDE.md` § Working rules. An amendment re-derives its home
      rather than inheriting the home of the rule it extends.
      **Split, don't dual-write** — a candidate can have BOTH a rule-shaped core (global or
      project-level) AND a one-off residue; if (and only if) the residue isn't already recorded in
