@@ -31,6 +31,8 @@ $SUBAGENT_GUARD_REPO_DIR / $SUBAGENT_GUARD_MEMORY_DIR so tests never touch real 
 Output protocol: emit a PreToolUse `permissionDecision: deny` to block + feed the reason back
 to Claude; stay silent (exit 0) to let everything else fall through to normal permission flow.
 """
+from __future__ import annotations
+
 import json
 import os
 import sys

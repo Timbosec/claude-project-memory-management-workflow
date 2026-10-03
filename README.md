@@ -110,7 +110,7 @@ Everything installs into `~/.claude/...` (global, not per-project) and only need
 machine. After that, starting a new project is just: open Claude Code inside the repo and run
 `/bootstrap-project`.
 
-You need `python3` and `git`.
+You need `python3` (3.9 or later) and `git`.
 
 1. Clone this repository, and keep the clone: you re-run the install from it.
 2. Open Claude Code inside the clone and ask it to install the bundle.

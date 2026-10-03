@@ -527,6 +527,9 @@ class TestAbsenceGuards(unittest.TestCase):
                             check=True, capture_output=True)
             subprocess.run(["git", "config", "user.name", "T"], cwd=tmpdir,
                             check=True, capture_output=True)
+            # A global commit.gpgsign would otherwise make this throwaway commit try to sign.
+            subprocess.run(["git", "config", "commit.gpgsign", "false"], cwd=tmpdir,
+                            check=True, capture_output=True)
             with open(os.path.join(tmpdir, "f.txt"), "w", encoding="utf-8") as f:
                 f.write("x\n")
             subprocess.run(["git", "add", "f.txt"], cwd=tmpdir, check=True,
@@ -615,7 +618,10 @@ class TestNextUpStalenessLive(unittest.TestCase):
     Hermetic: builds its own tmpdir repo and never reads this project's history."""
 
     def _git(self, repo, *args):
-        return subprocess.run(["git", "-c", "user.name=T", "-c", "user.email=t@e.st", *args],
+        # Identity and signing are pinned so the user's global git config can't reach in: a
+        # global commit.gpgsign makes every throwaway commit try to sign, and fail unattended.
+        return subprocess.run(["git", "-c", "user.name=T", "-c", "user.email=t@e.st",
+                               "-c", "commit.gpgsign=false", *args],
                               cwd=repo, check=True, capture_output=True, text=True).stdout.strip()
 
     def _commit(self, repo, files, msg):
