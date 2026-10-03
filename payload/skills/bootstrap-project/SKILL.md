@@ -53,6 +53,8 @@ when they'd actually help decide what to work on next.
    It writes nothing and prints `exists` or `would create` for `backlog.md`, `decisions.md`,
    `lesson-candidates.md` and `CLAUDE.md`. If any of the first three exists, show the user its
    content and ask how to proceed before going on — don't assume this is the first run here.
+   If it prints `refused`, this directory is a clone of the workflow bundle, not a project: stop,
+   show the user its message, and write nothing.
 4. Run the same command without `--dry-run`. It writes each missing file with the project name and
    today's date filled in, and never changes a file that exists. The files carry no invented
    tasks or decisions.

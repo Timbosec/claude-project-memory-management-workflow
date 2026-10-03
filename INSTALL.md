@@ -21,6 +21,11 @@ its own, and lists it under "Updated". It deletes a file the bundle no longer sh
 never edited it, and lists it under "Removed". Any other file changes only where the user decides
 it does, on a file the summary lists.
 
+If you find a bug in the bundle during an install, don't fix it in this clone. Write it up for the
+user (the file, what goes wrong, the evidence and a suggested fix) and tell them they can open an
+issue on the repository they cloned from, which `git remote get-url origin` names. Fixes arrive
+through `git pull`.
+
 ## 1. Run the script
 
 Run `python3 install.py` and show the user its summary. If it exits non-zero, show the user the

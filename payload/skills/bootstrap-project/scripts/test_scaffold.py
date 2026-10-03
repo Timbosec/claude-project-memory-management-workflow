@@ -85,6 +85,27 @@ class TestScaffold(unittest.TestCase):
                 self.assertNotEqual(r.returncode, 0, args)
                 self.assertEqual(os.listdir(root), [], args)
 
+    def test_bundle_clone_is_refused_and_left_untouched(self):
+        for extra in ([], ["--dry-run"]):
+            with tempfile.TemporaryDirectory() as root:
+                for name in ("install.py", "manifest.json"):
+                    with open(os.path.join(root, name), "w", encoding="utf-8") as f:
+                        f.write("")
+                r = _run(root, "widget-shop", *extra)
+                self.assertEqual(r.returncode, 1, extra)
+                self.assertIn("clone of the workflow bundle", r.stderr, extra)
+                self.assertEqual(r.stdout, "", extra)
+                self.assertEqual(sorted(os.listdir(root)), ["install.py", "manifest.json"], extra)
+
+    def test_project_with_only_one_bundle_marker_is_scaffolded(self):
+        for marker in ("install.py", "manifest.json"):
+            with tempfile.TemporaryDirectory() as root:
+                with open(os.path.join(root, marker), "w", encoding="utf-8") as f:
+                    f.write("")
+                r = _run(root, "widget-shop", "--date", "2026-01-15")
+                self.assertEqual(r.returncode, 0, r.stderr)
+                self.assertEqual(sorted(os.listdir(root)), sorted(WRITTEN + [marker]))
+
 
 if __name__ == "__main__":
     unittest.main()
