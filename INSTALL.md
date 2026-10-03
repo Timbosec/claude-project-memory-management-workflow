@@ -4,6 +4,10 @@ You follow these steps when the user asks you to install this bundle. `install.p
 copying, the `settings.json` changes and the tests. Your part is the decisions it leaves to the
 user, which you take with them one at a time.
 
+For every decision you raise, whether that's a file, a rule in `CLAUDE.md` or a component, give
+the user the options available, the pros and cons of each for that specific case, and which one
+you recommend and why. Then wait for their choice before acting on it.
+
 Run every command from the clone root, the directory holding this file. The install always goes
 into `~/.claude`. `--target DIR` exists only for testing in a scratch directory: the hook
 commands it writes still run files under `~/.claude/hooks/`.
@@ -70,7 +74,8 @@ in step 4 below; then record `merged`. Without one:
 
 **Any other file** (kind `owned`): with a bundle change, work from the diff as above. Without
 one, read both versions in full and show the user the specific differences, not just that the
-file differs. Ask whether to keep theirs, take the bundle's or merge. For a merge, agree each difference with the user, then write the result to the target.
+file differs. Ask whether to keep theirs, take the bundle's or merge. For a merge, agree each
+difference with the user, then write the result to the target.
 
 Then record the decision:
 - kept theirs: `python3 install.py record PATH --decision kept`
