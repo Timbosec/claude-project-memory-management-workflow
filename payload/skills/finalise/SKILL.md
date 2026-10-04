@@ -86,10 +86,10 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      **An amendment that sharpens an existing rule needs its own second case** — it does not
      inherit the base rule's maturity.
      **Write `Case:` and `What a second case would need to show:` to name the actual mechanism,
-     not just the symptom.** This matters more than it used to: a project-level candidate can now
-     be compared by `/memory-audit` against a *different* project's ledger, potentially a very
-     different discipline — a vague symptom description risks a false match on wording alone where
-     the two cases don't actually share a mechanism. Name what's actually going on.
+     not just the symptom.** `/memory-audit` compares a project-level candidate against other
+     projects' ledgers, potentially in a very different discipline — a vague symptom description
+     risks a false match on wording alone where the two cases don't actually share a mechanism.
+     Name what's actually going on.
      For (a) only, **who's the actor?** — four user-scope homes (`/memory-audit` applies this
      test from here, so it holds whatever the user's `CLAUDE.md` says): the user authoring a
      prompt/brief → `prompt-lessons.md`; the agent editing a standing doc or memory →
@@ -224,7 +224,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
 5. **Run the deterministic checks** — three scripts; one gates, two report:
    - `python3 ${CLAUDE_SKILL_DIR}/scripts/check_memory_index.py <memory dir> <project root>`
      It checks the "every memory file ↔ exactly one MEMORY.md index line" invariant
-     deterministically (this used to rely on the writer remembering it), reports MEMORY.md
+     deterministically, reports MEMORY.md
      against its load limits — only the first 200 lines **or 25 KB, whichever comes first**, is
      loaded at session start; the rest is silently dropped (**bytes bind first here**, long index
      lines, so watch that percentage, not the line count) — then resolves every `[[link]]`

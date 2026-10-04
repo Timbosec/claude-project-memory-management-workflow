@@ -38,8 +38,8 @@ Evidence logs and repo docs — same directory, not rule homes, easy to miss:
   - ~/.claude/doc-test-probes.md        (cold-reader probe inputs behind measured rule-wording
     verdicts; re-run the probes it names after editing the rule they test)
   - ~/.claude/README.md                 (what the config repo tracks and why, if present)
-  **Glob `~/.claude/*.md` and account for every result** rather than trusting this list — it has
-  already been wrong once on the source machine: two files post-dated it and went unaudited.
+  **Glob `~/.claude/*.md` and account for every result** rather than trusting this list — a file
+  added after the list was written would otherwise go unaudited.
   Anything the glob returns that is not named here is an unaudited standing surface; read it and
   say which category it falls in.
 Decisions log (git-tracked, durable):
@@ -56,7 +56,7 @@ Read files directly with the Read tool. (`/memory` only lists loaded files; it
 can't open auto-memory topic files for you.)
 Before editing any of the above, read `~/.claude/writing-standing-docs.md` — it carries the
 operative rules for this work (contract-vs-snapshot, canonical-plus-pointers, replace-not-join,
-audience-referent), including the pronoun check this command's own port originally motivated.
+audience-referent).
 Note: paths starting with `-` (e.g. `-Users-alice-project/...`) break mv/shell commands —
 prefix with `./` or use `--`.
 
@@ -68,7 +68,7 @@ prefix with `./` or use `--`.
    deleting/editing/committing.
 3. Work in batches: apply high-confidence changes first; defer per-file operational
    verification (checking memories against current skill code) to a focused pass —
-   ideally a fresh launch from the project repo (cheaper, per the fresh-launch SOP).
+   ideally a fresh session launched from the project repo, which is cheaper.
    For large dirs, assess from the index and deep-read only suspicious files per pass.
    When you defer, RECORD the exact deferred set in the change-plan output (which
    files, which unverified claims) so a later "continue" run resumes from that list
@@ -173,8 +173,8 @@ looking for a pairing:
 
 Propose one outcome per waiting candidate, and ask before writing:
 - **Promote** — a second, contrasting case has arrived (same project or a different one, per
-  above). Name it and the shared mechanism. Then follow the ledger's own Promotion section (write
-  the rule to its home, move both narratives to an origin log, delete both candidates).
+  above). Name it and the shared mechanism. Then write the rule to its home, move both narratives
+  to an origin log entry in the ledger, and delete both candidates.
 - **Still waiting** — the claim is live and worth keeping parked. Age alone is not a reason to
   act, and neither is a similar-looking case that doesn't share the mechanism; say so and move on.
 - **Retire** — the project has moved past it, or the first case no longer reproduces.
@@ -235,9 +235,8 @@ If a probe surfaces wrong/conflicting memory, that entry is a deletion candidate
   retired; plus every rule whose "Provisional" marker was resolved or left standing
 - Defects found in a skill file or reference doc: what and where, reported only — never edited here
 - Index/link fixes
-After the user approves: apply, then ask before committing or pushing either repo — don't assume
-pre-authorization on this machine the way the source version did.
-  - `<repo>` — decisions.md, CLAUDE.md, and any skill file touched
+After the user approves: apply, then ask before committing or pushing either repo.
+  - `<repo>` — decisions.md and CLAUDE.md
   - `~/.claude` — the rule homes and the ledger, which live in their own repo (if it is one);
     edits there are lost to the next audit's baseline if left uncommitted
 Where either isn't a git repo, say once that its edits are saved but not committed, and carry

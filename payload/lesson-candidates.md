@@ -8,18 +8,17 @@ Two things live here, both out of always-loaded context:
    the claim in its own home; the cases that justify it and mark its boundary live here.
 
 **Why this file exists.** The second-real-case gate in `~/.claude/CLAUDE.md` says a lesson must
-be validated against a second real, contrasting case before it becomes a standing rule. In
-practice a first case was written up as a rule anyway and annotated "provisional" — 11 of 19
-rules carried such a tag on 2026-08-17. A disclaimer costs the same bytes as a rule and gates
-nothing. Giving a first case somewhere to go makes the gate a place rather than something to
-remember.
+be validated against a second real, contrasting case before it becomes a standing rule. Without
+somewhere to put a first case, it tends to be written up as a rule anyway with a "provisional"
+note, and a note like that costs the same bytes as a rule and gates nothing. Giving a first case
+somewhere to go makes the gate a place rather than something to remember.
 
 **Not auto-loaded, deliberately.** This grows without bound and only matters when a lesson is
 being routed or a rule re-evaluated. `~/.claude/CLAUDE.md` carries no pointer to it, for the
 same reason `under-explained-cases.md` carries none: both consumers are commands that know
-where to look. Follows the precedent that file set.
+where to look.
 
-**Two consumers, two questions** (assigned 2026-08-19; neither assumes the other ran):
+**Two consumers, two questions** (neither assumes the other ran):
 `/finalise` step 2 does the **pairing** — is today's case the second, contrasting case for
 something already parked here? That is checked at the moment the new case is in hand.
 `/memory-audit` Part 2.6 does the **aging** — which candidates have waited long enough to be
@@ -50,15 +49,13 @@ Capture of a *candidate* needs no approval; it records an observation, not an in
     - Status: awaiting a second contrasting case
 
 **Most candidates have no test, and that is normal.** They are settled by a second real case
-arriving, not by running anything. Of the five parked on 2026-08-22, one was testable: the rest
-were analytical claims with nothing to run them against, and one is held un-promoted precisely
-*because* cold readers do not reproduce its failure. Do not invent a test to fill the field — an
-invented one costs what a real one costs and gates nothing, which is the failure the
-"provisional" tags already demonstrated.
+arriving, not by running anything: most are analytical claims with nothing to run them against.
+Do not invent a test to fill the field — an invented one costs what a real one costs and gates
+nothing, the same failure as a "provisional" note on a rule.
 
 **What a test looks like where one does exist.** A fixed setup that puts the claim in front of
 something able to prove it wrong, written down before the answer is known. The worked example is
-the one used on the clarity rule — see the entry headed "A description locates nothing":
+the harness for the clarity rule in `~/.claude/under-explained-cases.md`:
 
     - a prompt template composed BEFORE any case had been collected, so a later author who
       has read the answers cannot shape it around them;
@@ -73,7 +70,7 @@ the one used on the clarity rule — see the entry headed "A description locates
 
 The shape generalises past wording rules: fix the setup, withhold the answer, include cases that
 should NOT trigger, repeat each run, and decide what counts as a pass in advance. What varies is
-what plays the part of the cold reader. (2026-08-22.)
+what plays the part of the cold reader.
 
 ### Origin log
 

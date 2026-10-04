@@ -6,9 +6,9 @@ sharper approach emerged than the original prompt asked for.
 
 **Scope:** this file is about text the user commissions. Rules for *editing* standing docs, skills
 and memory bodies live in `~/.claude/writing-standing-docs.md`; rules governing the agent's own
-conduct at any moment live in `~/.claude/CLAUDE.md` § Working rules. The **origin log below stays
-canonical** for every rule's rationale and history, including those whose operative statement now
-sits elsewhere — the other homes carry the operative clause and point back here.
+conduct at any moment live in `~/.claude/CLAUDE.md` § Working rules. The **origin log below is
+where each rule's cases and rationale are logged**, including rules stated in full in another file
+— those files carry the operative clause and point back here.
 
 **Write rules:** update ONLY at the user's explicit instruction ("save that as a prompt lesson"). Claude may
 *suggest* a candidate rule, never write one unprompted. New rule = one checklist line + one
@@ -21,8 +21,7 @@ origin-log entry. Append-only in the log; checklist lines may be sharpened in pl
 ### What to write down (instructions, memory, CLAUDE.md, briefs)
 - Operative rules for **editing** standing docs live in `~/.claude/writing-standing-docs.md`
   (contract-vs-snapshot, non-derivable nuance, staleness triage, canonical-plus-pointers,
-  replace-not-join, audience-referent). Their rationale and prompt-writing consequences stay
-  canonical in the origin log below. When a brief asks an agent to document a system, fix stale
+  replace-not-join, audience-referent). When a brief asks an agent to document a system, fix stale
   docs, update a standing document or de-personalise a file, spell the relevant rule out in the
   brief — a cold executor won't infer it. → [contract-vs-snapshot], [canonical-plus-pointers],
   [replace-not-join], [audience-referent]
@@ -34,21 +33,21 @@ origin-log entry. Append-only in the log; checklist lines may be sharpened in pl
   they're not X. → [exclusions-scope-claims]
 
 ### Making rules stick
-- **A rule an LLM must remember to apply is not a fix.** Operative statement now lives in
-  `~/.claude/CLAUDE.md` § Working rules (it fires at any moment, not only while prompt-writing).
-  For briefs: a prompt that says "fix it and add a note" produces the note; if the correction is
-  computable, spec the deterministic enforcement instead. → [rule-into-code]
+- **A rule an LLM must remember to apply is not a fix.** The rule itself is in
+  `~/.claude/CLAUDE.md` § Working rules, since it applies at any moment, not only while writing
+  prompts. For briefs: a prompt that says "fix it and add a note" produces the note; if the
+  correction is computable, spec the deterministic enforcement instead. → [rule-into-code]
 
 ### Validating fixes before encoding them
-- **Test against a second real, contrasting example first.** Operative statement now in
+- **Test against a second real, contrasting example first.** The rule itself is in
   `~/.claude/CLAUDE.md` § Working rules. For briefs: any brief that says "fix it and record the
   lesson" must mandate the second-example validation explicitly, or the agent ships the first
   plausible mitigation. → [second-real-example]
 
 ### Presenting results & decisions
-- **Options and decisions come to the user one at a time, with tiered delivery.** Operative statement
-  (tiers 1–3, the two-turn split phrasing, and the blocking-panel hard rule) now lives in
-  `~/.claude/CLAUDE.md` § Working rules — it governs every interaction, not only prompt-writing.
+- **Options and decisions come to the user one at a time, with tiered delivery.** The rule itself
+  (tiers 1–3, the two-turn split phrasing, and the blocking-panel hard rule) is in
+  `~/.claude/CLAUDE.md` § Working rules, since it governs every interaction, not only prompts.
   For briefs: any brief whose output is a set of findings or choices should specify the
   presentation protocol explicitly, or the agent defaults to a wall of parallel questions,
   decides silently, or asks for decisions on context the user never saw.
@@ -58,14 +57,8 @@ origin-log entry. Append-only in the log; checklist lines may be sharpened in pl
 
 ## Origin log
 
-Empty on this fork of the ruleset. Every entry the source project had logged here was a dated,
-project-specific case narrative — a real incident, named store/file/task identifiers, sometimes a
-commit hash — that wouldn't mean anything outside that project, so none of it carried over. The
-checklist above lost nothing by this: each rule's operative statement is unchanged, only the case
-history that originally justified it is gone. Losing that history does have a real cost worth
-naming — the checklist's maturity markers (which rules are provisional vs. tested against a
-second contrasting case) were tracked in the entries that just got cut, so treat everything above
-as ungraded until this log has its own entries again.
+No entries yet. The checklist rules above have no logged cases, so none is marked as tested
+against a second, contrasting case: treat them as ungraded until entries exist here.
 
 New entries follow this shape:
 

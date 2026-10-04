@@ -3,10 +3,7 @@
 Operative rules for authoring a plan or brief for a sub-agent, and for accepting its
 checkpoints. Consult before writing either, and before approving a checkpoint.
 
-Relocated 2026-08-17 from `~/.claude/CLAUDE.md` § Working rules, where they were loaded into
-every session and every sub-agent regardless of whether any build was happening. The rules are
-unchanged; only their home moved. Case narratives stay inline here — this file is not
-auto-loaded, so length is paid only when it is read.
+This file is not auto-loaded, so its length is paid only when it is read.
 
 - **A delegated build will be interrupted mid-flight; size and commit the work so that costs
   little.** Session limits kill sub-agents routinely, leaving an unreported, partly-applied

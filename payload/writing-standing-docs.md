@@ -1,9 +1,9 @@
 # Writing & editing standing docs
 
 Operative rules for instruction files, skills, CLAUDE.md and memory bodies.
-Consult before any such edit. Rationale, origin cases and the prompt-writing
-consequences of each rule: `~/.claude/prompt-lessons.md` (canonical) — the tags
-below are its origin-log entries.
+Consult before any such edit. Each rule's cases and rationale are logged in the
+origin log of `~/.claude/prompt-lessons.md`; the tag after a rule names its entry
+there.
 
 ## What to write down
 

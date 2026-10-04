@@ -4,11 +4,9 @@ Real instances where the user had to ask what something meant. Evidence for the
 `~/.claude/CLAUDE.md` § Working rules bullet **"Write the sentence so it carries its own
 meaning; keep the symbol as a trailing pointer, not the carrier of the fact."**
 
-**Why this file exists.** That rule was tuned against seven sentences the agent wrote itself,
-to probe a rule the agent wrote itself — so passing the test said little about real use. Two
-clauses were added on the strength of that fixture and one of them (a guard against stating a
-direction backwards) was cut again once it turned out no such failure had ever actually
-happened to the user. Real captured cases are the corpus that evaluation needed.
+**Why this file exists.** A clarity rule tested only against sentences the agent wrote to test
+it passes them and says little about real use. These captured cases, real moments where the user
+was confused, are the corpus the rule is evaluated against.
 
 **Not auto-loaded, deliberately.** This grows without bound and only matters at evaluation
 time. `~/.claude/CLAUDE.md` carries no pointer to it for the same reason — the finalise skill
@@ -36,30 +34,25 @@ learnable before then:
 
 - **The collection rate is itself the metric.** Frequent entries mean the rule is not working.
   Entries drying up means it is. That signal starts at entry 1 and needs no threshold.
-- A single entry can still *disprove* a clause — as one did here.
+- A single entry can still *disprove* a clause.
 
 **When an evaluation finishes, record where it stopped.** Add a line to this file reading
 `Last evaluated: <date> — through entry <N>`, with `<N>` replaced by the last case number
 actually graded — never leave the placeholder itself in the file, since it doesn't parse as a
-number and the corpus would then read as never evaluated. On the source machine a session-start
-hook (`under_explained_line()` in a `session_health.py` script) finds the highest such line and
-stays silent until 10 further entries have landed since it — that hook is NOT part of this
-bootstrap, so on this machine evaluation timing is manual until/unless an equivalent is built;
-skipping this step still leaves no record that an evaluation happened.
+number and the corpus would then read as never evaluated. Nothing reads this line
+automatically: it is how the next evaluation knows where to start counting, and skipping this
+step leaves no record that an evaluation happened.
 
 No entries yet, so nothing to evaluate — the first "Last evaluated" line gets added once ~10
 entries have accumulated.
 
-**A cold agent does the rewriting — not you.** An earlier version of this file said to "evaluate
-blind", attempting the rewrite yourself while disregarding the repair you had just read. That is
-not a mechanism; once the file is read the repair is in context and there is no way to un-read
-it. (Second instruction in this rule's history to demand an impossible internal state — the
-first asked the agent to determine what the user had read.)
+**A cold agent does the rewriting — not you.** Once you have read this file, the repair is in
+your context and cannot be un-read, so attempting the rewrite yourself "blind" is not possible.
 
 Contamination is controlled by **what goes into the cold agent's prompt**, not by what is in
 yours — which is why the repair can live safely in this same file. Use the template below
-verbatim; it was written before any cases existed precisely so that a later composer, who has
-read the repairs, cannot steer it.
+verbatim: it is fixed in advance so that whoever runs it, having read the repairs, cannot steer
+it.
 
 The cold agent is given the rule and the offending sentence. It is **not** given the user's query
 or the repair: the query names the very thing that needed fixing, so handing it over leaks the
@@ -76,8 +69,7 @@ own conclusion.
 
 ## Harness template
 
-Written 2026-08-10, before any case had been evaluated, so that a later composer cannot shape it
-around answers they have seen. **Use it verbatim.** Fill only the three bracketed blocks, from
+**Use it verbatim.** Fill only the three bracketed blocks, from
 the case entry. Run it against a genuinely clean reader — an Agent-tool sub-agent carries a
 stale session-start snapshot of the CLAUDE.md files and would not see the current rule:
 
@@ -106,12 +98,12 @@ env -C <a-neutral-dir> claude --print --setting-sources project < prompt.txt
 >
 > [PASTE the offending sentence verbatim, plus its surrounding sentences]
 
-Run each case at least twice: single runs have already produced misleading results here — one
-wording looked fixed on one run and inverted on the next.
+Run each case at least twice: single runs mislead, and the same wording can look fixed on one
+run and inverted on the next.
 
 Include **negative controls** in the same batch — sentences using filenames, project jargon, or
 no symbols at all, which the rule should leave alone. Over-application is the failure mode a
-pass-only test cannot see, and it is the one users have flagged as their main concern.
+pass-only test cannot see.
 
 ---
 

@@ -20,7 +20,7 @@ instead of this project's `CLAUDE.md`, because the pairing has shown the claim i
 scoped to this project after all. Routing a case in here is what this session could see at the
 time, not a permanent verdict.
 
-Starts empty — no entries to port, nothing to seed.
+Starts empty.
 
 ## Entries
 

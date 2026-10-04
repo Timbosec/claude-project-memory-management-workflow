@@ -1,22 +1,20 @@
 # Cold-reader probes for standing-doc rules
 
-Exact inputs behind measured before/after verdicts on rule wording. Recipe: the
-`naked-subagent-for-doc-testing` memory —
-`env -C <neutral-dir> claude --print --setting-sources project < probe.txt`.
+Probes that check a rule's wording on a cold reader, to re-run after editing the rule they test.
+Run each from a neutral directory, so the reader loads neither CLAUDE.md and sees the rule only
+through the probe: `env -C <neutral-dir> claude --print --setting-sources project < probe.txt`.
 
 Hand over only the text under test, never the whole file. Draw the scenario from a real incident
 that is **not** the rule's own logged example — one that mirrors the example proves nothing,
 because a badly written rule passes it too. Run each probe more than once; single runs mislead.
 
-## Lesson routing — does a single case reach a rule home? (2026-08-19, task 48)
+## Lesson routing — does a single case reach a rule home?
 
-**Verdict:** pre-fix 2 of 2 filed it into a rule home under a "provisional" tag; post-fix 2 of 2
-routed to the ledger; control 1 of 1 correctly declined to park an already-validated lesson.
-Recorded in the project's `decisions.md` as "Lesson routing branches on evidence, not only on actor".
+Re-run all three after any edit to the routing rule in `~/.claude/CLAUDE.md`. Probe A uses a
+wording known to fail, which shows the scenario can catch the failure; Probe B uses the current
+wording; Probe C is a case the rule must leave alone.
 
-Re-run all three after any future edit to the routing rule in `~/.claude/CLAUDE.md`.
-
-### Probe A — pre-fix wording (expected: FAIL, i.e. routes to a rule home)
+### Probe A — wording known to fail (expected: routes to a rule home)
 
     You are an AI coding agent. These two rules are in force for you:
 
@@ -38,9 +36,9 @@ Re-run all three after any future edit to the routing rule in `~/.claude/CLAUDE.
     destination you would write it to, and say why. Answer in under 120 words. Do not ask
     clarifying questions - decide.
 
-### Probe B — post-fix wording (expected: routes to the ledger)
+### Probe B — current wording (expected: routes to the ledger)
 
-Identical to Probe A, with RULE A replaced by the shipped wording:
+Identical to Probe A, with RULE A replaced by the current wording:
 
     RULE A - Routing a new lesson: ask who the actor is, then how many cases you have. The user
     authoring a prompt or brief -> prompt-lessons. You editing a standing doc ->
@@ -53,7 +51,7 @@ Identical to Probe A, with RULE A replaced by the shipped wording:
 
 ### Probe C — negative control (expected: does NOT park; routes to a rule home)
 
-Post-fix RULE A and RULE B as in Probe B, with this scenario in place of the one above:
+RULE A and RULE B as in Probe B, with this scenario in place of the one above:
 
     SCENARIO: You are writing a brief for a sub-agent that will change a shared function. Three
     months ago a brief you wrote omitted the list of that function's callers, and the sub-agent
