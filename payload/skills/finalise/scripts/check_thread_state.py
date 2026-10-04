@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Thread-state heuristics for /finalise (backlog task #13, 2026-08-09).
+"""Thread-state heuristics for /finalise.
 
 Reports -- never gates (exit 0 always, even when it flags things). Unlike
 check_memory_index.py's index-sync/size checks, this is a heuristic, not an
@@ -8,34 +8,29 @@ backlog.md change. A non-zero exit would cry wolf and train the reader to ignore
 it. The forcing function is the /finalise skill step requiring an explicit
 per-task response, not the exit code.
 
-Four report sections:
+Three report sections:
   1. Task refs in recent commits vs. their current backlog.md section, split
      into OUTSTANDING and RECONCILED around the newest commit that actually
-     reconciled each task. A commit reconciles
-     task N only if all three hold: it references N (guaranteed -- that is
-     why it is in this task's commit list), it modified backlog.md, AND it
-     modified TASK N's OWN entry specifically (body text or section changed
-     between the commit and its parent). Touching the file is not enough --
-     the motivating counterexample is a commit that touches
-     backlog.md and mentions two unrelated tasks while only adding a new,
-     third task's section; treating it as a reconciler for either of the two
-     unrelated tasks would have silently cleared their genuinely-outstanding
-     references. Walk each task's referencing
+     reconciled each task. A commit reconciles task N only if all three hold:
+     it references N (guaranteed -- that is why it is in this task's commit
+     list), it modified backlog.md, AND it modified TASK N's OWN entry
+     specifically (body text or section changed between the commit and its
+     parent). Touching the file is not enough: a commit can touch backlog.md
+     and mention two tasks while only adding a new, third task's section, and
+     treating it as a reconciler for either of the two would silently clear
+     their genuinely-outstanding references. Walk each task's referencing
      commits NEWEST-FIRST and take the first (i.e. newest) one that modified
-     that task's own entry; if a touching commit mentions the task but did
-     NOT modify its entry, keep looking at older commits rather than stopping
-     -- do not let the newest touching commit win by default. Once found (at
+     that task's own entry; if a touching commit mentions the task but did NOT
+     modify its entry, keep looking at older commits rather than stopping --
+     do not let the newest touching commit win by default. Once found (at
      index i in the newest-first list): every non-touching commit newer than
      it (index < i) is OUTSTANDING; every non-touching commit older than it
      (index > i) is RECONCILED and collapsed to one summary line, never
      silently dropped. No reconciler found -> every non-touching commit is
-     OUTSTANDING, unchanged from the original (task #13) behaviour. This
-     preserves the original "an earlier miss must not be masked by a later,
-     unrelated touch" guarantee, now keyed on "modified THIS task's entry"
-     rather than merely "touched the file" -- see
+     OUTSTANDING. An earlier miss is never masked by a later, unrelated touch
+     -- see
      TestTouchedBacklogFlag.test_an_earlier_miss_is_not_masked_by_a_later_touch
-     in test_check_thread_state.py, which is the regression test for both the
-     original defect and this revision of it.
+     in test_check_thread_state.py.
   2. Declared blockers: any Open task whose body contains "blocked by #N",
      printed with #N's current section for human review. This is what surfaces a
      blocking task quietly going stale without anyone noticing.
@@ -46,32 +41,6 @@ Four report sections:
      without that exclusion the count would never read 0. Falls back to counting
      from midnight of the block's date when the basis line names no commit, or
      names one this repo's history doesn't have.
-  4. Task-number collisions: any task number defined in backlog.md that is ALSO
-     cited in a memory file under this project's auto-memory directory.
-     Memories only ever used the retired numbering scheme, so an overlap means a
-     citation now resolves to a different, live task. Exact and the highest-value
-     check here.
-     Split into two buckets so permanent, expected noise doesn't teach the reader
-     to skim the one line that matters:
-       - LIVE: the colliding number's current backlog.md section is not Closed --
-         a live task reusing a retired number for different work. This is the
-         real hazard, printed under the original heading.
-       - EXPECTED: the colliding number resolves to a Closed stub -- a citation
-         to work that's since closed, correctly cited in some other memory
-         file. Printed under its own "resolves to a Closed
-         stub -- expected" heading, never dropped silently.
-     A number with NO section at all (no '### #N' header, no Closed bullet --
-     i.e. no stub in backlog.md, like the retired #22) can never reach either
-     bucket: find_task_collisions only considers numbers that are keys of
-     `sections`, so a number with no stub produces no hit in the first place --
-     there is no live task for a citation to collide with. Kept defensive for
-     the one other way a key can lack a resolvable section (a task header
-     appearing before any '## ' heading, so its section value is literally
-     None): that case is bucketed LIVE, not EXPECTED, on purpose -- we can't
-     positively confirm it's a harmless Closed stub, and per backlog.md's own
-     Records section, "a colliding pointer is worse than a dangling one:
-     dangling fails loudly, colliding fails silently" -- the same asymmetry
-     argues for over-flagging here, not under-flagging.
 
 Known, deliberate limitation: this checker is reference-based, not
 dependency-based. It would NOT catch a blocked task going stale because its
@@ -91,7 +60,7 @@ Design constraints:
     is needed for section 1.
   - Pure functions + I/O at the edges, so tests never read mutable repo data or
     call git: parse_backlog_sections/parse_task_bodies/extract_task_refs/
-    find_declared_blockers/find_task_collisions/find_next_up_date/
+    find_declared_blockers/find_next_up_date/
     find_next_up_basis/is_next_up_only_rewrite/build_report
     all take pre-fetched text, Commit tuples, or (build_report only) an
     injected `did_modify_entry(commit_hash, task_no) -> bool` callable -- never
@@ -115,8 +84,7 @@ Design constraints:
         reference on an error.
   - Only the run_git_log/read_*/make_did_modify_entry/_git_show functions and
     main() touch git or the filesystem.
-  - Offline. Git and backlog.md (plus the memory directory for section 4) only,
-    no network.
+  - Offline. Git and backlog.md only, no network.
 """
 import argparse
 import os
@@ -127,8 +95,6 @@ from collections import namedtuple
 
 DEFAULT_REPO = os.getcwd()
 DEFAULT_BACKLOG = os.path.join(DEFAULT_REPO, "backlog.md")
-DEFAULT_MEMORY_DIR = os.path.expanduser(
-    "~/.claude/projects/" + DEFAULT_REPO.replace("/", "-") + "/memory")
 DEFAULT_DAYS = 14
 
 Commit = namedtuple("Commit", "hash date subject body files")
@@ -139,19 +105,6 @@ _REF_HASH_RE = re.compile(r'#(\d+)')
 _REF_TASK_RE = re.compile(
     r'\btasks?\s+(\d+(?:\s*(?:,|and)\s*\d+)*)', re.IGNORECASE)
 _NUM_RE = re.compile(r'\d+')
-
-# --- memory-citation pattern (section 4: task-number collisions) --------------
-#
-# Deliberately NARROWER than the commit patterns above: a bare '#12' inside
-# prose that merely MENTIONS an old citation (e.g. a note explaining why a
-# number was removed) must not re-trigger the very check it is explaining.
-# Verified against a real case: a memory file explaining a past citation fix
-# reads 'it cited "#12" under a retired numbering scheme ... now has a
-# different live #12' -- neither '#12' is adjacent to 'task'/'thread', so this
-# stays silent on it, while still catching the original citation shape (e.g.
-# '... see task #12 ...' or '... thread #12 ...').
-
-_MEMORY_CITATION_RE = re.compile(r'\b(?:task|thread)s?\s*#(\d+)', re.IGNORECASE)
 
 # --- backlog.md structure ------------------------------------------------------
 
@@ -168,10 +121,8 @@ _NEXT_UP_BASIS_RE = re.compile(r'Basis:\s*commits through\s*`([0-9a-f]{7,40})`')
 
 def extract_numeric_refs(text):
     """Every task-shaped number reference in a COMMIT message: '#N' and
-    'task(s) N[, M and P...]'. Used only for section 1 (commit refs) via
-    extract_task_refs -- section 4 (memory collisions) uses the stricter
-    extract_memory_citations below, on purpose (see that function's
-    docstring)."""
+    'task(s) N[, M and P...]'. Used for section 1 (commit refs) via
+    extract_task_refs."""
     nums = set()
     for m in _REF_HASH_RE.finditer(text):
         nums.add(int(m.group(1)))
@@ -179,14 +130,6 @@ def extract_numeric_refs(text):
         for n in _NUM_RE.findall(m.group(1)):
             nums.add(int(n))
     return nums
-
-
-def extract_memory_citations(text):
-    """Every 'task #N' / 'thread #N' citation in a MEMORY file's prose (any
-    case, singular or plural). Deliberately narrower than extract_numeric_refs
-    -- see the _MEMORY_CITATION_RE comment above for why a bare '#N' must NOT
-    count here."""
-    return {int(m.group(1)) for m in _MEMORY_CITATION_RE.finditer(text)}
 
 
 def extract_task_refs(commits):
@@ -260,9 +203,8 @@ def find_declared_blockers(bodies, sections):
 
 
 def find_next_up_date(backlog_text):
-    """The YYYY-MM-DD date on the 'Next up' block's heading, or None if the
-    block doesn't exist yet (it's a separate deliverable -- absence is normal
-    until that ships)."""
+    """The YYYY-MM-DD date on the 'Next up' block's heading, or None if there
+    is no block."""
     m = _NEXT_UP_DATE_RE.search(backlog_text)
     return m.group(1) if m else None
 
@@ -299,44 +241,6 @@ def is_next_up_only_rewrite(files, old_backlog, new_backlog):
     if set(files) != {"backlog.md"} or old_backlog is None or new_backlog is None:
         return False
     return split_next_up(old_backlog)[1] == split_next_up(new_backlog)[1]
-
-
-def find_task_collisions(sections, memory_texts):
-    """sections: {task_no: section_name}, i.e. parse_backlog_sections's output
-    -- every task number that has a stub in backlog.md, mapped to the section
-    it currently lives in. memory_texts: {filename: text}.
-
-    Returns (live_hits, closed_hits), each a sorted [(task_no, [filename,
-    ...]), ...] list, for every backlog task number that is ALSO cited (via
-    'task #N' / 'thread #N' -- see extract_memory_citations) inside a memory
-    file's body. Memories only ever used the retired numbering scheme, so any
-    overlap means the citation now resolves to a different, live task --
-    exact, not heuristic.
-
-    A task number with NO stub in backlog.md is not a key of `sections`, so it
-    can never produce a hit here at all -- there is no live task for a
-    citation to collide with (see the module docstring's section-4 note for
-    why, and why that's the right call for a number like the retired #22).
-
-    live_hits = the real hazard: the number's current section is not Closed.
-    closed_hits = expected: the number resolves to a Closed stub. A number
-    whose section is present-but-None (a malformed-structure edge case, not
-    reachable from today's real backlog.md -- see the module docstring) is
-    bucketed into live_hits, not closed_hits: unconfirmed is treated as
-    unsafe, not as expected."""
-    hits = {}
-    for fname, text in sorted(memory_texts.items()):
-        for n in extract_memory_citations(text):
-            if n in sections:
-                hits.setdefault(n, []).append(fname)
-    live_hits = []
-    closed_hits = []
-    for num, filenames in sorted(hits.items()):
-        if sections.get(num) == "Closed":
-            closed_hits.append((num, filenames))
-        else:
-            live_hits.append((num, filenames))
-    return live_hits, closed_hits
 
 
 # --- I/O at the edges -----------------------------------------------------
@@ -403,10 +307,8 @@ def count_commits_since(repo_dir, date_str):
     """Commits since `date_str` (a bare 'YYYY-MM-DD', as the 'Next up' block
     records it -- no time of day). Pinned to that date's midnight
     (T00:00:00): git's approxidate otherwise fills unspecified time fields
-    from the CURRENT clock, so a bare '--since=2026-08-09' means "since
-    ~11:15 this morning", not midnight -- demonstrated in this repo:
-    '--since=2026-08-09' returned 0 commits the same day '--since=
-    2026-08-09T00:00:00' returned 16. Pinning to midnight over-counts within
+    from the CURRENT clock, so a bare '--since=2026-08-09' run at 11:15 means
+    "since 11:15 that day", not midnight. Pinning to midnight over-counts within
     the block's own authoring day (it includes commits made earlier that same
     day, before the block was written) -- accepted deliberately: the block
     records a date with no time, so an exact answer isn't available, and
@@ -457,29 +359,13 @@ def count_commits_after_basis(repo_dir, basis):
     return counted, skipped
 
 
-def read_memory_texts(memory_dir):
-    """{filename: text} for every memory topic file. An absent directory returns {} rather than
-    raising: auto-memory is created lazily by the harness, so a project that has not written its
-    first memory yet legitimately has no such directory, and section 4 (collisions) simply has
-    nothing to compare against."""
-    if not os.path.isdir(memory_dir):
-        return {}
-    texts = {}
-    for fname in os.listdir(memory_dir):
-        if fname.endswith(".md") and fname != "MEMORY.md":
-            with open(os.path.join(memory_dir, fname), encoding="utf-8") as f:
-                texts[fname] = f.read()
-    return texts
-
-
-# --- did_modify_entry: git-backed, used only by main() (task #32) -----------
+# --- did_modify_entry: git-backed, used only by main() ----------------------
 #
 # build_report needs to know whether a commit modified a SPECIFIC task's own
 # backlog.md entry, not just the file. That requires git (diff against the
 # parent revision), so it is kept out of build_report entirely and injected
 # as a callable -- see the module docstring's "Design constraints" section
-# for the edge cases handled here and how each was verified against this
-# repo's real history.
+# for the edge cases handled here.
 
 _GIT_SHOW_ABSENT_MARKERS = ("exists on disk, but not in", "invalid object name")
 
@@ -537,20 +423,19 @@ def make_did_modify_entry(repo_dir):
 
 # --- report -----------------------------------------------------------------
 
-def build_report(backlog_text, commits, memory_texts, did_modify_entry):
-    """Pure (git-free): assemble the four report sections from already-loaded
+def build_report(backlog_text, commits, did_modify_entry):
+    """Pure (git-free): assemble the report sections from already-loaded
     inputs plus an injected did_modify_entry(commit_hash, task_no) -> bool
     (see make_did_modify_entry above; tests supply a fixture lambda). Returns
-    a dict; main() decides how to print it. Kept separate from
-    build_next_up_section, which additionally needs a commits-since-date count
-    that only main() (via count_commits_since) can supply.
+    a dict; main() decides how to print it. Section 3 is built separately, by
+    next_up_staleness, because it needs git commit counts.
 
     Section 1 partitions each task's commits (task_refs[num], newest-first)
     around the newest RECONCILING commit -- see the module docstring for the
     full three-condition definition. Walking newest-first and taking the
     first touching commit for which did_modify_entry is True means a touching
     commit that did NOT modify the task's own entry is skipped, not treated
-    as a reconciler by default -- that is the fix for backlog #32."""
+    as a reconciler by default."""
     sections = parse_backlog_sections(backlog_text)
     bodies = parse_task_bodies(backlog_text)
     task_refs = extract_task_refs(commits)
@@ -574,7 +459,7 @@ def build_report(backlog_text, commits, memory_texts, did_modify_entry):
             reconciled_by = commits_for_task[reconciler_idx].hash
         else:
             # No commit modified this task's own entry -- every non-touching
-            # commit is outstanding, unchanged from the pre-#32 behaviour.
+            # commit is outstanding.
             outstanding = [c for c in commits_for_task if "backlog.md" not in c.files]
             reconciled = []
             reconciled_by = None
@@ -591,13 +476,10 @@ def build_report(backlog_text, commits, memory_texts, did_modify_entry):
         })
 
     blockers = find_declared_blockers(bodies, sections)
-    collisions, closed_collisions = find_task_collisions(sections, memory_texts)
 
     return {
         "task_refs": ref_report,
         "blockers": blockers,
-        "collisions": collisions,
-        "closed_collisions": closed_collisions,
     }
 
 
@@ -633,21 +515,6 @@ def print_report(report, next_up_line, days):
     print("=== 3. Next-up staleness ===")
     print(f"  {next_up_line}")
 
-    print()
-    print("=== 4. Task-number collisions (backlog.md vs. retired-scheme memories) ===")
-    if not report["collisions"]:
-        print("  (none found)")
-    for task_no, filenames in report["collisions"]:
-        print(f"  #{task_no} is a LIVE backlog task, also cited in: "
-              f"{', '.join(filenames)} -- citation may resolve to the wrong task")
-
-    print()
-    print("=== 4b. Collisions that resolve to a Closed stub -- expected ===")
-    if not report["closed_collisions"]:
-        print("  (none found)")
-    for task_no, filenames in report["closed_collisions"]:
-        print(f"  #{task_no} resolves to a Closed stub, also cited in: "
-              f"{', '.join(filenames)} -- expected, no action needed")
 
 
 def next_up_staleness(repo_dir, backlog_text):
@@ -679,18 +546,17 @@ def main():
                          help=f"commit window in days (default {DEFAULT_DAYS})")
     parser.add_argument("--repo", default=DEFAULT_REPO)
     parser.add_argument("--backlog", default=DEFAULT_BACKLOG)
-    parser.add_argument("--memory-dir", default=DEFAULT_MEMORY_DIR)
+    # Accepted and ignored, so a /finalise that still passes it keeps working.
+    parser.add_argument("--memory-dir", help=argparse.SUPPRESS)
     args = parser.parse_args()
 
-    # Four absences are normal, not errors -- report and exit 0, since this script reports and
+    # Three absences are normal, not errors -- report and exit 0, since this script reports and
     # never gates and a traceback would break that contract:
     #   - no backlog.md yet (/bootstrap-project hasn't run here): every section needs it.
     #   - not a git repo: sections 1 and 3 are git-derived. Rather than print a half-report
     #     whose empty sections read as clean findings, say which input is missing and stop.
     #   - a git repo with no commits yet: the normal state straight after /bootstrap-project.
     #     Distinct from "not a repo" because the remedy differs: commit, then re-run.
-    #   - no memory dir yet (no prior Claude session in this project): read_memory_texts
-    #     returns {} and section 4 has nothing to compare against.
     # Any OTHER git failure is not an absence, and is left to raise.
     if not os.path.exists(args.backlog):
         print(f"no backlog.md yet at {args.backlog} -- skipping thread-state check "
@@ -710,10 +576,9 @@ def main():
     with open(args.backlog, encoding="utf-8") as f:
         backlog_text = f.read()
 
-    memory_texts = read_memory_texts(args.memory_dir)
     did_modify_entry = make_did_modify_entry(args.repo)
 
-    report = build_report(backlog_text, commits, memory_texts, did_modify_entry)
+    report = build_report(backlog_text, commits, did_modify_entry)
 
     print_report(report, next_up_staleness(args.repo, backlog_text), args.days)
 

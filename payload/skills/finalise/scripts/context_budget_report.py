@@ -16,9 +16,9 @@ Four things printed:
   1. Lesson candidates in lesson-candidates.md awaiting a second case -- count and the oldest
      one's age in days. A candidate entry is identified by carrying a "First observed:" field
      (the Candidate schema requires it; the Origin log schema has "Home:"/"Promoted:" instead),
-     so this counts by field signature, not by which "##" section heading happens to exist yet
-     -- the real file today has zero "## Candidates" entries and no such heading at all, and
-     that must read as a genuine zero, not the default a broken parser would also print. See
+     so this counts by field signature, not by which "##" section heading happens to exist --
+     a ledger with no candidates may have no such heading at all, and that must read as a
+     genuine zero, not the default a broken parser would also print. See
      TestCountCandidatesAwaiting for the populated-fixture case that guards against exactly that.
   2. Rules across the four user-scope homes (~/.claude/CLAUDE.md's Working rules section,
      prompt-lessons.md's Checklist section, writing-standing-docs.md, writing-executor-briefs.md
@@ -204,9 +204,8 @@ def previous_reading(rows, today_str):
 
 
 def upsert_reading(path, row):
-    """Idempotent upsert keyed on date -- the same convention any other date-keyed log in
-    this project should use: a rerun on the same day replaces that day's row instead of
-    duplicating it; a new day appends. Atomic write via the project's single shared CSV writer."""
+    """Idempotent upsert keyed on date: a rerun on the same day replaces that day's row instead
+    of duplicating it; a new day appends. Written atomically via atomic_write_csv."""
     rows = read_history(path)
     index = {r.get("date"): i for i, r in enumerate(rows)}
     if row["date"] in index:

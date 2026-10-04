@@ -1,23 +1,15 @@
 #!/usr/bin/env python3
-"""Tests for check_memory_index.py's dangling-[[link]] check (backlog task #13
-checkpoint 3, 2026-08-09).
+"""Tests for check_memory_index.py's dangling-[[link]] checks and its absence guards.
 
 check_memory_index.py is a top-level script, not an importable module -- it reads
 sys.argv[1] and acts at import time, no `if __name__ == "__main__":` guard. So these
-tests build a tmpdir fixture and invoke it via subprocess, per the plan and the
-coordinator's brief. That keeps this offline and independent of the real, mutable
-memory directory: a test that read the real directory live would drift as memory
-files churn, and the Stop hook runs this suite every turn-end.
+tests build a tmpdir fixture and invoke it via subprocess. That keeps this offline and
+independent of the real, mutable memory directory: a test that read the real directory
+live would drift as memory files churn.
 
-Only the NEW dangling-[[link]] check is exercised here. The two pre-existing checks
-(index-sync, load-limits) are exercised only incidentally -- every fixture below must
-satisfy both to reach the link check at all, which is itself asserted directly by
-test_dangling_link_check_does_not_run_when_index_is_out_of_sync.
-
-Live-data pass/fail is NOT re-asserted here on purpose -- see the module docstring's
-note above about mutable data. It was verified manually against the real memory
-directory (`python3 check_memory_index.py`, no argv override) as part of this
-checkpoint's own review; see the checkpoint report, not this file.
+The index-sync and load-limit checks are exercised only incidentally -- every fixture
+below must satisfy both to reach the link check at all, which is itself asserted
+directly by test_dangling_link_check_does_not_run_when_index_is_out_of_sync.
 """
 import os
 import subprocess
@@ -52,20 +44,12 @@ def _write_docs(docs_root, doc_files):
             f.write(body)
 
 
-def _run(tmpdir, docs_root=None, known_retired_links=None):
+def _run(tmpdir, docs_root=None):
     """docs_root: the doc-scope check's second argv. Every existing (memory-only) test omits
     it, so it must default to an EMPTY tmpdir of its own -- never falling through to the
     script's real current-directory default, which would resolve the doc check against
-    whatever real, mutable Markdown files happen to be there and drift as they churn.
-
-    known_retired_links: names to set in $KNOWN_RETIRED_LINKS, which the script used to read as
-    an exemption list and no longer does. Kept OUT of the process's real environment by default;
-    only the tests proving the variable is now ignored set it."""
+    whatever real, mutable Markdown files happen to be there and drift as they churn."""
     env = dict(os.environ)
-    if known_retired_links is None:
-        env.pop("KNOWN_RETIRED_LINKS", None)
-    else:
-        env["KNOWN_RETIRED_LINKS"] = ",".join(known_retired_links)
     if docs_root is None:
         with tempfile.TemporaryDirectory() as empty_docs_root:
             return subprocess.run([sys.executable, SCRIPT, tmpdir, empty_docs_root],
@@ -95,24 +79,12 @@ class TestDanglingLinkCheck(unittest.TestCase):
             self.assertIn("dangling", result.stdout.lower())
             self.assertIn("nonexistent-file", result.stdout)
 
-    def test_retired_links_variable_no_longer_exempts_a_name(self):
-        # The $KNOWN_RETIRED_LINKS exemption was removed. A value left set in
-        # someone's shell must not quietly bring it back: the named link gates like any other.
-        with tempfile.TemporaryDirectory() as tmpdir:
-            _write_fixture(tmpdir, {
-                "a.md": "see [[project-status-open-threads]] for context.\n",
-            })
-            result = _run(tmpdir, known_retired_links=["project-status-open-threads"])
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn("dangling [[project-status-open-threads]]", result.stdout)
-
     def test_dangling_link_check_does_not_run_when_index_is_out_of_sync(self):
         # An earlier check (index-sync) failing must stop the script before the link
-        # check runs, same sequential-gate behaviour the two pre-existing checks
-        # already had. A memory file present on disk with NO MEMORY.md index line at
-        # all is an index-sync problem, so this fixture never reaches the link check
-        # -- even though its dangling link would otherwise be a second, independent
-        # reason to fail.
+        # check runs, the same sequential-gate behaviour as the other checks. A memory
+        # file present on disk with NO MEMORY.md index line at all is an index-sync
+        # problem, so this fixture never reaches the link check -- even though its
+        # dangling link would otherwise be a second, independent reason to fail.
         with tempfile.TemporaryDirectory() as tmpdir:
             with open(os.path.join(tmpdir, "MEMORY.md"), "w", encoding="utf-8") as f:
                 f.write("# Memory index\n\n(no index lines at all)\n")
@@ -134,7 +106,7 @@ class TestDanglingLinkCheck(unittest.TestCase):
             self.assertIn("all links resolve", result.stdout)
 
     def test_unfenced_dangling_link_still_gates_alongside_backticked_mention(self):
-        # Companion to the test above: proves the fix strips backticked mentions
+        # Companion to the test above: proves backticked mentions are stripped
         # without disabling the check entirely -- a genuine, unfenced dangling link
         # in the same file must still gate, while the backticked mention still doesn't.
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -149,7 +121,7 @@ class TestDanglingLinkCheck(unittest.TestCase):
 
 
 class TestDocScopeLinkCheck(unittest.TestCase):
-    """The doc-scope [[link]] check (backlog #39, 2026-08-22): same citation syntax, same slug
+    """The doc-scope [[link]] check: same citation syntax, same slug
     set as TestDanglingLinkCheck above, but scanning a second,
     independent docs-root tree instead of the memory dir. Every fixture here gives the memory
     side a single trivial file (`a.md`, no outgoing links) purely to clear the two earlier
@@ -199,17 +171,6 @@ class TestDocScopeLinkCheck(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertNotIn("nonexistent-thing", result.stdout)
             self.assertIn("[[link]] check (docs): 0 citation(s) in 0 file(s)", result.stdout)
-
-    def test_doc_retired_links_variable_no_longer_exempts_a_name(self):
-        with tempfile.TemporaryDirectory() as tmpdir, \
-                tempfile.TemporaryDirectory() as docs_root:
-            _write_fixture(tmpdir, {"a.md": "Nothing links out of here.\n"})
-            _write_docs(docs_root, {
-                "note.md": "see [[project-status-open-threads]] here.\n",
-            })
-            result = _run(tmpdir, docs_root, known_retired_links=["project-status-open-threads"])
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn("dangling [[project-status-open-threads]]", result.stdout)
 
     def test_doc_nested_subdirectory_citation_is_found(self):
         with tempfile.TemporaryDirectory() as tmpdir, \
@@ -271,11 +232,10 @@ class TestDocScopeLinkCheck(unittest.TestCase):
             self.assertNotIn("(docs)", result.stdout)
 
     def test_doc_unfenced_bash_test_syntax_not_read_as_a_citation(self):
-        # Confirmed live before this fix: '[[ -f "$x" ]]' outside a code fence matched
-        # _LINK_RE (any run of non-]/| characters) and was reported as a dangling citation
-        # to a file named ' -f "$x" '.md. A real citation target is always an
+        # '[[ -f "$x" ]]' outside a code fence must not be read as a dangling citation to
+        # a file named ' -f "$x" '.md. A real citation target is always an
         # identifier-shaped slug, which this bash snippet is not -- it starts with a space,
-        # not a word character, so the tightened pattern never matches it at all.
+        # not a word character, so the pattern never matches it at all.
         with tempfile.TemporaryDirectory() as tmpdir, \
                 tempfile.TemporaryDirectory() as docs_root:
             _write_fixture(tmpdir, {"a.md": "Nothing links out of here.\n"})
@@ -287,8 +247,8 @@ class TestDocScopeLinkCheck(unittest.TestCase):
             self.assertIn("[[link]] check (docs): 0 citation(s) in 0 file(s)", result.stdout)
 
     def test_doc_real_citation_still_gates_alongside_bash_syntax(self):
-        # Companion to the case above: tightening the pattern to reject bash test syntax
-        # must not also reject genuine kebab-case citation targets sitting in the same repo.
+        # Companion to the case above: rejecting bash test syntax must not also reject genuine
+        # kebab-case citation targets sitting in the same repo.
         with tempfile.TemporaryDirectory() as tmpdir, \
                 tempfile.TemporaryDirectory() as docs_root:
             _write_fixture(tmpdir, {"a.md": "Nothing links out of here.\n"})
@@ -303,8 +263,8 @@ class TestDocScopeLinkCheck(unittest.TestCase):
 
 class TestMissingMemoryDir(unittest.TestCase):
     """A project with no prior Claude Code session has no memory dir at all yet -- exactly
-    what /bootstrap-project leaves behind before the first /finalise run. Confirmed live
-    before this fix: os.listdir(MD) raised FileNotFoundError, uncaught."""
+    what /bootstrap-project leaves behind before the first /finalise run. Must skip cleanly,
+    not raise FileNotFoundError."""
 
     def test_nonexistent_memory_dir_skips_cleanly_instead_of_crashing(self):
         with tempfile.TemporaryDirectory() as parent:

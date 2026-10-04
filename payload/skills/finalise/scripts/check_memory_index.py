@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-"""Memory-index integrity check for /finalise (audit follow-up, 2026-07-09; dangling-[[link]]
-check added for backlog task #13 checkpoint 3, 2026-08-09; doc-scope dangling-[[link]] check
-added for backlog task #39, 2026-08-22).
+"""Memory-index integrity check for /finalise.
 
-Four invariants, all deterministic, all gating (non-zero exit) -- these used to rely on the
-writer remembering them:
+Four invariants, all deterministic, all gating (non-zero exit):
   1. Every memory file has exactly one MEMORY.md index line (no more, no fewer).
   2. MEMORY.md stays within its session-start load limits (200 lines / 25 KB).
   3. Every `[[link]]` inside a memory file's body resolves to a real memory filename
@@ -13,7 +10,7 @@ writer remembering them:
      this script.
   4. Every `[[link]]` inside the repo's Markdown docs (DOCS_ROOT, recursive, `*.md` only)
      resolves the same way. Reference docs, decisions.md and backlog.md cite memories in the
-     same `[[name]]` syntax but were never checked (backlog #39) -- a dead citation there is
+     same `[[name]]` syntax -- a dead citation there is
      load-bearing for whatever claim it was supposed to source. Fenced code blocks and inline
      code spans are stripped first, length-preserving so reported line numbers stay correct: a
      backticked `` `[[link]]` `` is prose ABOUT the syntax, not a citation, and matching it would
@@ -62,7 +59,7 @@ if problems:
 print(f"memory index in sync: {len(files)} files <-> {sum(pointers.values())} index lines")
 
 # Load limits (docs: "first 200 lines of MEMORY.md, or the first 25KB, whichever comes first").
-# Bytes bind long before lines here -- our index lines are long, so it truncates near ~110 lines.
+# Bytes usually bind before lines, since index lines are long.
 # v2.1.211+ strips YAML frontmatter and block HTML comments before measuring; mirror that.
 LINE_LIMIT, BYTE_LIMIT = 200, 25 * 1024
 
@@ -87,11 +84,11 @@ if over:
 
 # Dangling [[link]] check. Every [[link]] inside a memory file's BODY must resolve to a real
 # memory filename (<name>.md next to it, or MEMORY.md itself). MEMORY.md's own body is never
-# scanned for [[links]] -- it has none today (pure index lines), so adding that complexity
-# isn't justified.
+# scanned for [[links]] -- it holds only index lines, so adding that complexity isn't
+# justified.
 #
-# There is no exemption for a retired memory's name: when a memory is removed, links to it are
-# resolved at the time (made plain text, or repointed where the content really moved).
+# There is no exemption list: when a memory is removed, links to it are resolved at the time
+# (made plain text, or repointed where the content really moved).
 
 _FENCE_RE = re.compile(r"^```.*?^```", re.MULTILINE | re.DOTALL)
 _SPAN_RE = re.compile(r"`+[^`]*`+")
@@ -108,7 +105,7 @@ def _strip_code(text):
     """Blank out fenced code blocks, then inline code spans (fences first, then spans -- a span
     marker inside an already-blanked fence has nothing left to match). A backticked [[link]] or
     one inside a fenced block is prose about the syntax, not a citation -- see the module
-    docstring. Two known limits, not built for because neither is attested in this repo: an
+    docstring. Two known limits, not built for because neither has been seen in use: an
     unterminated fence is not stripped, and `~~~` fences are not handled."""
     text = _FENCE_RE.sub(lambda m: _blank(m.group(0)), text)
     text = _SPAN_RE.sub(lambda m: _blank(m.group(0)), text)
@@ -120,8 +117,6 @@ _LINK_RE = re.compile(r"\[\[([A-Za-z0-9][A-Za-z0-9_.-]*)\]\]")
 # system's own naming convention). Requiring that shape, rather than "any run of non-]/|
 # characters", is what excludes unfenced bash test syntax like `[[ -f "$x" ]]` from being read
 # as a citation: it starts with a space, not a word character, so it never matches at all.
-# (Confirmed live: the old pattern captured ' -f "$x" ' as a dangling-link target from a doc
-# containing that exact bash snippet outside a code fence.)
 
 link_problems = []
 for fname in sorted(files):
@@ -142,8 +137,9 @@ if link_problems:
 
 print(f"[[link]] check: {len(files)} files scanned, all links resolve")
 
-# Doc-scope [[link]] check. Same citation syntax and same slug set (files) as above, but scanning the repo's Markdown docs instead of the
-# memory dir -- reference docs, decisions.md and backlog.md cite memories in [[name]] form too.
+# Doc-scope [[link]] check. Same citation syntax and same slug set (files) as above, but
+# scanning the repo's Markdown docs instead of the memory dir -- reference docs, decisions.md and
+# backlog.md cite memories in [[name]] form too.
 # Runs after the memory-file link check above, keeping the same stop-at-first-failure sequencing
 # (a failure above exits before this code ever runs).
 DOCS_ROOT = sys.argv[2] if len(sys.argv) > 2 else os.getcwd()

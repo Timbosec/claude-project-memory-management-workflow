@@ -1,10 +1,9 @@
 """Every Python file the bundle ships, and install.py, must run on Python 3.9.
 
 macOS's command-line tools provide python3 3.9, so that is the oldest interpreter the bundle
-meets in practice. CI and this machine run newer ones, so a 3.10-only construct passes every
-test here and fails only in the field. The hook that denies sub-agent edits once did exactly
-that: an `X | None` annotation raised TypeError at import on 3.9, the hook exited without a
-decision, and the edit it existed to block went through.
+meets in practice. Development runs newer ones, so a 3.10-only construct passes every test here
+and fails only in the field: an `X | None` annotation in a hook raises TypeError at import on
+3.9, so the hook exits without a decision and the edit it exists to block goes through.
 
 Checked statically, since no 3.9 interpreter is assumed: the file must parse as 3.9 syntax, and
 an `X | Y` annotation (evaluated when the function is defined) needs

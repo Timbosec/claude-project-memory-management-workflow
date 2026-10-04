@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
-"""Tests for context_budget_report.py (checkpoint 5, context-budget-relocation-and-lesson-ledger
-plan, 2026-08-18).
+"""Tests for context_budget_report.py.
 
 This check reads eight mutable paths in production (both CLAUDE.md files, MEMORY.md, the three
 other user-scope rule homes, the ledger, and the history CSV) and writes one (the history CSV).
-`run_tests.sh` runs this suite at every turn-end, in the supervisor's session as much as the
-executor's, so none of it may touch the real files -- every test below builds its own fixture
-text or its own tmpdir and passes it in explicitly. A test that read the real ~/.claude/CLAUDE.md
-would drift red as that file's Provisional-tag count and byte size change, exactly the failure
-mode the project convention warns about (a function grows a repo-data read and its existing tests
-start reading live data silently).
+None of these tests may touch the real files -- every test below builds its own fixture text or
+its own tmpdir and passes it in explicitly. A test that read the real ~/.claude/CLAUDE.md would
+drift red as that file's Provisional-tag count and byte size change (a function grows a repo-data
+read and its existing tests start reading live data silently).
 
 Date-dependent logic (candidate age, the history delta) never calls date.today() inside a test
 or inside the functions under test without an explicit `today` argument -- fixtures and the
 assertions that check them share one pinned reference date, so nothing here can drift as the
-calendar advances (see feedback-test-fixtures-share-a-clock).
+calendar advances.
 """
 import os
 import tempfile
@@ -145,7 +142,7 @@ class TestSplitH3Entries(unittest.TestCase):
         self.assertIn("Home: somewhere", entries[0][1])
 
     def test_indented_schema_template_is_not_an_entry(self):
-        # Mirrors the real file's "## Schema" block: template lines are indented four spaces,
+        # Mirrors the ledger's "## Schema" block: template lines are indented four spaces,
         # so they render as a markdown code block and must never be mistaken for a real entry.
         text = (
             "## Schema\n\n"
@@ -171,7 +168,7 @@ class TestCountCandidatesAwaiting(unittest.TestCase):
     TODAY = date(2026, 8, 18)
 
     def test_populated_ledger_returns_nonzero_count_and_oldest_age(self):
-        # The load-bearing case the checkpoint brief calls out: a parser that silently returns
+        # The load-bearing case: a parser that silently returns
         # 0 on every input would pass the empty-ledger test below but must fail THIS one.
         text = (
             "## Candidates\n\n"
@@ -197,7 +194,7 @@ class TestCountCandidatesAwaiting(unittest.TestCase):
         self.assertIsNone(oldest_age)
 
     def test_ledger_with_only_origin_logs_returns_zero(self):
-        # This is the shape of the REAL file today: two origin logs, zero candidates. An
+        # A ledger holding two origin logs and no candidates. An
         # origin-log entry has "Home:"/"Promoted:" fields, never "First observed:", so it must
         # not be miscounted as a candidate.
         text = (
@@ -214,8 +211,8 @@ class TestCountCandidatesAwaiting(unittest.TestCase):
         self.assertIsNone(oldest_age)
 
     def test_origin_log_with_a_bare_promoted_date_is_still_not_a_candidate(self):
-        # A REAL future promotion's "Promoted:" field is a bare date (unlike the two pre-dates-
-        # the-ledger entries today), so this is not a contrived edge case -- a detector keyed on
+        # A promotion's "Promoted:" field is usually a bare date, so this is not a contrived
+        # edge case -- a detector keyed on
         # "any field with a date" rather than specifically "First observed:" would wrongly count
         # every future origin log as a candidate too.
         text = (

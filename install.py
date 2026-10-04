@@ -764,8 +764,8 @@ def cmd_install(args, manifest, record, target):
     not_selected = [name for name in optional if name not in components]
     declined = [name for name in not_selected if states[name] == "declined"]
     offered = [name for name in not_selected if states[name] != "declined"]
-    # Installed by the old prompts, so present but never recorded: say so rather than offer
-    # it as if it were absent.
+    # Installed before the install record existed, so present but never recorded: say so
+    # rather than offer it as if it were absent.
     untracked = [name for name in offered
                  if any(os.path.exists(os.path.join(target, e["target"]))
                         for e in manifest["files"] if e["component"] == name)]

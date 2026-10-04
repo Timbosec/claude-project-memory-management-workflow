@@ -234,12 +234,10 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      the listed mismatches, over-limit bytes, or dangling citations now, before ending the
      session, then re-run it.
    - `python3 ${CLAUDE_SKILL_DIR}/scripts/check_thread_state.py --repo <project root>
-     --backlog <project root>/backlog.md --memory-dir <memory dir>`
-     It **reports and never gates — it always exits 0**. It prints four sections: task refs found
+     --backlog <project root>/backlog.md`
+     It **reports and never gates — it always exits 0**. It prints three sections: task refs found
      in recent commits against each task's current `backlog.md` section, declared `blocked by #N`
-     dependencies for review, `Next up` block staleness (commits since its basis commit), and
-     task-number collisions with retired-scheme memory citations (split into a live-task bucket
-     that needs a decision and a "resolves to a Closed stub — expected" bucket that doesn't).
+     dependencies for review, and `Next up` block staleness (commits since its basis commit).
      **Every flagged task requires an explicit response — "still correct" is a valid response,
      silence is not.** That requirement is the forcing function here, chosen deliberately instead
      of a non-zero exit: a crying-wolf gate on a heuristic just trains the reader to ignore it.

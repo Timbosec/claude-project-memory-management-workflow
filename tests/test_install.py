@@ -513,7 +513,7 @@ class SettingsTest(TargetCase):
         self.install_ok("record", self.SCRIPT, "--decision", "replaced")
         self.assertEqual(self.record()["files"][self.SCRIPT]["decision"], "replaced")
 
-    # --- review fixes -------------------------------------------------------
+    # --- file modes, base copies and the summary ----------------------------
 
     HOOK = "hooks/remind_finalise.py"
 
