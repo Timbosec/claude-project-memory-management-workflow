@@ -1,114 +1,46 @@
 # Claude Code project memory & session-close workflow
 
-A set of rule files, commands, a skill and hooks, with an install script, that installs a
-cross-project working-rules and session-close system into any
-[Claude Code](https://claude.com/claude-code) setup. Originally built up over months on one personal project, then generalised here so it can
-be dropped onto a different machine and reused across every project on it, not just the one it
-came from.
+A set of skills, a command, hooks and rule files for [Claude Code](https://claude.com/claude-code),
+with an install script. It keeps each session's context tight while making sure what matters,
+the decisions made, lessons learned and work still open, is written down before `/clear` throws
+the conversation away. Install it once per machine and it works in every project on it.
 
-**Why this exists:** it applies a few concrete memory-management practices so that a coding
-agent's session context stays tight instead of bloating with irrelevant history, while what
-actually matters, decisions made, lessons learned, fixes worth remembering, survives past the
-end of the session instead of evaporating when the context window clears. It also gives you a
-place to notice patterns in how the agent works: which topics it keeps needing something
-explained about twice, or where it burned several turns figuring out why something wasn't
-working, so that friction gets fixed once instead of relived every session.
+Nothing historical ships with it: every ledger, log and backlog starts empty.
 
-## Core benefits and capabilities
+## How you work once it's installed
 
-- **Nothing important gets lost to `/clear`.** Claude Code's context window resets, but a
-  decision, a fix, or a lesson learned mid-session shouldn't; `/finalise` sweeps the conversation
-  for anything that only exists in the chat and writes it down before the window closes.
-- **A rule earns its place instead of accumulating from one anecdote.** A lesson observed once is
-  a candidate, not policy: it waits in a ledger until a second, genuinely different case confirms
-  it before becoming a standing rule, so a confident-sounding one-off doesn't quietly calcify
-  into an instruction nobody re-examines.
-- **The rule set checks itself.** `/memory-audit` periodically walks every rule file, both
-  CLAUDE.mds, and accumulated memory against each other, flagging contradictions, duplicates, and
-  staleness instead of relying on catching drift by eye.
-- **A durable "why," independent of git archaeology.** `decisions.md` keeps the reasoning behind
-  a choice queryable on its own; a future session doesn't have to reconstruct intent from commit
-  messages and guesswork.
-- **Install once, use on every project.** Everything lives at the user level (`~/.claude/...`),
-  not per-repo, so there's no re-setup tax each time you start something new.
-- **New projects get the same discipline in one command.** `/bootstrap-project` gives a brand-new
-  repo the same worklist/decision-log conventions immediately, instead of that structure being
-  re-derived from scratch, or skipped because it felt like overhead for something small.
-- **Context cost stays visible, not just correctness.** The rule files distinguish what's loaded
-  into every session from what's read on demand, and a built-in check reports growth over time,
-  so the system doesn't silently get more expensive to run as it accumulates rules.
-- **Friction gets diagnosed, not just tolerated.** The evidence ledgers exist specifically to
-  capture moments the agent had to be corrected or asked to re-explain something, so a pattern of
-  repeated confusion around one topic becomes visible and fixable instead of just annoying.
+1. **When starting a project (or adding this workflow to an existing one).** Open Claude Code in
+   the project folder and run `/bootstrap-project`. It creates `backlog.md` (the open worklist),
+   `decisions.md` (why things were done) and a project `lesson-candidates.md`, and adds a pointer
+   to them in the project's `CLAUDE.md`. If the project's memory already holds open work, it
+   offers to move each item into the backlog.
+2. **Pick up work.** Run `/next`. It reads the "Next up" recommendation at the top of
+   `backlog.md` and stops for you to choose. Once you've picked an item, it drafts a plan or a
+   brief for a sub-agent, and waits for your approval before touching any file.
+3. **Work as normal.** The rule files in `~/.claude` load into every session and shape how Claude
+   plans, briefs sub-agents, edits docs and reports back. If you've installed the optional guard,
+   a sub-agent can't edit the project's record files (`CLAUDE.md`, `backlog.md`, `decisions.md`,
+   memory). After each `git commit`, a hook reminds Claude to run `/finalise` before the session
+   ends.
+4. **Close the session.** Run `/finalise` before `/clear`. It sweeps the conversation for
+   decisions, fixes and lessons that exist only in the chat and proposes a home for each, one
+   approval at a time. It then moves any loose work into `backlog.md`, runs integrity checks, and
+   rewrites "Next up" so the next session's `/next` starts from it.
+5. **Audit occasionally.** Run `/memory-audit` from time to time. It checks the rule files, both
+   `CLAUDE.md`s and memory against each other for contradictions, duplication and staleness. It
+   shows you the whole plan before changing anything.
 
-## What it sets up
+## How a lesson becomes a rule
 
-Three permanent Claude Code commands/skills, plus the rule files they depend on:
+`~/.claude/CLAUDE.md` and the rule files beside it load into every session on the machine.
+Everything else, the backlog, decision log, project `CLAUDE.md`, memory and project ledger, stays
+in its own project. A lesson seen once goes into a ledger (the project's, or the global
+`~/.claude/lesson-candidates.md`), not into a rule. It becomes a standing rule only when a second,
+different case confirms it. `/memory-audit` reads every project's ledger as one pool, so two
+cases from unrelated projects can together make a global rule neither project would have
+proposed alone.
 
-- **`/finalise`**: a session-close ritual. Run it before clearing context and it sweeps the
-  conversation for undocumented decisions, fixes, and lessons; routes each one to the right home
-  (a memory file, a rule file, a project decision log, or a "wait for a second case" ledger);
-  reconciles the project's open worklist; and runs a few deterministic integrity checks (memory
-  index consistency, dangling cross-references, context-budget growth).
-- **`/memory-audit`**: the periodic consistency pass `/finalise` explicitly does not do itself.
-  Checks the rule files, both CLAUDE.mds, and accumulated memory against each other for
-  contradictions, duplication, and staleness; ages the "waiting for a second case" ledger
-  (promoting entries that now have one, retiring ones that don't hold up); extracts durable
-  decisions out of memory into a project decision log.
-- **`/bootstrap-project`**: sets up a new (or very basic existing) project to work with the two
-  commands above: a `backlog.md`/`decisions.md` pair with the conventions that make them useful
-  (stable task numbers, an append-only decision log, a dated "what's next" summary that gets
-  replaced rather than appended to), plus a `CLAUDE.md` pointer so a fresh session actually knows
-  these files exist. If the project's memory already holds open work, it offers to move each
-  item into the backlog as a task.
-
-Underneath those three, a small set of always-loaded and on-demand rule files: a routing header
-that decides which file a new lesson belongs in, checklists for writing a prompt, editing a
-standing doc, or briefing a sub-agent, and evidence ledgers that hold single observations until a
-second, contrasting one arrives to justify promoting them into an actual rule — one global
-(`~/.claude/lesson-candidates.md`), plus a project-scoped sibling `/bootstrap-project` creates in
-each project it sets up (see "How the global/project split works" below).
-
-One more, optional piece, not part of `/finalise` or `/memory-audit`: a `PreToolUse` hook that
-denies a delegated sub-agent from editing any of the project-record files this whole system
-depends on (`CLAUDE.md`, `backlog.md`, `decisions.md`, a skill file outside its own `scripts/`
-directory, or a memory file). A sub-agent should only ever touch the source/test files named in
-its own brief; this makes that structural instead of just something you have to remember to say
-in every brief.
-
-## How the global/project split works
-
-Two genuinely different scopes are in play here, worth being clear on before using this on a
-machine with more than one project:
-
-- **`~/.claude/CLAUDE.md` and its sibling rule files are truly global** — loaded into every
-  session on this machine regardless of which project it's in, because Claude Code loads them
-  unconditionally from the user's home directory rather than by walking up the filesystem tree
-  from wherever the current project happens to live. One file, one piece of content, every
-  project — including two projects organised into completely unrelated folder trees.
-- **Everything else here is per-project, and inherently so.** `backlog.md`, `decisions.md`, a
-  project's own `CLAUDE.md`, its `lesson-candidates.md`, and its auto-memory directory (keyed by
-  Claude Code itself off the project's own filesystem path, not by anything this bundle adds) are
-  all local to that one project and never leak into another, no matter how many projects share the
-  machine or how they're organised into folders.
-- **The bridge between the two is the lesson-candidate ledgers, not a bigger global file.** A
-  lesson observed once in a project starts in that project's own ledger — or the global one, if it
-  already looks like it applies everywhere. It only becomes a standing rule, project-level or
-  global, once a second, genuinely contrasting case confirms it; nothing is promoted on a single
-  sighting. `/memory-audit` is what makes this work across many projects: it reads every project's
-  ledger together as one pool, so a case that looks project-specific from inside one `/finalise`
-  session can still turn out to match a case sitting in a completely different project, and get
-  promoted to a global rule that neither project's own session would ever have proposed alone.
-
-In short: facts and rules specific to one project's own domain stay there permanently unless
-something proves they generalise, and only the proven-general ones ever cost every *other*
-project anything in always-loaded context.
-
-## Setup
-
-Everything installs into `~/.claude/...` (global, not per-project) and only needs doing once per
-machine. After that, starting a new project is just: open Claude Code inside the repo and run
-`/bootstrap-project`.
+## Install
 
 You need `python3` (3.9 or later) and `git`.
 
@@ -118,38 +50,32 @@ You need `python3` (3.9 or later) and `git`.
    don't have yet, adds its hooks to `~/.claude/settings.json`, and runs the bundle's tests.
    Where you already have a file that differs from the bundle's, it leaves the file alone, and
    Claude goes through those files with you one at a time. Where one of your projects already
-   has its own `/finalise`, which a user-level one would override, the script holds the
-   bundle's back and Claude asks you whether to install it anyway. Claude also asks whether you
-   want the optional sub-agent guard.
+   has its own copy of a bundle skill or command, which a user-level one would override, the
+   script holds the bundle's back and Claude asks you whether to install it anyway. Claude also
+   asks whether you want the optional sub-agent guard.
 
 Re-running the install is safe. It never overwrites a file you have changed, and it doesn't ask
 again about a file you've already decided on unless you edit it or the bundle's version changes.
 
-## What's deliberately not included
+## Upgrade
 
-- No actual historical content: no logged lessons, no ledger entries, no decisions, no backlog
-  tasks. Every accumulating file starts genuinely empty, only the schema/mechanics ported. A
-  lesson ledger entry needs a *second, contrasting* case to ever get promoted, and a case from an
-  unrelated origin project can never be that.
-- No git push authorization. Whether these files get committed/pushed anywhere is left for you to
-  decide per machine; nothing here assumes a trust level that hasn't been explicitly granted.
-- Two things are referenced in passing but not installed by this bundle: a skill that measures
-  where trimming a rule file actually reclaims always-loaded context budget, and a hook that
-  nudges periodic re-evaluation of the under-explained-cases ledger. Both references have a
-  documented fallback, so their absence doesn't break anything, they're just not automated here.
+Run `git pull` in the clone, then ask Claude to install the bundle again. Files you never edited
+are updated, and files the bundle no longer ships are removed. For a file you did edit, Claude
+shows you only what the bundle changed and asks which changes to take.
+
+## Found a bug?
+
+Open an issue on this repository rather than fixing it in your clone. Fixes arrive through
+`git pull`.
 
 ## Verifying it worked
 
-In a scratch/throwaway repo:
+`INSTALL.md` ends by checking the hooks and `/finalise` in a fresh session. Then, in a scratch
+repo:
 
-1. Run `/bootstrap-project`. It should produce a clean, empty `backlog.md`, `decisions.md`,
-   `lesson-candidates.md`, and `CLAUDE.md` pointer, nothing referencing the origin project.
-2. Run `/finalise` **before making a first commit**. All three checker scripts should report a
-   clean, one-line skip for their own absence condition (no commits yet, no backlog.md if you
-   haven't run step 1, no memory directory) and exit 0 rather than crashing — this is the exact
-   state `/bootstrap-project` leaves a project in, since it writes the files and then asks before
-   committing. Then make a first commit and run `/finalise` again: it should complete normally and
-   report zero candidates on a session that did no real work.
-3. Run `/memory-audit`. It should discover the project's memory directory, audit the (mostly
-   empty) rule homes without erroring, and stop to show a proposed change plan before touching
-   anything.
+1. Run `/bootstrap-project`. It should create empty `backlog.md`, `decisions.md` and
+   `lesson-candidates.md` files, and a `CLAUDE.md` pointer to them.
+2. Make a first commit and run `/finalise`. On a session that did no real work it should
+   complete and report no candidates.
+3. Run `/memory-audit`. It should find the project's memory directory, audit the mostly empty
+   rule files without errors, and stop at its proposed plan before changing anything.
