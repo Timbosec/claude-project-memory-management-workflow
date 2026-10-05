@@ -23,7 +23,9 @@ it does, on a file the summary lists.
 
 If you find a bug in the bundle during an install, don't fix it in this clone. Write it up for the
 user (the file, what goes wrong, the evidence and a suggested fix) and tell them they can open an
-issue on the repository they cloned from, which `git remote get-url origin` names. Fixes arrive
+issue on the repository they cloned from. Name it with
+`git remote get-url origin | sed -E 's#://[^/@]*@#://#'`, which removes any user name or token
+an HTTPS clone URL can carry; don't print the remote URL without that filter. Fixes arrive
 through `git pull`.
 
 ## 1. Run the script
