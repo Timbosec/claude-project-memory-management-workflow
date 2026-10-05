@@ -266,10 +266,15 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
    carry today's date and a basis line that names the latest commit as "Basis: commits through
    `<hash>`" (step 5's staleness check reads exactly that form) and lists the Open threads as of
    today; and **replace the block in full, never append** — appending turns it into the append-only
-   ledger this file exists to avoid. The block runs from its `## Next up` heading to the next `## `
-   heading; replace all of it. Commit it (see the commit note above) — this is a `<project root>`
-   write, push included once you've confirmed pushing is wanted. Skip this step if `backlog.md`
-   doesn't exist yet.
+   ledger this file exists to avoid. Write it with the script, never by editing the file: pipe the
+   whole new block, from its `## Next up` heading through its closing `---` line, into
+   `python3 ${CLAUDE_SKILL_DIR}/scripts/write_next_up.py --backlog <project root>/backlog.md`,
+   using a quoted heredoc (`<<'EOF'`) so the block's backticks reach it unchanged. It finds the
+   old block's edges itself, and refuses, leaving the file untouched, unless the result has
+   exactly one `Next up` block, ends with the old block's last line and changes nothing outside
+   it. On a refusal, fix the block and run it again. Commit it (see the commit note above) — this
+   is a `<project root>` write, push included once you've confirmed pushing is wanted. Skip this
+   step if `backlog.md` doesn't exist yet.
 
 7. **Report what you did** — list each candidate and its outcome (applied + file touched, or
    rejected), the reconcile result from step 4, the results of all three step-5 checks (the
