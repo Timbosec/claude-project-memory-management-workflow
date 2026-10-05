@@ -138,4 +138,9 @@
   the instrument is supposed to be summarising. The trigger is verbal and easy to catch once named:
   **the case against doing the work cites the very signal the work would repair.**
   (Provisional — single episode.)
+- **Write shipped text for the people who will read it, not for the person in the session.**
+  Before text leaves for other users (a public repo, published docs, a shared prompt), check every
+  route, pointer and piece of history in it: does the reader have what it points at, and does the
+  history mean anything to them? The author's own copy is the boundary: there the same history is
+  true and in use, and stripping it does damage.
 
