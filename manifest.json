@@ -65,6 +65,20 @@
       "executable": false
     },
     {
+      "source": "payload/skills/finalise/scripts/write_next_up.py",
+      "target": "skills/finalise/scripts/write_next_up.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/finalise/scripts/test_write_next_up.py",
+      "target": "skills/finalise/scripts/test_write_next_up.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
       "source": "payload/skills/finalise/scripts/context_budget_report.py",
       "target": "skills/finalise/scripts/context_budget_report.py",
       "kind": "owned",
@@ -239,6 +253,10 @@
     {
       "component": "core",
       "file": "skills/finalise/scripts/test_context_budget_report.py"
+    },
+    {
+      "component": "core",
+      "file": "skills/finalise/scripts/test_write_next_up.py"
     },
     {
       "component": "core",
