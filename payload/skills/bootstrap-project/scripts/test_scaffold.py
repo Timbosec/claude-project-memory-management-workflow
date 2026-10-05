@@ -8,6 +8,9 @@ import sys
 import tempfile
 import unittest
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import scaffold  # noqa: E402
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.join(HERE, "scaffold.py")
 TEMPLATES = os.path.join(HERE, os.pardir, "templates")
@@ -16,6 +19,13 @@ WRITTEN = ["backlog.md", "decisions.md", "lesson-candidates.md", "CLAUDE.md"]
 
 def _run(root, *args):
     return subprocess.run([sys.executable, SCRIPT, root, *args], capture_output=True, text=True)
+
+
+def _touch(root, rel):
+    path = os.path.join(root, *rel.split("/"))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("")
 
 
 def _read(path):
@@ -88,23 +98,40 @@ class TestScaffold(unittest.TestCase):
     def test_bundle_clone_is_refused_and_left_untouched(self):
         for extra in ([], ["--dry-run"]):
             with tempfile.TemporaryDirectory() as root:
-                for name in ("install.py", "manifest.json"):
-                    with open(os.path.join(root, name), "w", encoding="utf-8") as f:
-                        f.write("")
+                _touch(root, "payload/skills/bootstrap-project/SKILL.md")
                 r = _run(root, "widget-shop", *extra)
                 self.assertEqual(r.returncode, 1, extra)
                 self.assertIn("clone of the workflow bundle", r.stderr, extra)
                 self.assertEqual(r.stdout, "", extra)
-                self.assertEqual(sorted(os.listdir(root)), ["install.py", "manifest.json"], extra)
+                self.assertEqual(os.listdir(root), ["payload"], extra)
 
-    def test_project_with_only_one_bundle_marker_is_scaffolded(self):
-        for marker in ("install.py", "manifest.json"):
-            with tempfile.TemporaryDirectory() as root:
-                with open(os.path.join(root, marker), "w", encoding="utf-8") as f:
-                    f.write("")
-                r = _run(root, "widget-shop", "--date", "2026-01-15")
-                self.assertEqual(r.returncode, 0, r.stderr)
-                self.assertEqual(sorted(os.listdir(root)), sorted(WRITTEN + [marker]))
+    def test_project_with_install_py_and_manifest_json_is_scaffolded(self):
+        # Both names are common in real projects (manifest.json especially), so neither, nor
+        # the pair, may mark a folder as the bundle's clone.
+        with tempfile.TemporaryDirectory() as root:
+            for name in ("install.py", "manifest.json"):
+                _touch(root, name)
+            r = _run(root, "widget-shop", "--date", "2026-01-15")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(sorted(os.listdir(root)),
+                             sorted(WRITTEN + ["install.py", "manifest.json"]))
+
+    def test_project_with_its_own_copy_of_the_skill_is_scaffolded(self):
+        # A project-level install of the skill lives under .claude/, not payload/.
+        with tempfile.TemporaryDirectory() as root:
+            _touch(root, ".claude/skills/bootstrap-project/SKILL.md")
+            r = _run(root, "widget-shop", "--date", "2026-01-15")
+            self.assertEqual(r.returncode, 0, r.stderr)
+
+    def test_marker_is_where_the_bundle_keeps_this_skill(self):
+        # Ties the marker to the real layout: the path after payload/ must be this skill's own
+        # SKILL.md, found the same way in a clone (payload/skills/...) or an install
+        # (~/.claude/skills/...). If the bundle's layout changes, this goes red.
+        prefix = "payload" + os.sep
+        self.assertTrue(scaffold.BUNDLE_CLONE_MARKER.startswith(prefix))
+        tail = scaffold.BUNDLE_CLONE_MARKER[len(prefix):]
+        skills_parent = os.path.join(HERE, os.pardir, os.pardir, os.pardir)
+        self.assertTrue(os.path.isfile(os.path.join(skills_parent, tail)), tail)
 
 
 if __name__ == "__main__":

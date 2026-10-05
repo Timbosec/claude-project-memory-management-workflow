@@ -10,8 +10,10 @@ as instructions. Prints one line per file, `created` or `exists`, so the agent r
 knows which existing files to show the user and whether an existing CLAUDE.md needs reconciling.
 `--dry-run` prints the same lines (`would create` in place of `created`) and writes nothing.
 
-It refuses, writing nothing, when the root holds `install.py` and `manifest.json`: that is a clone
-of the workflow bundle, which agents run installs from and so can mistake for a project.
+It refuses, writing nothing, when the root holds `payload/skills/bootstrap-project/SKILL.md`, the
+bundle's own source for this skill: that is a clone of the workflow bundle, which agents run
+installs from and so can mistake for a project. A project never has that path; a project-level
+copy of the skill lives under `.claude/skills/`.
 
 The date is today's, in YYYY-MM-DD form, because /finalise's check_thread_state.py parses the
 "Next up" heading with that pattern. `--date` exists for tests.
@@ -32,8 +34,8 @@ FILES = [
     ("project-CLAUDE.md", "CLAUDE.md"),
 ]
 
-# Files at the root of a clone of the workflow bundle itself, which is never a project to scaffold.
-BUNDLE_CLONE_MARKERS = ("install.py", "manifest.json")
+# Present only in a clone of the workflow bundle itself, which is never a project to scaffold.
+BUNDLE_CLONE_MARKER = os.path.join("payload", "skills", "bootstrap-project", "SKILL.md")
 
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -58,9 +60,9 @@ def main(argv=None):
         parser.error(f"--date must be YYYY-MM-DD, got {args.date!r}")
     if not os.path.isdir(args.root):
         parser.error(f"not a directory: {args.root}")
-    if all(os.path.isfile(os.path.join(args.root, f)) for f in BUNDLE_CLONE_MARKERS):
+    if os.path.isfile(os.path.join(args.root, BUNDLE_CLONE_MARKER)):
         print(f"refused: {args.root} is a clone of the workflow bundle (it has "
-              f"{' and '.join(BUNDLE_CLONE_MARKERS)} at its root), not a project. The bundle is "
+              f"{BUNDLE_CLONE_MARKER}), not a project. The bundle is "
               "installed from this clone, so a CLAUDE.md here would load into every later install "
               "session, and project files committed here would leave the clone out of step with "
               "the bundle it pulls updates from. Run /bootstrap-project in the project you want "
