@@ -76,6 +76,11 @@ PROJECTS_DIR = "projects"
 SKILL_FILE = re.compile(r"^skills/([^/]+)/SKILL\.md$")
 COMMAND_FILE = re.compile(r"^commands/([^/]+)\.md$")
 NOT_ALNUM = re.compile(r"[^A-Za-z0-9]")
+HEADING = re.compile(r"^#{1,6}\s")
+# A rule's ID is a tag written `` → `[kebab-id]` `` at the end of one of its lines: the last line
+# of the bullet, or, in one rule, the end of its first paragraph. The arrow also appears
+# mid-sentence in rules, so only this exact form counts.
+RULE_ID = re.compile(r"[ \t]*→[ \t]*`\[([a-z0-9]+(?:-[a-z0-9]+)*)\]`[ \t]*$", re.M)
 SESSION_LINES_READ = 50
 
 
@@ -89,6 +94,53 @@ def sha256_of(path):
         for chunk in iter(lambda: f.read(65536), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def rule_blocks(text):
+    """The top-level bullets of a rules file as (first line, whole text), in order.
+
+    A bullet starts at a line beginning '- ' and runs to the next such line or to a heading.
+    Indented lines and blank lines inside it belong to it; text before the first bullet, and
+    headings, are not rules.
+    """
+    blocks, current = [], None
+    for line in text.splitlines():
+        if line.startswith("- "):
+            current = [line]
+            blocks.append(current)
+        elif HEADING.match(line):
+            current = None
+        elif current is not None:
+            current.append(line)
+    return [(b[0], "\n".join(b).strip()) for b in blocks]
+
+
+def split_rules(text):
+    """Each rule in a rules file as (id or None, body), in order.
+
+    The ID is the `` → `[id]` `` tag (see RULE_ID), None when the bullet has none. The body is
+    the bullet without that tag and with every run of whitespace collapsed to one space, so
+    rewrapping a rule does not change it.
+    """
+    rules = []
+    for _first, block in rule_blocks(text):
+        ids = RULE_ID.findall(block)
+        rules.append((ids[-1] if ids else None, " ".join(RULE_ID.sub(" ", block).split())))
+    return rules
+
+
+def check_rule_ids(text, rel):
+    """Raise ValueError unless every rule in a shared file has one ID and no ID repeats."""
+    seen = {}
+    for (first, block), (rule_id, _body) in zip(rule_blocks(text), split_rules(text)):
+        if rule_id is None:
+            raise ValueError("%s: this rule has no ID (a `→ [id]` tag): %s" % (rel, first))
+        if len(RULE_ID.findall(block)) > 1:
+            raise ValueError("%s: this rule has more than one ID tag: %s" % (rel, first))
+        if rule_id in seen:
+            raise ValueError("%s: the ID [%s] is used twice, by %s and by %s"
+                             % (rel, rule_id, seen[rule_id], first))
+        seen[rule_id] = first
 
 
 def load_manifest():
@@ -105,6 +157,9 @@ def load_manifest():
                 raise ValueError("unknown kind %r for %s" % (entry["kind"], entry["target"]))
             if not os.path.isfile(os.path.join(HERE, entry["source"])):
                 raise ValueError("payload file missing: %s" % entry["source"])
+            if entry["kind"] == "shared":
+                with open(os.path.join(HERE, entry["source"]), encoding="utf-8") as src:
+                    check_rule_ids(src.read(), entry["source"])
         live = {entry["target"] for entry in files}
         for entry in manifest.setdefault("retired", []):
             if not isinstance(entry.get("target"), str) or not entry["target"]:
