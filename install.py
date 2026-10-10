@@ -143,6 +143,89 @@ def check_rule_ids(text, rel):
         seen[rule_id] = first
 
 
+# What rules_to_raise reports for a rule.
+RULE_NEW = "new"
+RULE_CHANGED = "changed"
+RULE_DROPPED_CHANGED = "dropped-changed"
+RULE_REMOVED = "removed"
+
+
+def body_sha256(body):
+    """The hash recorded against a rule's decision: the collapsed body split_rules returns."""
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()
+
+
+def titled_rules(text):
+    """Each rule as (id or None, body, first line), in order."""
+    return [(rule_id, body, first)
+            for (first, _block), (rule_id, body) in zip(rule_blocks(text), split_rules(text))]
+
+
+def rules_to_raise(base_text, bundle_text, rule_records):
+    """The rules in the bundle's rules file the user has to decide on, worked out from the
+    bundle version they last had (`base_text`), the current one and their recorded decisions.
+
+    Returns a list of dicts with the keys "id", "status", "old", "new", "reason" and
+    "first_line": the bundle's rules in bundle order, then the removed ones in base order.
+    `old` is the base body, or None when the base has none for the rule; `new` is the bundle
+    body, or None for a removed rule; `reason` is the recorded reason for a dropped-changed
+    rule and None otherwise; `first_line` is the first line of the bullet that is shown.
+
+    Statuses:
+      new              not in the base and not decided
+      changed          in the base with a different body, and no decision on the current body
+      dropped-changed  as changed, but the earlier decision was `dropped`: it stays dropped
+                       unless the caller judges the new wording answers the reason
+      removed          in the base and not in the bundle (id None for a base without IDs)
+    A decision recorded on the current body, or a body equal to the base's, raises nothing.
+    A taken or merged decision recorded on an earlier body does not: the user holds the old
+    wording. `base_text` None means no base copy: every rule not yet decided is new.
+    """
+    bundle = titled_rules(bundle_text)
+    base = titled_rules(base_text) if base_text is not None else []
+    base_by_id = {rid: (body, first) for rid, body, first in base if rid is not None}
+    # A base from before rules had IDs: its bullets are matched to the bundle's by body.
+    idless = [(body, first) for rid, body, first in base if rid is None]
+    records = rule_records or {}
+    items, bundle_ids = [], set()
+    for rule_id, body, first in bundle:
+        if rule_id is None:
+            raise ValueError("the bundle rule has no ID: %s" % first)
+        bundle_ids.add(rule_id)
+        record = records.get(rule_id)
+        record = record if isinstance(record, dict) else None
+        if record is not None and record.get("body_sha256") == body_sha256(body):
+            continue
+        old = None
+        if rule_id in base_by_id:
+            old = base_by_id[rule_id][0]
+            if old == body:
+                continue
+        elif base_text is not None:
+            match = next((i for i, (b, _f) in enumerate(idless) if b == body), None)
+            if match is not None:
+                del idless[match]
+                continue
+        if record is not None and base_text is not None and record.get("decision") == "dropped":
+            status, reason = RULE_DROPPED_CHANGED, record.get("reason")
+        elif record is not None and base_text is not None:
+            status, reason = RULE_CHANGED, None
+        elif old is not None:
+            status, reason = RULE_CHANGED, None
+        else:
+            status, reason = RULE_NEW, None
+        items.append({"id": rule_id, "status": status, "old": old, "new": body,
+                      "reason": reason, "first_line": first})
+    for rule_id, body, first in base:
+        if rule_id is not None and rule_id not in bundle_ids:
+            items.append({"id": rule_id, "status": RULE_REMOVED, "old": body, "new": None,
+                          "reason": None, "first_line": first})
+    for body, first in idless:
+        items.append({"id": None, "status": RULE_REMOVED, "old": body, "new": None,
+                      "reason": None, "first_line": first})
+    return items
+
+
 def load_manifest():
     path = os.path.join(HERE, "manifest.json")
     try:
