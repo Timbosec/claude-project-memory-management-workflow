@@ -56,12 +56,17 @@ You need `python3` (3.9 or later) and `git`.
 
 Re-running the install is safe. It never overwrites a file you have changed, and it doesn't ask
 again about a file you've already decided on unless you edit it or the bundle's version changes.
+Your user-level `CLAUDE.md` is handled rule by rule instead: adding your own rules never brings
+it up again, and each bundle rule you take, merge or drop is remembered with a one-line reason.
 
 ## Upgrade
 
 Run `git pull` in the clone, then ask Claude to install the bundle again. Files you never edited
 are updated, and files the bundle no longer ships are removed. For a file you did edit, Claude
-shows you only what the bundle changed and asks which changes to take.
+shows you only what the bundle changed and asks which changes to take. For `CLAUDE.md` that
+means only the bundle rules that are new or reworded and that you haven't decided on; a rule you
+dropped stays dropped unless the new wording answers your reason for dropping it.
+`python3 install.py rules` lists your recorded rule decisions.
 
 ## Found a bug?
 

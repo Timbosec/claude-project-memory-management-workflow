@@ -38,7 +38,9 @@ covers their own copies of those, not the bundle's.
 ## 2. Resolve each listed file
 
 The summary lists, under "Needs a decision", each existing file that differs from the bundle
-version, by its path under the config directory. It has left them all as they are. To find the
+version, by its path under the config directory, and lists any rules in the user-level
+`CLAUDE.md` that need a decision in a section of their own. It has left them all as they are.
+To find the
 bundle version, look that path up as a `target` in `manifest.json`: its `source` is the bundle
 file, relative to the clone root. The user-level `CLAUDE.md` is stored as
 `payload/user-CLAUDE.md`, so that it doesn't load as instructions into this session.
@@ -50,11 +52,43 @@ A listed file may end with `bundle change: <path>`. That diff holds only what th
 since the version the user last had, never the user's own edits. Work from it rather than from
 the whole files: show the user each change and carry the ones they agree to into their file. A
 file listed without one has no earlier bundle version to compare against, so compare the whole
-files as below.
+files as below. `CLAUDE.md` never carries one; it has its own procedure below.
 
-**`CLAUDE.md`** (kind `shared`). With a bundle change: take each rule the diff adds, removes or
-rewords, find what the user's file says about the same situation, and raise them one at a time as
-in step 4 below; then record `merged`. Without one:
+**`CLAUDE.md`** (kind `shared`). This file holds the user's own rules as well as the bundle's, so
+the script never compares it as a whole. It compares the bundle's rules one at a time, by the ID
+each one ends with (such as `→ [one-decision-at-a-time]`), against the bundle version the user
+last had and the decisions recorded on earlier upgrades. Editing the file never lists it again;
+only a bundle change to one of its rules can.
+
+*When the summary lists "Rules in CLAUDE.md that need a decision"*, each line names a rule and
+what happened to it, and the path printed under them is a file holding each rule's old and new
+wording exactly as the bundle writes it. Take the rules one at a time:
+- **new** or **changed**: find what the user's file says about the same situation, under any
+  heading. For a changed rule, show the user what the bundle changed between the two wordings.
+  Raise it with the options in item 4 of the full pass below. Then draft a one-line reason from
+  the conflict you raised (or, with no conflict, from what the rule adds) and have the user
+  confirm or correct it; they never have to write one. Record it:
+  `python3 install.py record-rule ID --decision taken|merged|dropped --reason "TEXT"`. Taken
+  means the bundle's wording went in as it is; merged means a wording agreed with the user,
+  including keeping both with the bundle rule as an exception; dropped means it was left out.
+  If the user declines without a reason, leave `--reason` off. A rule taken or merged into the
+  file keeps its ID tag, which helps whoever runs a later upgrade find it in the file. The script
+  never reads the user's `CLAUDE.md`, so a missing tag changes nothing it lists; don't present
+  tagging as a reason to choose one option over another.
+- **dropped earlier**: the user declined this rule on an earlier upgrade, for the reason shown,
+  and the bundle has reworded it since. It stays dropped. Tell the user in one line that it
+  changed. Raise it again only if the new wording plausibly answers their reason; if it does and
+  they decide, record that as above. Recording nothing keeps it dropped.
+- **removed from the bundle**: if the user's file still holds the rule, ask whether to keep it
+  or delete it. There is nothing to record.
+
+For `CLAUDE.md`, each rule's `record-rule` is what finishes that rule; record the file once, after
+the last rule: `python3 install.py record CLAUDE.md --decision merged`. It refuses, naming the
+rules, while a new or changed rule has no decision.
+
+*When the summary lists `CLAUDE.md` under "Needs a decision" with "no earlier bundle version to
+compare against: full pass"*, there are no earlier decisions to work from, so go through the
+whole file:
 1. Read the whole existing file, not just its headings. A rule can cover the same ground under a
    different heading or as an unheaded paragraph.
 2. Go through the bundle version bullet by bullet. For each, check whether the existing file
@@ -69,15 +103,19 @@ in step 4 below; then record `merged`. Without one:
    - take the bundle's: drop the existing text and keep the bundle rule;
    - merge them into one rule, worded with the user;
    - keep both, with the bundle rule worded as an explicit exception.
-5. A bundle rule left out may end with a tag such as `→ [one-decision-at-a-time]`. Search
-   `payload/` for the tag's name without brackets (`one-decision-at-a-time`) and tell the user
-   which installed files cite it, since those citations will now point at nothing. If the rule
+5. For a bundle rule left out, search `payload/` for its ID without brackets
+   (`one-decision-at-a-time`). Most IDs are cited nowhere else; where another installed file
+   cites it, tell the user which, since that citation will now point at nothing. If the rule
    left out is the paragraph on routing a new lesson, or the rule that a lesson needs a second
    real case before it becomes a rule, tell the user that `/finalise` and `/memory-audit` carry
    their own copy and still route lessons that way.
 6. Append the bundle content, adjusted by those decisions, as new top-level sections after a
-   blank line. Delete or change existing content only where the user has said so for that
-   specific content. Record `CLAUDE.md` as `merged`, whatever the individual decisions were.
+   blank line, keeping each rule's ID tag. Delete or change existing content only where the user
+   has said so for that specific content.
+7. Record every bundle rule with `record-rule` as above: a rule appended as it is, with nothing
+   in the user's file to weigh it against, is taken, with a reason such as "no existing rule on
+   this". Then record `CLAUDE.md` as `merged`, whatever the individual decisions were; it refuses
+   until every rule has a decision.
 
 **Any other file** (kind `owned`): with a bundle change, work from the diff as above. Without
 one, read both versions in full and show the user the specific differences, not just that the
@@ -92,7 +130,11 @@ Then record the decision:
 - merged: `python3 install.py record PATH --decision merged`
 
 `PATH` is the path as the summary lists it. A recorded file isn't listed again until it is
-edited or the bundle version changes.
+edited or the bundle version changes. `CLAUDE.md` is the exception: editing it never lists it
+again, and a bundle change lists only the rules it changed.
+
+`python3 install.py rules` lists every recorded rule decision with its reason. To reverse one,
+record the rule again with the new decision.
 
 If the summary lists `settings.json` entries that differ from the bundle's, show the user both
 and change an entry only if they say so.
