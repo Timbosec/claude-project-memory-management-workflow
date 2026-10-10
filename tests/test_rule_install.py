@@ -245,6 +245,64 @@ class BundleChangeTest(RuleInstallCase):
         self.ok("record", "CLAUDE.md", "--decision", "merged")  # removed never blocks
 
 
+def indented(text):
+    """What the rules file does to a bullet: four spaces on every non-blank line."""
+    return "\n".join(("    " + line) if line.strip() else "" for line in text.split("\n"))
+
+
+class RulesFileVerbatimTest(RuleInstallCase):
+    """The agent copies a rule from the rules file into the user's CLAUDE.md, so the file
+    shows each bullet exactly as the bundle writes it."""
+
+    def rules_file(self):
+        return read(self.t("workflow-bundle/changes/CLAUDE.md.rules"))
+
+    def bullet(self, first, last):
+        """The bullet in the shipped file from its first words to the end of `last`, sliced
+        from the text itself and not through the rule parser."""
+        start = self.shipped.index(first)
+        return self.shipped[start:self.shipped.index(last, start) + len(last)]
+
+    def test_a_new_rule_is_shown_byte_for_byte_with_its_id_tag(self):
+        self.user_edits()
+        self.last_had(read(os.path.join(REPO, "tests", "fixtures", "user-CLAUDE-f596cd7.md")))
+        self.ok()
+        bullet = self.bullet("- **Write shipped text for the people", "`[write-for-readers]`")
+        self.assertTrue(bullet.endswith("\n  \u2192 `[write-for-readers]`"))
+        self.assertIn("New wording:\n" + indented(bullet) + "\n", self.rules_file())
+        # the other rule of that upgrade is shown the same way
+        self.assertIn(indented(self.bullet("- **Write the sentence so it carries",
+                                           "`[self-carrying-sentences]`")), self.rules_file())
+
+    def test_a_mid_bullet_tag_and_the_paragraph_break_after_it_are_kept(self):
+        # second-real-example has two paragraphs, and its tag ends the first one
+        self.user_edits()
+        old = self.shipped.replace("Corroborated cases cannot falsify it",
+                                   "Corroborated cases can never falsify it", 1)
+        self.assertNotEqual(old, self.shipped)
+        self.last_had(old)
+        out = self.ok()
+        self.assertIn("  second-real-example (changed)\n", out)
+        start = self.shipped.index("- Before a fix or lesson becomes a standing rule")
+        bullet = self.shipped[start:self.shipped.index("- A defect's")].rstrip()
+        text = self.rules_file()
+        self.assertIn("New wording:\n" + indented(bullet) + "\n", text)
+        self.assertIn("appears. \u2192 `[second-real-example]`\n      **A check added as", text)
+        old_part = text[text.index("Old wording:"):text.index("New wording:")]
+        self.assertIn("can never falsify it", old_part)
+        self.assertIn("appears. \u2192 `[second-real-example]`\n      **A check added as",
+                      old_part)
+
+    def test_blank_lines_inside_a_rule_stay_empty_not_padded(self):
+        self.user_edits()
+        self.last_had(self.shipped + "- a rule gone\n\n  with a "
+                      "blank line inside\n  \u2192 `[gone-rule]`\n")
+        self.ok()
+        text = self.rules_file()
+        self.assertIn("    - a rule gone\n\n      with a blank line inside\n", text)
+        self.assertNotIn("    \n", text)
+
+
 class NoUsableBaseTest(RuleInstallCase):
 
     FULL = "  CLAUDE.md (shared) (no earlier bundle version to compare against: full pass)\n"

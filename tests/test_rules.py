@@ -168,7 +168,9 @@ class RulesToRaiseTest(unittest.TestCase):
     def test_changed_with_no_record(self):
         items = install.rules_to_raise(rule("a", self.OLD), rule("a", self.NEW), {})
         self.assertEqual(items, [{"id": "a", "status": "changed", "old": self.OLD,
-                                  "new": self.NEW, "reason": None, "first_line": self.NEW}])
+                                  "new": self.NEW, "reason": None, "first_line": self.NEW,
+                                  "old_text": self.OLD + "\n  \u2192 `[a]`",
+                                  "new_text": self.NEW + "\n  \u2192 `[a]`"}])
 
     def test_same_body_raises_nothing_even_when_rewrapped(self):
         self.assertEqual(raised(rule("a", "- one two three"),
@@ -203,14 +205,16 @@ class RulesToRaiseTest(unittest.TestCase):
         items = install.rules_to_raise(rule("a", "- first") + rule("b", "- second"),
                                        rule("a", "- first"), {})
         self.assertEqual(items, [{"id": "b", "status": "removed", "old": "- second",
-                                  "new": None, "reason": None, "first_line": "- second"}])
+                                  "new": None, "reason": None, "first_line": "- second",
+                                  "old_text": "- second\n  \u2192 `[b]`", "new_text": None}])
 
     def test_removed_from_a_base_without_ids(self):
         base = "- first\n- second rule\n  runs on\n"
         bundle = rule("a", "- first")
         items = install.rules_to_raise(base, bundle, {})
         self.assertEqual(items, [{"id": None, "status": "removed", "old": "- second rule runs on",
-                                  "new": None, "reason": None, "first_line": "- second rule"}])
+                                  "new": None, "reason": None, "first_line": "- second rule",
+                                  "old_text": "- second rule\n  runs on", "new_text": None}])
 
     def test_base_without_ids_matches_by_body_and_the_rest_is_new(self):
         base = "- first\n- second\n"

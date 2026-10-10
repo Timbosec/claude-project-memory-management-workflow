@@ -83,7 +83,6 @@ import shlex
 import shutil
 import subprocess
 import sys
-import textwrap
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CORE = "core"
@@ -202,11 +201,14 @@ def rules_to_raise(base_text, bundle_text, rule_records):
     """The rules in the bundle's rules file the user has to decide on, worked out from the
     bundle version they last had (`base_text`), the current one and their recorded decisions.
 
-    Returns a list of dicts with the keys "id", "status", "old", "new", "reason" and
-    "first_line": the bundle's rules in bundle order, then the removed ones in base order.
-    `old` is the base body, or None when the base has none for the rule; `new` is the bundle
-    body, or None for a removed rule; `reason` is the recorded reason for a dropped-changed
-    rule and None otherwise; `first_line` is the first line of the bullet that is shown.
+    Returns a list of dicts with the keys "id", "status", "old", "new", "reason", "first_line",
+    "old_text" and "new_text": the bundle's rules in bundle order, then the removed ones in
+    base order. `old` is the base body, or None when the base has none for the rule; `new` is
+    the bundle body, or None for a removed rule; `reason` is the recorded reason for a
+    dropped-changed rule and None otherwise; `first_line` is the first line of the bullet that
+    is shown. `old_text` and `new_text` are the same bullets exactly as written (line breaks,
+    paragraphs and ID tag included), or None; `old` and `new` are the collapsed bodies that
+    comparison and hashing use.
 
     Statuses:
       new              not in the base and not decided
@@ -224,33 +226,38 @@ def rules_to_raise(base_text, bundle_text, rule_records):
     """
     bundle = titled_rules(bundle_text)
     base = titled_rules(base_text) if base_text is not None else []
-    base_by_id = {rid: (body, first) for rid, body, first in base if rid is not None}
+    # The bullets exactly as written, ID tag included, for showing to the user.
+    bundle_raw = {rid: raw for (rid, _b, _f), (_ff, raw) in zip(bundle, rule_blocks(bundle_text))}
+    base_raw = [raw for _f, raw in rule_blocks(base_text)] if base_text is not None else []
+    base_by_id = {rid: (body, raw) for (rid, body, _f), raw in zip(base, base_raw)
+                  if rid is not None}
     # A base from before rules had IDs: its bullets are matched to the bundle's by body, and
     # then a reworded rule to its earlier version by first line.
-    idless = [(body, first) for rid, body, first in base if rid is None]
+    idless = [(body, first, raw) for (rid, body, first), raw in zip(base, base_raw)
+              if rid is None]
     records = rule_records or {}
     for rule_id, _body, first in bundle:
         if rule_id is None:
             raise ValueError("the bundle rule has no ID: %s" % first)
 
-    same, old_of = set(), {}
+    same, old_of, old_raw = set(), {}, {}
     for rule_id, body, _first in bundle:
         if rule_id in base_by_id:
-            old_of[rule_id] = base_by_id[rule_id][0]
+            old_of[rule_id], old_raw[rule_id] = base_by_id[rule_id]
             if old_of[rule_id] == body:
                 same.add(rule_id)
             continue
-        match = next((i for i, (b, _f) in enumerate(idless) if b == body), None)
+        match = next((i for i, (b, _f, _r) in enumerate(idless) if b == body), None)
         if match is not None:
             del idless[match]
             same.add(rule_id)
     for rule_id, _body, first in bundle:
         if rule_id in base_by_id or rule_id in same:
             continue
-        match = next((i for i, (_b, f) in enumerate(idless)
+        match = next((i for i, (_b, f, _r) in enumerate(idless)
                       if _without_tag(f) == _without_tag(first)), None)
         if match is not None:
-            old_of[rule_id] = idless.pop(match)[0]
+            old_of[rule_id], _first, old_raw[rule_id] = idless.pop(match)
 
     items, bundle_ids = [], set()
     for rule_id, body, first in bundle:
@@ -271,18 +278,19 @@ def rules_to_raise(base_text, bundle_text, rule_records):
         else:
             status, reason = RULE_NEW, None
         items.append({"id": rule_id, "status": status, "old": old, "new": body,
-                      "reason": reason, "first_line": first})
-    for rule_id, body, first in base:
+                      "reason": reason, "first_line": first,
+                      "old_text": old_raw.get(rule_id), "new_text": bundle_raw[rule_id]})
+    for (rule_id, body, first), raw in zip(base, base_raw):
         if rule_id is None or rule_id in bundle_ids:
             continue
         record = records.get(rule_id)
         if isinstance(record, dict) and record.get("decision") == "dropped":
             continue  # the user never had it, so there is nothing to remove
         items.append({"id": rule_id, "status": RULE_REMOVED, "old": body, "new": None,
-                      "reason": None, "first_line": first})
-    for body, first in idless:
+                      "reason": None, "first_line": first, "old_text": raw, "new_text": None})
+    for body, first, raw in idless:
         items.append({"id": None, "status": RULE_REMOVED, "old": body, "new": None,
-                      "reason": None, "first_line": first})
+                      "reason": None, "first_line": first, "old_text": raw, "new_text": None})
     return items
 
 
@@ -1120,9 +1128,11 @@ def rule_line(item):
 
 def rules_file_text(items):
     """The old and new wording of every raised rule, for the agent to show the user."""
-    def block(body, none):
-        return textwrap.fill(body, width=100, initial_indent="    ",
-                             subsequent_indent="    ") if body else "    " + none
+    def block(text, none):
+        # The rule exactly as the bundle writes it, so it can be copied as it stands.
+        if not text:
+            return "    " + none
+        return "\n".join(("    " + line) if line.strip() else "" for line in text.split("\n"))
 
     out = ["Rules in CLAUDE.md that need a decision: %d" % len(items), "",
            "Old is the bundle version you last had; new is the bundle version now.", ""]
@@ -1133,8 +1143,8 @@ def rules_file_text(items):
                        % item["reason"])
         else:
             out.append("Status: %s" % item["status"])
-        out += ["Old wording:", block(item["old"], "(not in the version you last had)"),
-                "New wording:", block(item["new"], "(no longer in the bundle)"), ""]
+        out += ["Old wording:", block(item["old_text"], "(not in the version you last had)"),
+                "New wording:", block(item["new_text"], "(no longer in the bundle)"), ""]
     return "\n".join(out)
 
 
