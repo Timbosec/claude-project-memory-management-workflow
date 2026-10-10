@@ -1,5 +1,6 @@
 ---
-name: finalise
+# The menu shows /finalize; the folder name keeps /finalise working too.
+name: finalize
 description: Session-close doc review — captures decisions, fixes and lessons into decisions.md and memory before context clears.
 disable-model-invocation: true
 ---

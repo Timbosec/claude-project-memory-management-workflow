@@ -22,9 +22,9 @@ Nothing historical ships with it: every ledger, log and backlog starts empty.
    a sub-agent can't edit the project's record files (`CLAUDE.md`, `backlog.md`, `decisions.md`,
    memory). After each `git commit`, a hook reminds Claude to run `/finalise` before the session
    ends.
-4. **Close the session.** Run `/finalise` before `/clear`. It sweeps the conversation for
-   decisions, fixes and lessons that exist only in the chat and proposes a home for each, one
-   approval at a time. It then moves any loose work into `backlog.md`, runs integrity checks, and
+4. **Close the session.** Run `/finalise` (or `/finalize`) before `/clear`. It sweeps the
+   conversation for decisions, fixes and lessons that exist only in the chat and proposes a home
+   for each, one approval at a time. It then moves any loose work into `backlog.md`, runs integrity checks, and
    rewrites "Next up" so the next session's `/next` starts from it.
 5. **Audit occasionally.** Run `/memory-audit` from time to time. It checks the rule files, both
    `CLAUDE.md`s and memory against each other for contradictions, duplication and staleness. It
