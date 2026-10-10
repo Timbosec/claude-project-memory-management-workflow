@@ -181,7 +181,10 @@ class InstallTest(TargetCase):
         r = self.install_ok()
         self.assertEqual(read_bytes(self.t("CLAUDE.md")), mine)
         self.assertIn("Needs a decision (existing file differs, left as it is): 1", r.stdout)
-        self.assertIn("  CLAUDE.md (shared)", r.stdout)
+        self.assertIn("  CLAUDE.md (shared) (no earlier bundle version to compare against: "
+                      "full pass)\n", r.stdout)
+        self.assertNotIn("Rules in CLAUDE.md", r.stdout)
+        self.assertFalse(os.path.exists(self.t("workflow-bundle/changes")))
         self.assertIn("Installed: %d" % (len(CORE_FILES) - 1), r.stdout)
         self.assertNotIn("CLAUDE.md", self.record()["files"])
 

@@ -184,7 +184,9 @@ class RecordFileRefusalTest(RuleRecordCase):
     def test_allowed_once_each_rule_is_recorded_and_then_refreshes_the_base(self):
         self.start(fixture("user-CLAUDE-a6c5979.md"))
         self.ok("record-rule", "write-for-readers", "--decision", "taken")
-        self.ok("record", "CLAUDE.md", "--decision", "merged")
+        r = self.ok("record", "CLAUDE.md", "--decision", "merged")
+        self.assertNotIn("until it is edited again", r.stdout)
+        self.assertIn("editing the file does not list it again", r.stdout)
         entry = self.record()["files"]["CLAUDE.md"]
         self.assertEqual(entry["decision"], "merged")
         self.assertEqual(entry["bundle_sha256"], sha(self.shipped))
@@ -238,7 +240,8 @@ class RecordFileRefusalTest(RuleRecordCase):
     def test_other_files_are_not_affected(self):
         self.start(self.shipped)
         self.write("prompt-lessons.md", "mine\n")
-        self.ok("record", "prompt-lessons.md", "--decision", "kept")
+        r = self.ok("record", "prompt-lessons.md", "--decision", "kept")
+        self.assertIn("skip it until it is edited again", r.stdout)
 
     def write_rules(self, rules):
         record = self.record()
@@ -259,9 +262,9 @@ class RulesListingTest(RuleRecordCase):
                           "date": "2026-10-03"}})
         out = self.ok("rules").stdout
         self.assertIn("Recorded rule decisions: 3", out)
-        self.assertIn("  search-silence: dropped, 2026-10-01 (bundle unchanged since)", out)
+        self.assertIn("  search-silence: dropped, 2026-10-01 (decided on the current wording)", out)
         self.assertIn("    reason: conflicts with mine", out)
-        self.assertIn("  lesson-routing: taken, 2026-10-02 (bundle has changed it since)", out)
+        self.assertIn("  lesson-routing: taken, 2026-10-02 (the bundle has reworded it since)", out)
         self.assertIn("  gone-rule: merged, 2026-10-03 (no longer in the bundle)", out)
         self.assertEqual(out.count("reason:"), 1)
 
@@ -271,7 +274,7 @@ class RulesListingTest(RuleRecordCase):
         out = self.ok("rules").stdout
         self.assertIn("Recorded rule decisions: 1", out)
         self.assertIn("  search-silence: dropped,", out)
-        self.assertIn("(bundle unchanged since)", out)
+        self.assertIn("(decided on the current wording)", out)
         self.assertIn("    reason: nope", out)
 
 

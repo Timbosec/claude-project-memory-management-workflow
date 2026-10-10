@@ -18,7 +18,20 @@ decided on). Otherwise it leaves the existing file alone: a seed ledger is kept 
 whose recorded decision still holds is skipped, and any other file is listed as needing a
 decision. When the bundle has changed since the version recorded for a listed file, that change
 alone (recorded version to current bundle version) is written as a diff under
-workflow-bundle/changes/ and its path printed with the file. A file the bundle no longer
+workflow-bundle/changes/ and its path printed with the file.
+
+The shared file (the user-level CLAUDE.md) is the exception, because its user always edits it.
+It is compared rule by rule instead: every rule in the bundle's copy carries an ID, and the
+saved base copy of the bundle version the user last had is split into rules and compared with
+the current one. Only the rules that are new, that the bundle has reworded since, or that it
+has removed, and that the user has not decided on, are listed in the summary under "Rules in
+CLAUDE.md that need a decision", and the old and new wording of each is written to
+workflow-bundle/changes/CLAUDE.md.rules. A rule the user dropped earlier stays dropped when the
+bundle rewords it: the summary shows the recorded reason, and it is the agent's call whether
+the new wording answers it. When nothing is left to decide, the record is refreshed to the
+current bundle version silently. An edit to the file alone never lists it. With no usable base
+copy (none saved, or it no longer matches the record) there is nothing to compare, so the file
+is listed under "Needs a decision" for a pass through the whole file. A file the bundle no longer
 ships (the manifest's "retired" list) is deleted if the install record proves the user never
 edited it, dropped from the record silently if it is already gone, and otherwise listed and
 left. A skill or command that a project already has its own copy of
@@ -34,7 +47,18 @@ record: the agent calls this after resolving a listed file with the user. It rec
 decision (kept, merged or replaced) so that later runs skip the file until it is edited again
 or the bundle changes. For a file the bundle no longer ships it takes only kept, which leaves
 the file alone until it is edited again, or removed, once the file has been deleted, which
-stops tracking it.
+stops tracking it. For the shared file it refuses, whatever the decision, while a rule is still
+undecided, and on success it saves the current bundle version as the base to compare from next
+time.
+
+record-rule: the agent calls this for each rule it raised with the user. It records taken,
+dropped (with a one-line reason; "declined, no reason given" if none) or merged against the
+rule's current wording, so that the rule is not raised again until the bundle rewords it.
+Recording again overwrites, which is how a decision is reversed. It refuses an ID the bundle
+does not have.
+
+rules: prints every recorded rule decision with its reason and date, and whether the bundle
+has reworded the rule since.
 
 project-override: the agent calls this after asking the user about a held-back skill or
 command. install puts it in at user level on the next run; hold keeps it out. Either holds until
@@ -59,6 +83,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import textwrap
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CORE = "core"
@@ -69,6 +94,8 @@ BASE_SUFFIX = ".base"
 # Each real run's bundle changes for files the user edited; emptied at the start of the run.
 CHANGES_DIR = "changes"
 CHANGE_SUFFIX = ".diff"
+RULES_SUFFIX = ".rules"
+FULL_PASS_NOTE = "no earlier bundle version to compare against: full pass"
 SETTINGS_FILE = "settings.json"
 DECISIONS = ("kept", "merged", "replaced")
 # The decisions on one rule of the shared rules file (record-rule).
@@ -440,8 +467,8 @@ def bundle_change(record, target, entry, bundle_sha):
     return "".join(lines)
 
 
-def write_change(target, rel, text):
-    path = os.path.join(changes_dir(target), rel + CHANGE_SUFFIX)
+def write_change(target, rel, text, suffix=CHANGE_SUFFIX):
+    path = os.path.join(changes_dir(target), rel + suffix)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="") as f:
         f.write(text)
@@ -776,6 +803,7 @@ def cmd_install(args, manifest, record, target):
     installed, unchanged, needs_decision = [], [], []
     seeds_kept, earlier_decision, exec_fixed, updated = [], [], [], []
     held_back, held_earlier, overriding = [], [], []
+    raised_rules, rules_file = [], None
 
     selected = [e for e in manifest["files"] if e["component"] in components]
     own = projects_with_own(target, {n for n in map(slash_name, (e["target"] for e in selected))
@@ -826,10 +854,29 @@ def cmd_install(args, manifest, record, target):
                 copy_file(src, dst, entry["executable"])
                 note_in_record(record, target, entry, src, dst, "updated", commit, today)
             continue
+        elif entry["kind"] == "shared":
+            # The user always edits this file, so it is compared rule by rule: only the rules
+            # the bundle has changed since the version the user last had, and not yet decided,
+            # are raised.
+            if recorded_base(record, target, entry) is None:
+                needs_decision.append((entry["target"], entry["kind"], None, FULL_PASS_NOTE))
+            else:
+                items = pending_rules(record, target, entry)
+                if items:
+                    raised_rules = items
+                    if write:
+                        rules_file = write_change(target, entry["target"],
+                                                  rules_file_text(items), RULES_SUFFIX)
+                else:
+                    earlier_decision.append(entry["target"])
+                    if write:
+                        note_in_record(record, target, entry, src, dst, "kept-rules", commit,
+                                       today)
+            continue
         else:
             change = bundle_change(record, target, entry, bundle_sha) if write else None
             diff = write_change(target, entry["target"], change) if change else None
-            needs_decision.append((entry["target"], entry["kind"], diff))
+            needs_decision.append((entry["target"], entry["kind"], diff, None))
             continue
 
         # A file the bundle's content is settled for: restore a lost executable bit. This
@@ -891,8 +938,15 @@ def cmd_install(args, manifest, record, target):
     print("Left as you have them: %d (seed ledgers kept: %d; skipped by an earlier decision: %d)"
           % (len(seeds_kept) + len(earlier_decision), len(seeds_kept), len(earlier_decision)))
     print("Needs a decision (existing file differs, left as it is): %d" % len(needs_decision))
-    for path, kind, diff in needs_decision:
-        print("  %s (%s)%s" % (path, kind, ", bundle change: %s" % diff if diff else ""))
+    for path, kind, diff, note in needs_decision:
+        print("  %s (%s)%s%s" % (path, kind, " (%s)" % note if note else "",
+                                 ", bundle change: %s" % diff if diff else ""))
+    if raised_rules:
+        print("Rules in CLAUDE.md that need a decision: %d" % len(raised_rules))
+        for item in raised_rules:
+            print("  %s" % rule_line(item))
+        if rules_file:
+            print("  old and new wording of each: %s" % rules_file)
     print("%s (no longer in the bundle): %d" % ("Would remove" if args.dry_run else "Removed",
                                                len(removed)))
     for path in removed:
@@ -1048,6 +1102,42 @@ def record_retired(args, record, target, entry):
     return 0
 
 
+def rule_label(item):
+    """How a raised rule is named in the summary and the rules file."""
+    return item["id"] if item["id"] is not None else "(no ID) " + item["first_line"]
+
+
+def rule_line(item):
+    """One line of the install summary for a raised rule."""
+    label = rule_label(item)
+    if item["status"] == RULE_DROPPED_CHANGED:
+        return '%s (dropped earlier: "%s"; the bundle has changed it since)' % (
+            label, item["reason"])
+    if item["status"] == RULE_REMOVED:
+        return "%s (removed from the bundle)" % label
+    return "%s (%s)" % (label, item["status"])
+
+
+def rules_file_text(items):
+    """The old and new wording of every raised rule, for the agent to show the user."""
+    def block(body, none):
+        return textwrap.fill(body, width=100, initial_indent="    ",
+                             subsequent_indent="    ") if body else "    " + none
+
+    out = ["Rules in CLAUDE.md that need a decision: %d" % len(items), "",
+           "Old is the bundle version you last had; new is the bundle version now.", ""]
+    for item in items:
+        out.append("== %s ==" % rule_line(item))
+        if item["status"] == RULE_DROPPED_CHANGED:
+            out.append("Status: dropped-changed. You dropped it earlier, for this reason: %s"
+                       % item["reason"])
+        else:
+            out.append("Status: %s" % item["status"])
+        out += ["Old wording:", block(item["old"], "(not in the version you last had)"),
+                "New wording:", block(item["new"], "(no longer in the bundle)"), ""]
+    return "\n".join(out)
+
+
 def read_utf8(path):
     with open(path, encoding="utf-8", errors="replace", newline="") as f:
         return f.read()
@@ -1107,9 +1197,9 @@ def cmd_rules(args, manifest, record, target):
         if rule_id not in bundle:
             since = "no longer in the bundle"
         elif seen.get("body_sha256") == body_sha256(bundle[rule_id]):
-            since = "bundle unchanged since"
+            since = "decided on the current wording"
         else:
-            since = "bundle has changed it since"
+            since = "the bundle has reworded it since"
         print("  %s: %s, %s (%s)" % (rule_id, seen.get("decision"), seen.get("date"), since))
         if seen.get("reason"):
             print("    reason: %s" % seen["reason"])
@@ -1150,8 +1240,13 @@ def cmd_record(args, manifest, record, target):
     note_in_record(record, target, entry, src, dst, args.decision, bundle_commit(),
                    datetime.date.today().isoformat())
     save_record(target, record)
-    print("Recorded: %s %s. Later runs skip it until it is edited again or the bundle "
-          "version changes." % (entry["target"], args.decision))
+    if entry["kind"] == "shared":
+        print("Recorded: %s %s. Later runs raise only the rules the bundle changes after this "
+              "version, and not any you have decided; editing the file does not list it again."
+              % (entry["target"], args.decision))
+    else:
+        print("Recorded: %s %s. Later runs skip it until it is edited again or the bundle "
+              "version changes." % (entry["target"], args.decision))
     return 0
 
 
