@@ -6,6 +6,8 @@ Usage:
   python3 install.py [--target DIR] decline subagent-guard
   python3 install.py [--target DIR] record PATH --decision kept|merged|replaced|removed
   python3 install.py [--target DIR] project-override PATH --decision install|hold
+  python3 install.py [--target DIR] record-rule ID --decision taken|dropped|merged [--reason TEXT]
+  python3 install.py [--target DIR] rules
 
 Reads manifest.json and payload/ from this script's own directory.
 
@@ -62,13 +64,16 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CORE = "core"
 RECORD_DIR = "workflow-bundle"
 RECORD_FILE = "install-record.json"
-RECORD_FORMAT = 3
+RECORD_FORMAT = 4
 BASE_SUFFIX = ".base"
 # Each real run's bundle changes for files the user edited; emptied at the start of the run.
 CHANGES_DIR = "changes"
 CHANGE_SUFFIX = ".diff"
 SETTINGS_FILE = "settings.json"
 DECISIONS = ("kept", "merged", "replaced")
+# The decisions on one rule of the shared rules file (record-rule).
+RULE_DECISIONS = ("taken", "dropped", "merged")
+NO_REASON = "declined, no reason given"
 # The only decisions on a file the bundle no longer ships.
 RETIRED_DECISIONS = ("kept", "removed")
 OVERRIDE_DECISIONS = ("install", "hold")
@@ -155,6 +160,11 @@ def body_sha256(body):
     return hashlib.sha256(body.encode("utf-8")).hexdigest()
 
 
+def _without_tag(line):
+    """A bullet's first line with any ID tag stripped, for pairing a rule with its old self."""
+    return RULE_ID.sub("", line).strip()
+
+
 def titled_rules(text):
     """Each rule as (id or None, body, first line), in order."""
     return [(rule_id, body, first)
@@ -176,36 +186,55 @@ def rules_to_raise(base_text, bundle_text, rule_records):
       changed          in the base with a different body, and no decision on the current body
       dropped-changed  as changed, but the earlier decision was `dropped`: it stays dropped
                        unless the caller judges the new wording answers the reason
-      removed          in the base and not in the bundle (id None for a base without IDs)
+      removed          in the base and not in the bundle (id None for a base without IDs),
+                       unless the user had dropped that rule, so never had it
     A decision recorded on the current body, or a body equal to the base's, raises nothing.
     A taken or merged decision recorded on an earlier body does not: the user holds the old
     wording. `base_text` None means no base copy: every rule not yet decided is new.
+    In a base without IDs a rule is matched to its base bullet by equal body, then, if the rule
+    was reworded, by equal first line (ID tag stripped), which makes it changed rather than a
+    new rule plus a removed one.
     """
     bundle = titled_rules(bundle_text)
     base = titled_rules(base_text) if base_text is not None else []
     base_by_id = {rid: (body, first) for rid, body, first in base if rid is not None}
-    # A base from before rules had IDs: its bullets are matched to the bundle's by body.
+    # A base from before rules had IDs: its bullets are matched to the bundle's by body, and
+    # then a reworded rule to its earlier version by first line.
     idless = [(body, first) for rid, body, first in base if rid is None]
     records = rule_records or {}
-    items, bundle_ids = [], set()
-    for rule_id, body, first in bundle:
+    for rule_id, _body, first in bundle:
         if rule_id is None:
             raise ValueError("the bundle rule has no ID: %s" % first)
+
+    same, old_of = set(), {}
+    for rule_id, body, _first in bundle:
+        if rule_id in base_by_id:
+            old_of[rule_id] = base_by_id[rule_id][0]
+            if old_of[rule_id] == body:
+                same.add(rule_id)
+            continue
+        match = next((i for i, (b, _f) in enumerate(idless) if b == body), None)
+        if match is not None:
+            del idless[match]
+            same.add(rule_id)
+    for rule_id, _body, first in bundle:
+        if rule_id in base_by_id or rule_id in same:
+            continue
+        match = next((i for i, (_b, f) in enumerate(idless)
+                      if _without_tag(f) == _without_tag(first)), None)
+        if match is not None:
+            old_of[rule_id] = idless.pop(match)[0]
+
+    items, bundle_ids = [], set()
+    for rule_id, body, first in bundle:
         bundle_ids.add(rule_id)
         record = records.get(rule_id)
         record = record if isinstance(record, dict) else None
+        if rule_id in same:
+            continue
         if record is not None and record.get("body_sha256") == body_sha256(body):
             continue
-        old = None
-        if rule_id in base_by_id:
-            old = base_by_id[rule_id][0]
-            if old == body:
-                continue
-        elif base_text is not None:
-            match = next((i for i, (b, _f) in enumerate(idless) if b == body), None)
-            if match is not None:
-                del idless[match]
-                continue
+        old = old_of.get(rule_id)
         if record is not None and base_text is not None and record.get("decision") == "dropped":
             status, reason = RULE_DROPPED_CHANGED, record.get("reason")
         elif record is not None and base_text is not None:
@@ -217,9 +246,13 @@ def rules_to_raise(base_text, bundle_text, rule_records):
         items.append({"id": rule_id, "status": status, "old": old, "new": body,
                       "reason": reason, "first_line": first})
     for rule_id, body, first in base:
-        if rule_id is not None and rule_id not in bundle_ids:
-            items.append({"id": rule_id, "status": RULE_REMOVED, "old": body, "new": None,
-                          "reason": None, "first_line": first})
+        if rule_id is None or rule_id in bundle_ids:
+            continue
+        record = records.get(rule_id)
+        if isinstance(record, dict) and record.get("decision") == "dropped":
+            continue  # the user never had it, so there is nothing to remove
+        items.append({"id": rule_id, "status": RULE_REMOVED, "old": body, "new": None,
+                      "reason": None, "first_line": first})
     for body, first in idless:
         items.append({"id": None, "status": RULE_REMOVED, "old": body, "new": None,
                       "reason": None, "first_line": first})
@@ -271,7 +304,7 @@ def load_record(target):
     path = os.path.join(target, RECORD_DIR, RECORD_FILE)
     if not os.path.exists(path):
         return {"format": RECORD_FORMAT, "files": {}, "components": {}, "settings_added": [],
-                "project_overrides": {}, "retired_kept": {}}
+                "project_overrides": {}, "retired_kept": {}, "rules": {}}
     try:
         with open(path, encoding="utf-8") as f:
             record = json.load(f)
@@ -283,12 +316,15 @@ def load_record(target):
         record.setdefault("settings_added", [])
         record.setdefault("project_overrides", {})
         record.setdefault("retired_kept", {})
+        record.setdefault("rules", {})
         if not isinstance(record["components"], dict):
             raise ValueError("'components' is not an object")
         if not isinstance(record["project_overrides"], dict):
             raise ValueError("'project_overrides' is not an object")
         if not isinstance(record["retired_kept"], dict):
             raise ValueError("'retired_kept' is not an object")
+        if not isinstance(record["rules"], dict):
+            raise ValueError("'rules' is not an object")
         if not isinstance(record["settings_added"], list):
             raise ValueError("'settings_added' is not a list")
         record["format"] = RECORD_FORMAT
@@ -363,6 +399,18 @@ def changes_dir(target):
     return os.path.join(target, RECORD_DIR, CHANGES_DIR)
 
 
+def recorded_base(record, target, entry):
+    """The path of the base copy of a file, if it is still the bundle version the record says
+    the user last had; None when there is no record entry or the copy is missing or differs."""
+    seen = record["files"].get(entry["target"])
+    if not isinstance(seen, dict):
+        return None
+    base = base_path(target, entry["target"])
+    if not os.path.isfile(base) or sha256_of(base) != seen.get("bundle_sha256"):
+        return None
+    return base
+
+
 def bundle_change(record, target, entry, bundle_sha):
     """The bundle's own change since the version the user last had, as unified-diff text.
 
@@ -374,8 +422,8 @@ def bundle_change(record, target, entry, bundle_sha):
     seen = record["files"].get(entry["target"])
     if not isinstance(seen, dict) or seen.get("bundle_sha256") == bundle_sha:
         return None
-    base = base_path(target, entry["target"])
-    if not os.path.isfile(base) or sha256_of(base) != seen.get("bundle_sha256"):
+    base = recorded_base(record, target, entry)
+    if base is None:
         return None
     with open(base, encoding="utf-8", errors="replace", newline="") as f:
         old = f.read().splitlines(keepends=True)
@@ -1000,6 +1048,74 @@ def record_retired(args, record, target, entry):
     return 0
 
 
+def read_utf8(path):
+    with open(path, encoding="utf-8", errors="replace", newline="") as f:
+        return f.read()
+
+
+def shared_entry(manifest):
+    """The manifest entry of the shared rules file (the user-level CLAUDE.md), or None."""
+    for entry in manifest["files"]:
+        if entry["kind"] == "shared":
+            return entry
+    return None
+
+
+def pending_rules(record, target, entry):
+    """What rules_to_raise reports for a shared file: the bundle's rules against the base copy
+    the record says the user last had (None when that copy is missing or no longer matches)
+    and the recorded per-rule decisions."""
+    base = recorded_base(record, target, entry)
+    return rules_to_raise(read_utf8(base) if base else None,
+                          read_utf8(os.path.join(HERE, entry["source"])), record["rules"])
+
+
+def undecided_rules(items):
+    """The raised rules that still need a decision recorded. A dropped-changed rule does not:
+    its earlier `dropped` record stands unless the agent raises it again, and a removed rule
+    has nothing to decide."""
+    return [i for i in items if i["status"] in (RULE_NEW, RULE_CHANGED)]
+
+
+def cmd_record_rule(args, manifest, record, target):
+    entry = shared_entry(manifest)
+    bundle = {rid: body for rid, body, _first
+              in titled_rules(read_utf8(os.path.join(HERE, entry["source"])))}
+    if args.id not in bundle:
+        print("install.py: the bundle has no rule with the ID %s. The IDs are: %s."
+              % (args.id, ", ".join(bundle)), file=sys.stderr)
+        return 2
+    reason = (args.reason or "").strip()
+    if args.decision == "dropped" and not reason:
+        reason = NO_REASON
+    record["rules"][args.id] = {
+        "decision": args.decision, "reason": reason, "body_sha256": body_sha256(bundle[args.id]),
+        "bundle_commit": bundle_commit(), "date": datetime.date.today().isoformat()}
+    save_record(target, record)
+    print("Recorded: rule %s %s." % (args.id, args.decision))
+    return 0
+
+
+def cmd_rules(args, manifest, record, target):
+    entry = shared_entry(manifest)
+    bundle = {rid: body for rid, body, _first
+              in titled_rules(read_utf8(os.path.join(HERE, entry["source"])))}
+    rules = record["rules"]
+    print("Recorded rule decisions: %d" % len(rules))
+    for rule_id in sorted(rules):
+        seen = rules[rule_id] if isinstance(rules[rule_id], dict) else {}
+        if rule_id not in bundle:
+            since = "no longer in the bundle"
+        elif seen.get("body_sha256") == body_sha256(bundle[rule_id]):
+            since = "bundle unchanged since"
+        else:
+            since = "bundle has changed it since"
+        print("  %s: %s, %s (%s)" % (rule_id, seen.get("decision"), seen.get("date"), since))
+        if seen.get("reason"):
+            print("    reason: %s" % seen["reason"])
+    return 0
+
+
 def cmd_record(args, manifest, record, target):
     retired = retired_entry_for(manifest, target, args.path)
     if retired is not None:
@@ -1024,6 +1140,13 @@ def cmd_record(args, manifest, record, target):
               "replaced. Copy %s over it first, or record kept or merged."
               % (dst, os.path.join(HERE, entry["source"])), file=sys.stderr)
         return 2
+    if entry["kind"] == "shared":
+        undecided = undecided_rules(pending_rules(record, target, entry))
+        if undecided:
+            print("install.py: %s still has rules that need a decision: %s. Record each with "
+                  "record-rule first, whatever you record for the file."
+                  % (entry["target"], ", ".join(i["id"] for i in undecided)), file=sys.stderr)
+            return 2
     note_in_record(record, target, entry, src, dst, args.decision, bundle_commit(),
                    datetime.date.today().isoformat())
     save_record(target, record)
@@ -1082,6 +1205,16 @@ def main(argv=None):
     p_override.add_argument("path", help="the file's path as the install summary lists it")
     p_override.add_argument("--decision", required=True, choices=OVERRIDE_DECISIONS)
     p_override.add_argument("--target", default=argparse.SUPPRESS)
+    p_rule = sub.add_parser("record-rule",
+                            help="record the decision on one rule of the user-level CLAUDE.md")
+    p_rule.add_argument("id", help="the rule's ID, as the install summary lists it")
+    p_rule.add_argument("--decision", required=True, choices=RULE_DECISIONS)
+    p_rule.add_argument("--reason", default="",
+                        help="why, in one line (stored as '%s' for dropped if omitted)"
+                             % NO_REASON)
+    p_rule.add_argument("--target", default=argparse.SUPPRESS)
+    p_rules = sub.add_parser("rules", help="list the recorded per-rule decisions")
+    p_rules.add_argument("--target", default=argparse.SUPPRESS)
     args = parser.parse_args(argv)
 
     if args.command and (args.dry_run or args.with_subagent_guard):
@@ -1096,6 +1229,10 @@ def main(argv=None):
             return cmd_decline(args, manifest, record, target)
         if args.command == "record":
             return cmd_record(args, manifest, record, target)
+        if args.command == "record-rule":
+            return cmd_record_rule(args, manifest, record, target)
+        if args.command == "rules":
+            return cmd_rules(args, manifest, record, target)
         if args.command == "project-override":
             return cmd_project_override(args, manifest, record, target)
         return cmd_install(args, manifest, record, target)

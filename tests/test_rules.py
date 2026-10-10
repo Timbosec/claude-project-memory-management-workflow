@@ -243,6 +243,73 @@ class RulesToRaiseTest(unittest.TestCase):
             install.rules_to_raise(None, "- no tag here\n", {})
 
 
+class IdlessBaseTest(unittest.TestCase):
+    """A base from before rules had IDs: reworded rules pair with their earlier version."""
+
+    def test_a_reworded_rule_pairs_with_its_earlier_version_in_the_real_old_base(self):
+        # f596cd7 predates both the shipped-text rule and the current wording of the
+        # self-carrying-sentences rule, whose first line is unchanged.
+        base = fixture_text("user-CLAUDE-f596cd7.md")
+        items = install.rules_to_raise(base, shipped_text(), {})
+        self.assertEqual([(i["id"], i["status"]) for i in items],
+                         [("self-carrying-sentences", "changed"), ("write-for-readers", "new")])
+        changed = items[0]
+        self.assertTrue(changed["old"].startswith("- **Write the sentence so it carries"))
+        self.assertNotEqual(changed["old"], changed["new"])
+        self.assertIsNone(items[1]["old"])
+
+    def test_pairing_is_by_first_line_with_the_id_tag_stripped(self):
+        base = "- the same first line\n  old second line\n"
+        bundle = "- the same first line\n  new second line\n  \u2192 `[a]`\n"
+        (item,) = install.rules_to_raise(base, bundle, {})
+        self.assertEqual((item["id"], item["status"], item["old"]),
+                         ("a", "changed", "- the same first line old second line"))
+        tagged = "- the same first line \u2192 `[a]`\n  new second line\n"
+        self.assertEqual(raised(base, tagged), [("a", "changed")])
+
+    def test_an_old_bullet_whose_first_line_matches_no_rule_stays_removed(self):
+        base = "- kept as is\n- a rule since deleted\n  with a second line\n"
+        bundle = rule("a", "- kept as is") + rule("b", "- a different rule")
+        items = install.rules_to_raise(base, bundle, {})
+        self.assertEqual([(i["id"], i["status"]) for i in items],
+                         [("b", "new"), (None, "removed")])
+        self.assertEqual(items[1]["first_line"], "- a rule since deleted")
+
+    def test_one_old_bullet_pairs_with_one_rule_only(self):
+        base = "- shared first line\n  old\n"
+        bundle = ("- shared first line\n  one\n  \u2192 `[a]`\n"
+                  "- shared first line\n  two\n  \u2192 `[b]`\n")
+        self.assertEqual(raised(base, bundle), [("a", "changed"), ("b", "new")])
+
+    def test_a_decided_rule_still_uses_up_its_equal_old_bullet(self):
+        base = "- same\n"
+        records = {"a": {"decision": "taken", "reason": "",
+                         "body_sha256": install.body_sha256("- same")}}
+        self.assertEqual(install.rules_to_raise(base, rule("a", "- same"), records), [])
+
+    def test_a_reworded_dropped_rule_pairs_and_is_dropped_changed(self):
+        base = "- first line\n  old\n"
+        bundle = "- first line\n  new\n  \u2192 `[a]`\n"
+        records = {"a": record("dropped", rule("a", "- first line old"), "no thanks")}
+        (item,) = install.rules_to_raise(base, bundle, records)
+        self.assertEqual((item["status"], item["reason"]), ("dropped-changed", "no thanks"))
+
+
+class RemovedRuleTest(unittest.TestCase):
+
+    def test_a_removed_rule_the_user_dropped_is_not_reported(self):
+        base = rule("a", "- one") + rule("b", "- two")
+        records = {"b": record("dropped", rule("b", "- two"), "never wanted")}
+        self.assertEqual(raised(base, rule("a", "- one"), records), [])
+
+    def test_a_removed_rule_the_user_took_is_still_reported(self):
+        base = rule("a", "- one") + rule("b", "- two")
+        for decision in ("taken", "merged"):
+            with self.subTest(decision=decision):
+                records = {"b": record(decision, rule("b", "- two"))}
+                self.assertEqual(raised(base, rule("a", "- one"), records), [("b", "removed")])
+
+
 class PayloadTagsTest(unittest.TestCase):
 
     def test_no_new_id_equals_a_tag_used_in_another_payload_file(self):
