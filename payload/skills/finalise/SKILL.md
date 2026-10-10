@@ -22,9 +22,11 @@ commit together, at each step below that writes something.** Two repos are in pl
 root>` (decisions.md, backlog.md) and `~/.claude` (CLAUDE.md, prompt-lessons.md,
 writing-standing-docs.md, writing-executor-briefs.md, lesson-candidates.md,
 under-explained-cases.md). Commit in whichever repo the file lives in. **Ask before pushing
-either repo** — don't assume push is pre-authorized; that's a per-machine decision the user makes
-explicitly, not a default. A push can't be scoped to one subdirectory either (it sends the whole
-branch), which is a second reason to confirm rather than assume before pushing `~/.claude`.
+either repo, unless that project's `CLAUDE.md` explicitly pre-authorizes routine pushes — then
+push and say so in step 7.** Never infer it from anything else (a past push, a memory note, a
+decision log): it's a per-machine decision the user makes explicitly, and `CLAUDE.md` is where
+it is loaded as an instruction. A push can't be scoped to one subdirectory either (it sends the
+whole branch), which is a second reason to confirm rather than assume before pushing `~/.claude`.
 **Either may not be a git repo.** Where `<project root>` or `~/.claude` isn't one, its writes are
 saved to disk but not committed: say so once and carry on. Never offer to initialise a repo.
 
@@ -273,7 +275,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
    old block's edges itself, and refuses, leaving the file untouched, unless the result has
    exactly one `Next up` block, ends with the old block's last line and changes nothing outside
    it. On a refusal, fix the block and run it again. Commit it (see the commit note above) — this
-   is a `<project root>` write, push included once you've confirmed pushing is wanted. Skip this
+   is a `<project root>` write, push included once pushing is confirmed or pre-authorized (see the commit note above). Skip this
    step if `backlog.md` doesn't exist yet.
 
 7. **Report what you did** — list each candidate and its outcome (applied + file touched, or
@@ -283,8 +285,8 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
    non-memory write from this run was committed** (`git status` in each of the two that is a git
    repo, not just recall; for one that isn't, say its writes are saved but not committed), name
    any memory-directory writes as filesystem-only per the commit note above, and state each
-   repo's push status — pushed, or left uncommitted/unpushed for the user, per what they said
-   this run.
+   repo's push status — pushed (and whether on the user's say-so this run or a `CLAUDE.md`
+   pre-authorization), or left uncommitted/unpushed for the user.
 
 ## What NOT to record
 
