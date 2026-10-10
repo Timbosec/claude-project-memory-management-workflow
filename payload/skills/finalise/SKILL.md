@@ -276,8 +276,8 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
    old block's edges itself, and refuses, leaving the file untouched, unless the result has
    exactly one `Next up` block, ends with the old block's last line and changes nothing outside
    it. On a refusal, fix the block and run it again. Commit it (see the commit note above) — this
-   is a `<project root>` write, push included once pushing is confirmed or pre-authorized (see the commit note above). Skip this
-   step if `backlog.md` doesn't exist yet.
+   is a `<project root>` write, push included once pushing is confirmed or pre-authorized. Skip
+   this step if `backlog.md` doesn't exist yet.
 
 7. **Report what you did** — list each candidate and its outcome (applied + file touched, or
    rejected), the reconcile result from step 4, the results of all three step-5 checks (the
