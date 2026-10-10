@@ -22,11 +22,12 @@ commit together, at each step below that writes something.** Two repos are in pl
 root>` (decisions.md, backlog.md) and `~/.claude` (CLAUDE.md, prompt-lessons.md,
 writing-standing-docs.md, writing-executor-briefs.md, lesson-candidates.md,
 under-explained-cases.md). Commit in whichever repo the file lives in. **Ask before pushing
-either repo, unless that project's `CLAUDE.md` explicitly pre-authorizes routine pushes — then
-push and say so in step 7.** Never infer it from anything else (a past push, a memory note, a
+either repo, unless a `CLAUDE.md` explicitly pre-authorizes routine pushes of it — the project's
+for `<project root>`, the project's or the user-level `~/.claude/CLAUDE.md` for `~/.claude` —
+then push and say so in step 7.** Never infer it from anything else (a past push, a memory note, a
 decision log): it's a per-machine decision the user makes explicitly, and `CLAUDE.md` is where
 it is loaded as an instruction. A push can't be scoped to one subdirectory either (it sends the
-whole branch), which is a second reason to confirm rather than assume before pushing `~/.claude`.
+whole branch), which is a second reason a `~/.claude` push needs that explicit say-so.
 **Either may not be a git repo.** Where `<project root>` or `~/.claude` isn't one, its writes are
 saved to disk but not committed: say so once and carry on. Never offer to initialise a repo.
 
