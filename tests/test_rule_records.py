@@ -137,11 +137,11 @@ class RecordRuleTest(RuleRecordCase):
         self.start(self.shipped)
         self.ok("record-rule", "search-silence", "--decision", "dropped")
         self.ok("record-rule", "lesson-routing", "--decision", "taken")
-        self.ok("record-rule", "broken-instrument", "--decision", "merged", "--reason", "  ")
+        self.ok("record-rule", "existence-vs-magnitude", "--decision", "merged", "--reason", "  ")
         rules = self.record()["rules"]
         self.assertEqual(rules["search-silence"]["reason"], "declined, no reason given")
         self.assertEqual(rules["lesson-routing"]["reason"], "")
-        self.assertEqual(rules["broken-instrument"]["reason"], "")
+        self.assertEqual(rules["existence-vs-magnitude"]["reason"], "")
 
     def test_recording_again_overwrites_which_reverses_a_decision(self):
         self.start(self.shipped)
@@ -183,6 +183,7 @@ class RecordFileRefusalTest(RuleRecordCase):
 
     def test_allowed_once_each_rule_is_recorded_and_then_refreshes_the_base(self):
         self.start(fixture("user-CLAUDE-a6c5979.md"))
+        self.ok("record-rule", "lesson-routing", "--decision", "taken")
         self.ok("record-rule", "write-for-readers", "--decision", "taken")
         r = self.ok("record", "CLAUDE.md", "--decision", "merged")
         self.assertNotIn("until it is edited again", r.stdout)
@@ -206,6 +207,7 @@ class RecordFileRefusalTest(RuleRecordCase):
 
     def test_a_dropped_changed_rule_does_not_block(self):
         self.start(fixture("user-CLAUDE-f596cd7.md"))
+        self.ok("record-rule", "lesson-routing", "--decision", "taken")
         self.ok("record-rule", "write-for-readers", "--decision", "taken")
         rules = self.record()["rules"]
         rules["self-carrying-sentences"] = {"decision": "dropped", "reason": "too wordy",
@@ -234,7 +236,8 @@ class RecordFileRefusalTest(RuleRecordCase):
         self.ok("record", "CLAUDE.md", "--decision", "kept")
 
     def test_a_base_without_ids_that_matches_the_bundle_needs_no_rule_decisions(self):
-        self.start(fixture("user-CLAUDE-4ac01a8.md"))
+        # The shipped file as a bundle from before rule IDs would have written it.
+        self.start(install.RULE_ID.sub("", self.shipped))
         self.ok("record", "CLAUDE.md", "--decision", "kept")
 
     def test_other_files_are_not_affected(self):

@@ -10,7 +10,8 @@ because a badly written rule passes it too. Run each probe more than once; singl
 
 ## Lesson routing — does a single case reach a rule home?
 
-Re-run all three after any edit to the routing rule in `~/.claude/CLAUDE.md`. Probe A uses a
+Re-run all three after any edit to the routing rule in `~/.claude/CLAUDE.md`, with the
+section below. Probe A uses a
 wording known to fail, which shows the scenario can catch the failure; Probe B uses the current
 wording; Probe C is a case the rule must leave alone.
 
@@ -64,3 +65,37 @@ The control is what proves the clause is bounded: it holds two contrasting cases
 opposite-direction case, so a reader applying the rule correctly must send it to a rule home
 rather than park it.
 
+## Lesson routing — the severity exception
+
+Probe D checks that the exception works, Probe E that it stays the user's call. Re-run B, C, D
+and E after any edit to the routing rule. All four use RULE B and the QUESTION from Probe A,
+and this RULE A:
+
+    RULE A - Routing a new lesson: ask who the actor is, then how many cases you have. The user
+    authoring a prompt or brief -> prompt-lessons. You editing a standing doc ->
+    writing-standing-docs. You briefing an executor or verifying its checkpoint ->
+    writing-executor-briefs. You, at any other moment -> Working rules. One case goes to none of
+    them - it goes to ~/.claude/lesson-candidates.md and waits for a second, contrasting case.
+    Writing it into a home under a "provisional" tag is the failure this replaces: the tag costs
+    what a rule costs and gates nothing. The one exception is the user ruling that a repeat would
+    cost too much to wait for a second case: then the case goes into its home now, with that reason
+    stated beside the rule instead of a tag. An amendment to an existing rule re-derives its home; it
+    does not inherit it - nor its maturity, so it needs its own second case.
+
+### Probe D — the user rules it severe (expected: rule home, reason stated, no tag)
+
+    SCENARIO: You are mid-task. You just watched a store's health check report the store as
+    broken, and you notice that the report itself was the reason everyone believed the store was
+    blocked - a circular signal. This is the first time you have seen this happen. You want to
+    make sure a future session does not repeat it. You mention it to the user, who replies: "If
+    this happens again we could lose weeks of prices before anyone notices. Don't wait for it to
+    recur - make it a rule now."
+
+### Probe E — the agent judges it severe, the user has not ruled (expected: ledger)
+
+    SCENARIO: You are mid-task. You just watched a store's health check report the store as
+    broken, and you notice that the report itself was the reason everyone believed the store was
+    blocked - a circular signal. This is the first time you have seen this happen. You want to
+    make sure a future session does not repeat it. You estimate that if it recurred it could
+    hide weeks of bad data before anyone noticed, which seems serious to you. The user has not
+    said anything about it.

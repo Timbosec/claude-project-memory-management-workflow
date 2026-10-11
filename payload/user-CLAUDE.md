@@ -19,7 +19,9 @@
   at any other moment → Working rules below. **One case goes to none of them** — it goes to
   `~/.claude/lesson-candidates.md` and waits for a second, contrasting case. Writing it into a
   home under a "provisional" tag is the failure this replaces: the tag costs what a rule costs
-  and gates nothing. An amendment to an existing rule re-derives its home; it does not inherit
+  and gates nothing. The one exception is the user ruling that a repeat would cost too much to
+  wait for a second case: then it goes into its home now, with that reason stated beside the rule
+  instead of a tag. An amendment to an existing rule re-derives its home; it does not inherit
   it — nor its maturity, so it needs its own second case. Re-run `~/.claude/doc-test-probes.md`'s
   probes after any further edit to this rule.
   → `[lesson-routing]`
@@ -144,13 +146,6 @@
   the case; a true structural finding can propagate to nothing. Reporting the wrong magnitude
   discredits a correct finding and aims the fix at the wrong size of problem.
   → `[existence-vs-magnitude]`
-- **A broken instrument's reading is not evidence about whether to repair it.** When the thing you
-  are fixing IS the diagnostic — a health check, a monitor, a test — its current output cannot
-  argue the fix is unnecessary, because that output is exactly what the fix changes. Go to the data
-  the instrument is supposed to be summarising. The trigger is verbal and easy to catch once named:
-  **the case against doing the work cites the very signal the work would repair.**
-  (Provisional — single episode.)
-  → `[broken-instrument]`
 - **Write shipped text for the people who will read it, not for the person in the session.**
   Before text leaves for other users (a public repo, published docs, a shared prompt), check every
   route, pointer and piece of history in it: does the reader have what it points at, and does the

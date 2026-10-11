@@ -41,12 +41,12 @@ def shipped_text():
 
 class SplitRulesTest(unittest.TestCase):
 
-    def test_shipped_file_parses_to_17_rules_with_17_unique_ids(self):
+    def test_shipped_file_parses_to_16_rules_with_16_unique_ids(self):
         rules = install.split_rules(shipped_text())
-        self.assertEqual(len(rules), 17)
+        self.assertEqual(len(rules), 16)
         ids = [rule_id for rule_id, _body in rules]
         self.assertNotIn(None, ids)
-        self.assertEqual(len(set(ids)), 17)
+        self.assertEqual(len(set(ids)), 16)
         self.assertTrue(KEPT_TAGS <= set(ids))
 
     def test_shipped_bodies_hold_no_id_tag_and_no_extra_whitespace(self):
@@ -142,22 +142,27 @@ class BodyHashTest(unittest.TestCase):
 class RealRulesToRaiseTest(unittest.TestCase):
     """The two real bundle versions an install can hold, against the shipped file."""
 
-    def test_the_base_a_real_install_holds_raises_nothing(self):
-        # 4ac01a8 has no IDs, and its second-real-example tag sits mid-bullet.
+    def test_the_base_a_real_install_holds_raises_only_the_rules_changed_since(self):
+        # 4ac01a8 has no IDs, and its second-real-example tag sits mid-bullet. Since then the
+        # routing rule gained its exception and the broken-instrument rule was removed.
         base = fixture_text("user-CLAUDE-4ac01a8.md")
         self.assertEqual({rid for rid, _ in install.split_rules(base)} - {None},
                          {"one-decision-at-a-time", "rule-into-code", "second-real-example"})
-        self.assertEqual(install.rules_to_raise(base, shipped_text(), {}), [])
+        items = install.rules_to_raise(base, shipped_text(), {})
+        self.assertEqual([(i["id"], i["status"]) for i in items],
+                         [("lesson-routing", "changed"), (None, "removed")])
+        self.assertTrue(items[1]["old"].startswith("- **A broken instrument's reading"))
 
     def test_the_version_before_the_shipped_text_rule_raises_exactly_that_rule(self):
         items = install.rules_to_raise(fixture_text("user-CLAUDE-a6c5979.md"),
                                        shipped_text(), {})
         self.assertEqual([(i["id"], i["status"]) for i in items],
-                         [("write-for-readers", "new")])
-        self.assertIsNone(items[0]["old"])
-        self.assertTrue(items[0]["new"].startswith("- **Write shipped text for the people"))
-        self.assertTrue(items[0]["first_line"].startswith("- **Write shipped text"))
-        self.assertIsNone(items[0]["reason"])
+                         [("lesson-routing", "changed"), ("write-for-readers", "new"),
+                          (None, "removed")])
+        self.assertIsNone(items[1]["old"])
+        self.assertTrue(items[1]["new"].startswith("- **Write shipped text for the people"))
+        self.assertTrue(items[1]["first_line"].startswith("- **Write shipped text"))
+        self.assertIsNone(items[1]["reason"])
 
 
 class RulesToRaiseTest(unittest.TestCase):
@@ -256,11 +261,12 @@ class IdlessBaseTest(unittest.TestCase):
         base = fixture_text("user-CLAUDE-f596cd7.md")
         items = install.rules_to_raise(base, shipped_text(), {})
         self.assertEqual([(i["id"], i["status"]) for i in items],
-                         [("self-carrying-sentences", "changed"), ("write-for-readers", "new")])
-        changed = items[0]
+                         [("lesson-routing", "changed"), ("self-carrying-sentences", "changed"),
+                          ("write-for-readers", "new"), (None, "removed")])
+        changed = items[1]
         self.assertTrue(changed["old"].startswith("- **Write the sentence so it carries"))
         self.assertNotEqual(changed["old"], changed["new"])
-        self.assertIsNone(items[1]["old"])
+        self.assertIsNone(items[2]["old"])
 
     def test_pairing_is_by_first_line_with_the_id_tag_stripped(self):
         base = "- the same first line\n  old second line\n"
