@@ -8,9 +8,8 @@
   bodies. Consult before any such edit.
   → `[standing-docs-home]`
 - `~/.claude/writing-executor-briefs.md` — rules for **briefing an executor and verifying its
-  work**: caller audits, proving a test can fail, pinning expectations, checkpoint sizing,
-  porting a pattern. Consult before authoring any plan or brief for a sub-agent, and before
-  accepting a checkpoint — **including any task that adds or changes tests**, where the
+  work**: caller audits, proving a test can fail, checkpoint sizing, porting a pattern. Consult
+  before authoring any plan or brief for a sub-agent, and before accepting a checkpoint — **including any task that adds or changes tests**, where the
   proof-of-red rules live.
   → `[executor-briefs-home]`
 - Routing a new lesson: ask who the **actor** is, then **how many cases you have**. The user

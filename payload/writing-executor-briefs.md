@@ -20,34 +20,21 @@ This file is not auto-loaded, so its length is paid only when it is read.
   — an audit, not a gate; what a plan omits is where the surprises are. **Verify the remedy
   separately from the findings** — run the proposed fix against the failing case; correct facts
   routinely carry a fix that misses them.
-  **When a delegate reports that it narrowed scope because the specified approach was
-  impossible, the impossibility claim is the thing to verify — and verify reach, not just
-  correctness.** A narrowed fix that works on the case it was tested against tells you nothing
-  about the cases it silently dropped; measure what it covers against what was asked.
-  (Provisional — single case of this half.)
   **A caller audit finds what INVOKES a symbol; it cannot find what depends on what the symbol's
   answers MEAN.** Scope by where the fact is expressed or re-derived, not by what calls it: a site
   that reconstructs a value's significance is a consumer even when it never names your symbol. The
   question that finds them is "what does this change make newly true, and who already answers that
   question for themselves?" (The boundary: caller scope answers reach, never meaning.)
-- **Whether this protocol applies at all is settled before the brief is written, and it is the
-  supervisor's call.** Where a project tiers verification by blast radius, that tiering governs —
-  a project's own `CLAUDE.md` is where it belongs, since sub-agents can load it and this file is
-  not. **Proving a test honest is not a bug-finding technique and must not be budgeted as one** —
-  what follows is how to prove a test properly once that decision is made, not an argument that
-  every test needs it. (Provisional — single observed case.)
 - A regression test that never went red proves nothing: **revert the fix and confirm it
   fails**, assert at the layer the bug lived at, and mutate the *value* not just the guard —
   a test bounded by the thing it checks agrees with it whatever it says, and a revert that
-  hangs is not a pass. **A revert that stays green indicts the test OR the code — decide which
-  before acting.** The thing you reverted may simply do nothing, in which case hardening the
-  test would fossilise dead code; delete it instead and re-aim the test at whatever really
-  protects the case. (Provisional — single observed case of this half.)
+  hangs is not a pass.
   **When the fix changed a SIGNATURE, a bare revert proves nothing either** — the tests fail
   with TypeError/AttributeError on the call, which shows the signature moved, not that the
   behaviour did. Restore the PRE-FIX SEMANTICS against the NEW signature instead (accept the
   new parameter, ignore it), so the only thing that can fail is the behaviour under test.
-  (Provisional — single observed case.)
+  Kept on one case: an executor applies it at every checkpoint, so waiting for a second case
+  costs more than the rule does.
   **The same trap without a signature change: the pre-fix code reaches the SAME coarse outcome
   by a different route.** A test asserting only that outcome stays green on revert and proves
   nothing — it agrees with the code whatever the code says. Assert a finer field the new path
@@ -55,8 +42,9 @@ This file is not auto-loaded, so its length is paid only when it is read.
   **Revert only the change under test, not the whole file.** A blanket stash undoes every edit in
   the checkpoint at once, so a red result cannot say which one caused it — and a test that would
   also fail for an unrelated reverted reason reads as proof. Restore just the stage the claim is
-  about, leave the rest in place, and the failure has one possible cause. (Provisional — single
-  case.)
+  about, leave the rest in place, and the failure has one possible cause.
+  Kept on one case: an executor applies it at every checkpoint, so waiting for a second case
+  costs more than the rule does.
   **When there is no fix to revert — the tests are new coverage over code that already works —
   mutate instead.** A test that has never been red is not evidence until you have watched it fail.
   Change the production line it targets, one change at a time, reverting each before the next, and
@@ -64,25 +52,14 @@ This file is not auto-loaded, so its length is paid only when it is read.
   asserting something other than what it claims. **Record which tests went red under which
   mutation, not a count** — the mapping is what shows each test is anchored to the behaviour it
   names, and a bare total hides a test that is riding on someone else's assertion.
-  (Provisional — single observed case.)
+  Kept on one case: an executor applies it at every checkpoint, so waiting for a second case
+  costs more than the rule does.
   **The mutation is an instrument; the tests it did NOT target are how you check it.** Running
   only the targeted tests cannot distinguish a valid perturbation from one that could never have
   worked — an invalid one often passes its targets for free, because breaking the correct case
   produces exactly what a negative test asserts. Untargeted tests staying green is the instrument
   reading clean; a wide spillover means the mutation is coarser than it was described as, which
   changes what its red result proves.
-- **Expectations computed from mutable state belong in a plan only with a pinned revision and an
-  instruction to re-derive.** When a brief tells an executor what it should observe — counts,
-  which commit did what, live output — that answer rots as the state moves, and deriving it from
-  the first plausible candidate instead of exhaustively makes it wrong on arrival. Pin it to the
-  exact revision, say so if it was spot-derived rather than measured exhaustively, and require the
-  executor to re-derive from the stated rule and **report** a mismatch rather than code toward the
-  number. That last clause is what makes being wrong harmless.
-  **Record the input that produced a measured verdict, not just the verdict.** "Viable", "404",
-  "10 of 10 clean" are conclusions; the endpoint, query or revision behind them is what makes
-  them re-checkable. Without it a successor must re-spend the measurement before it can act —
-  and on a rate-limited, metered or fragile target that cost is real, not notional. The test:
-  could a cold reader reproduce this reading without guessing? (Provisional — one episode.)
 - **Copying a working pattern: name what makes it safe at the source, check the target has it.**
   Before reusing a pattern in a new context, name the specific property that made it safe where it
   came from, and check the new target actually has that property — a pattern that looks identical
