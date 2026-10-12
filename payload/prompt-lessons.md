@@ -46,7 +46,7 @@ origin-log entry. Append-only in the log; checklist lines may be sharpened in pl
 
 ### Presenting results & decisions
 - **Options and decisions come to the user one at a time, with tiered delivery.** The rule itself
-  (tiers 1–3, the two-turn split phrasing, and the blocking-panel hard rule) is in
+  (tiers 1–3 and the two-turn split phrasing) is in
   `~/.claude/CLAUDE.md` § Working rules, since it governs every interaction, not only prompts.
   For briefs: any brief whose output is a set of findings or choices should specify the
   presentation protocol explicitly, or the agent defaults to a wall of parallel questions,

@@ -73,12 +73,6 @@
   as prose ending the turn, closing with "I'll need your decision on how to proceed. Tell me when
   you're ready.", then a bare AskUserQuestion carrying a two-line recap next turn.
   → `[one-decision-at-a-time]`
-- Never call a blocking-panel tool (AskUserQuestion, ExitPlanMode) in the same turn as prose the
-  user still needs to read — the panel renders over it and the turn ends, so the prose is never
-  seen. When context has to come first, end the turn on the prose AND say explicitly what you
-  intend to do next and that you're waiting on them ("tell me when you're ready and I'll put the
-  plan up for approval") — otherwise they have no way to know a turn is needed to unblock you.
-  → `[panel-tool-prose]`
 - **Write the sentence so it carries its own meaning; keep the symbol as a trailing pointer, not
   the carrier of the fact.** The test is on your own text, never on the reader: if replacing the
   identifier with what it *does* loses nothing, it was never doing the work. "The classifier now
