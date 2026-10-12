@@ -33,8 +33,6 @@ This file is not auto-loaded, so its length is paid only when it is read.
   with TypeError/AttributeError on the call, which shows the signature moved, not that the
   behaviour did. Restore the PRE-FIX SEMANTICS against the NEW signature instead (accept the
   new parameter, ignore it), so the only thing that can fail is the behaviour under test.
-  Kept on one case: an executor applies it at every checkpoint, so waiting for a second case
-  costs more than the rule does.
   **The same trap without a signature change: the pre-fix code reaches the SAME coarse outcome
   by a different route.** A test asserting only that outcome stays green on revert and proves
   nothing — it agrees with the code whatever the code says. Assert a finer field the new path
@@ -43,8 +41,6 @@ This file is not auto-loaded, so its length is paid only when it is read.
   the checkpoint at once, so a red result cannot say which one caused it — and a test that would
   also fail for an unrelated reverted reason reads as proof. Restore just the stage the claim is
   about, leave the rest in place, and the failure has one possible cause.
-  Kept on one case: an executor applies it at every checkpoint, so waiting for a second case
-  costs more than the rule does.
   **When there is no fix to revert — the tests are new coverage over code that already works —
   mutate instead.** A test that has never been red is not evidence until you have watched it fail.
   Change the production line it targets, one change at a time, reverting each before the next, and
@@ -52,8 +48,6 @@ This file is not auto-loaded, so its length is paid only when it is read.
   asserting something other than what it claims. **Record which tests went red under which
   mutation, not a count** — the mapping is what shows each test is anchored to the behaviour it
   names, and a bare total hides a test that is riding on someone else's assertion.
-  Kept on one case: an executor applies it at every checkpoint, so waiting for a second case
-  costs more than the rule does.
   **The mutation is an instrument; the tests it did NOT target are how you check it.** Running
   only the targeted tests cannot distinguish a valid perturbation from one that could never have
   worked — an invalid one often passes its targets for free, because breaking the correct case

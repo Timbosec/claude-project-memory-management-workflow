@@ -39,16 +39,8 @@ wording; Probe C is a case the rule must leave alone.
 
 ### Probe B — current wording (expected: routes to the ledger)
 
-Identical to Probe A, with RULE A replaced by the current wording:
-
-    RULE A - Routing a new lesson: ask who the actor is, then how many cases you have. The user
-    authoring a prompt or brief -> prompt-lessons. You editing a standing doc ->
-    writing-standing-docs. You briefing an executor or verifying its checkpoint ->
-    writing-executor-briefs. You, at any other moment -> Working rules. One case goes to none of
-    them - it goes to ~/.claude/lesson-candidates.md and waits for a second, contrasting case.
-    Writing it into a home under a "provisional" tag is the failure this replaces: the tag costs
-    what a rule costs and gates nothing. An amendment to an existing rule re-derives its home; it
-    does not inherit it - nor its maturity, so it needs its own second case.
+Identical to Probe A, with RULE A replaced by the current wording, given under "the severity
+exception" below.
 
 ### Probe C — negative control (expected: does NOT park; routes to a rule home)
 
@@ -75,14 +67,13 @@ and this RULE A:
     authoring a prompt or brief -> prompt-lessons. You editing a standing doc ->
     writing-standing-docs. You briefing an executor or verifying its checkpoint ->
     writing-executor-briefs. You, at any other moment -> Working rules. One case goes to none of
-    them - it goes to ~/.claude/lesson-candidates.md and waits for a second, contrasting case.
-    Writing it into a home under a "provisional" tag is the failure this replaces: the tag costs
-    what a rule costs and gates nothing. The one exception is the user ruling that a repeat would
-    cost too much to wait for a second case: then the case goes into its home now, with that reason
-    stated beside the rule instead of a tag. An amendment to an existing rule re-derives its home; it
-    does not inherit it - nor its maturity, so it needs its own second case.
+    them - it goes to ~/.claude/lesson-candidates.md and waits for a second, contrasting case. The
+    one exception is the user ruling that a repeat would cost too much to wait for a second case:
+    then it goes into its home now, untagged, with that reason recorded under the rule's entry in
+    the ledger's origin log. An amendment to an existing rule re-derives its home; it does not
+    inherit it - nor its maturity, so it needs its own second case.
 
-### Probe D — the user rules it severe (expected: rule home, reason stated, no tag)
+### Probe D — the user rules it severe (expected: rule home, untagged, reason in the ledger's origin log)
 
     SCENARIO: You are mid-task. You just watched a store's health check report the store as
     broken, and you notice that the report itself was the reason everyone believed the store was

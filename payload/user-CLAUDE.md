@@ -16,13 +16,12 @@
   authoring a prompt → prompt-lessons. The agent editing a standing doc → writing-standing-docs.
   The agent briefing an executor or verifying its checkpoint → writing-executor-briefs. The agent,
   at any other moment → Working rules below. **One case goes to none of them** — it goes to
-  `~/.claude/lesson-candidates.md` and waits for a second, contrasting case. Writing it into a
-  home under a "provisional" tag is the failure this replaces: the tag costs what a rule costs
-  and gates nothing. The one exception is the user ruling that a repeat would cost too much to
-  wait for a second case: then it goes into its home now, with that reason stated beside the rule
-  instead of a tag. An amendment to an existing rule re-derives its home; it does not inherit
-  it — nor its maturity, so it needs its own second case. Re-run `~/.claude/doc-test-probes.md`'s
-  probes after any further edit to this rule.
+  `~/.claude/lesson-candidates.md` and waits for a second, contrasting case. The one exception is
+  the user ruling that a repeat would cost too much to wait for a second case: then it goes into
+  its home now, untagged, with that reason recorded under the rule's entry in the ledger's origin
+  log. An amendment to an existing rule re-derives its home; it does not inherit it — nor its
+  maturity, so it needs its own second case. Re-run `~/.claude/doc-test-probes.md`'s probes after
+  any edit to this rule.
   → `[lesson-routing]`
 
 # Working rules

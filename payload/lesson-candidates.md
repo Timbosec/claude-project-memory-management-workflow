@@ -79,5 +79,7 @@ what plays the part of the cold reader.
     - Promoted: <absolute date>
     - Cases: <full narratives, one per case, dated — moved verbatim from the rule>
     - Boundary: <what the opposite-direction case fixes, where one exists>
+    - Severity ruling: <only for a rule promoted on one case: who ruled, when, and why a repeat
+      would cost too much to wait for>
 
 
