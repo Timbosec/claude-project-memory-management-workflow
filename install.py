@@ -20,6 +20,12 @@ decision. When the bundle has changed since the version recorded for a listed fi
 alone (recorded version to current bundle version) is written as a diff under
 workflow-bundle/changes/ and its path printed with the file.
 
+rule-changes.json, beside this script, holds a one-line reason for each version of a rule or
+file the bundle has shipped. Where a raised rule or a file needing a decision has such reasons for
+the changes since the version the user last had, they are printed with it (under "Why the bundle
+changed it:" in the rules file, as "why:" lines in the summary). A missing or unreadable
+rule-changes.json gives one warning line and an install without reasons.
+
 The shared file (the user-level CLAUDE.md) is the exception, because its user always edits it.
 It is compared rule by rule instead: every rule in the bundle's copy carries an ID, and the
 saved base copy of the bundle version the user last had is split into rules and compared with
@@ -94,6 +100,8 @@ BASE_SUFFIX = ".base"
 CHANGES_DIR = "changes"
 CHANGE_SUFFIX = ".diff"
 RULES_SUFFIX = ".rules"
+# Why each shipped rule and file changed, beside this script; not in the manifest, never installed.
+RULE_CHANGES_PATH = os.path.join(HERE, "rule-changes.json")
 FULL_PASS_NOTE = "no earlier bundle version to compare against: full pass"
 SETTINGS_FILE = "settings.json"
 DECISIONS = ("kept", "merged", "replaced")
@@ -333,6 +341,78 @@ def optional_components(manifest):
     names = {e["component"] for e in manifest["files"]}
     names |= {e["component"] for e in manifest.get("settings", [])}
     return sorted(names - {CORE})
+
+
+def load_rule_changes(path=None):
+    """The file of reasons for changes (rule-changes.json) as (changes, problem).
+
+    `changes` is {"rules": {id: [entry, ...]}, "files": {target path: [entry, ...]}}, each entry
+    a dict, oldest first. When the file is missing or can't be used, `changes` is empty and
+    `problem` says why (None otherwise): an install goes ahead without reasons.
+    """
+    path = path or RULE_CHANGES_PATH
+    empty = {"rules": {}, "files": {}}
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            raise ValueError("not an object")
+        changes = {}
+        for section in ("rules", "files"):
+            lists = data.get(section, {})
+            if not isinstance(lists, dict):
+                raise ValueError("'%s' is not an object" % section)
+            for key, entries in lists.items():
+                if not isinstance(entries, list) or not all(isinstance(e, dict) for e in entries):
+                    raise ValueError("'%s' of '%s' is not a list of objects" % (key, section))
+                if not all(isinstance(e.get("note", ""), str) for e in entries):
+                    raise ValueError("a note under '%s' is not text" % key)
+            changes[section] = lists
+    except (OSError, ValueError) as e:
+        return empty, "%s: %s" % (os.path.basename(path), e)
+    return changes, None
+
+
+def notes_since(entries, fingerprint):
+    """The reasons to show for a rule or file whose published versions are `entries` (oldest
+    first), to a machine whose last version had `fingerprint`.
+
+    That is the note of every entry after the one with that fingerprint (the first, if it
+    appears twice). When the fingerprint is None or not in the list, every non-empty note.
+    """
+    start = 0
+    if fingerprint is not None:
+        for i, entry in enumerate(entries):
+            if entry.get("sha256") == fingerprint:
+                start = i + 1
+                break
+    return [" ".join(entry["note"].split()) for entry in entries[start:]
+            if entry.get("note", "").strip()]
+
+
+def rule_notes(changes, item):
+    """The reasons for the changes to a raised rule since the wording the user last had.
+
+    A rule with an ID is looked up by it. A removed rule from a base copy made before rules had
+    IDs is found by searching every list for the base wording; if none holds it, no reasons.
+    A rule with no base wording gets every reason.
+    """
+    fingerprint = body_sha256(item["old"]) if item["old"] is not None else None
+    rule_id = item["id"]
+    if rule_id is None:
+        rule_id = next((key for key, entries in changes["rules"].items()
+                        if any(e.get("sha256") == fingerprint for e in entries)), None)
+        if rule_id is None:
+            return []
+    return notes_since(changes["rules"].get(rule_id, []), fingerprint)
+
+
+def file_notes(changes, record, entry):
+    """The reasons for the changes to a file since the bundle version the record says the user
+    last had (every reason when the record has none)."""
+    seen = record["files"].get(entry["target"])
+    fingerprint = seen.get("bundle_sha256") if isinstance(seen, dict) else None
+    return notes_since(changes["files"].get(entry["target"], []), fingerprint)
 
 
 def load_record(target):
@@ -812,6 +892,7 @@ def cmd_install(args, manifest, record, target):
     seeds_kept, earlier_decision, exec_fixed, updated = [], [], [], []
     held_back, held_earlier, overriding = [], [], []
     raised_rules, rules_file = [], None
+    changes, changes_problem = load_rule_changes()
 
     selected = [e for e in manifest["files"] if e["component"] in components]
     own = projects_with_own(target, {n for n in map(slash_name, (e["target"] for e in selected))
@@ -867,9 +948,11 @@ def cmd_install(args, manifest, record, target):
             # the bundle has changed since the version the user last had, and not yet decided,
             # are raised.
             if recorded_base(record, target, entry) is None:
-                needs_decision.append((entry["target"], entry["kind"], None, FULL_PASS_NOTE))
+                needs_decision.append((entry["target"], entry["kind"], None, FULL_PASS_NOTE, []))
             else:
                 items = pending_rules(record, target, entry)
+                for item in items:
+                    item["notes"] = rule_notes(changes, item)
                 if items:
                     raised_rules = items
                     if write:
@@ -884,7 +967,9 @@ def cmd_install(args, manifest, record, target):
         else:
             change = bundle_change(record, target, entry, bundle_sha) if write else None
             diff = write_change(target, entry["target"], change) if change else None
-            needs_decision.append((entry["target"], entry["kind"], diff, None))
+            # CLAUDE.md is the shared kind and never reaches here, so no whole-file reasons.
+            needs_decision.append((entry["target"], entry["kind"], diff, None,
+                                   file_notes(changes, record, entry)))
             continue
 
         # A file the bundle's content is settled for: restore a lost executable bit. This
@@ -938,6 +1023,9 @@ def cmd_install(args, manifest, record, target):
 
     print("Workflow bundle install into %s%s" % (target, " (DRY RUN: nothing written)"
                                                   if args.dry_run else ""))
+    if changes_problem:
+        print("Warning: can't read the reasons for the bundle's changes (%s); installing without "
+              "them." % changes_problem)
     print("Installed: %d" % len(installed))
     print("Unchanged: %d" % len(unchanged))
     print("%s: %d" % ("Would update" if args.dry_run else "Updated", len(updated)))
@@ -946,9 +1034,11 @@ def cmd_install(args, manifest, record, target):
     print("Left as you have them: %d (seed ledgers kept: %d; skipped by an earlier decision: %d)"
           % (len(seeds_kept) + len(earlier_decision), len(seeds_kept), len(earlier_decision)))
     print("Needs a decision (existing file differs, left as it is): %d" % len(needs_decision))
-    for path, kind, diff, note in needs_decision:
+    for path, kind, diff, note, why in needs_decision:
         print("  %s (%s)%s%s" % (path, kind, " (%s)" % note if note else "",
                                  ", bundle change: %s" % diff if diff else ""))
+        for line in why:
+            print("    why: %s" % line)
     if raised_rules:
         print("Rules in CLAUDE.md that need a decision: %d" % len(raised_rules))
         for item in raised_rules:
@@ -1143,6 +1233,8 @@ def rules_file_text(items):
                        % item["reason"])
         else:
             out.append("Status: %s" % item["status"])
+        if item.get("notes"):
+            out += ["Why the bundle changed it:"] + ["  " + note for note in item["notes"]]
         out += ["Old wording:", block(item["old_text"], "(not in the version you last had)"),
                 "New wording:", block(item["new_text"], "(no longer in the bundle)"), ""]
     return "\n".join(out)
