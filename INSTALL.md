@@ -54,6 +54,13 @@ the whole files: show the user each change and carry the ones they agree to into
 file listed without one has no earlier bundle version to compare against, so compare the whole
 files as below. `CLAUDE.md` never carries one; it has its own procedure below.
 
+The bundle says why it changed something: `why:` lines under a listed file, and "Why the bundle
+changed it" under a rule in the rules file. Give the user that reason with the change. Where the
+reason says a cut was tested, the cut text is not a loss, so don't recommend restoring it because
+it is missing. Recommend it only if the user's own file or reasoning needs it. Re-run probes from
+`doc-test-probes.md` only on a wording you merged with the user's; the bundle's own wording needs
+no re-run.
+
 **`CLAUDE.md`** (kind `shared`). This file holds the user's own rules as well as the bundle's, so
 the script never compares it as a whole. It compares the bundle's rules one at a time, by the ID
 each one ends with (such as `→ [one-decision-at-a-time]`), against the bundle version the user
