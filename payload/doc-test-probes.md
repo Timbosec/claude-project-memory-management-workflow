@@ -90,3 +90,22 @@ and this RULE A:
     make sure a future session does not repeat it. You estimate that if it recurred it could
     hide weeks of bad data before anyone noticed, which seems serious to you. The user has not
     said anything about it.
+
+## End-of-turn text — does text written before a tool call reach the user?
+
+Unlike the probes above, this one tests the client and model, not a rule's wording: it needs a
+live session and the user's own screen, and there is no cold reader. It shows whether the
+end-of-turn-text rule in `~/.claude/CLAUDE.md` is still needed. Re-run it when the model or
+Claude Code changes.
+
+In a live session, ask the agent to write 20 numbered lines of filler text, with a marker word on
+the first, tenth and last lines, and then, in the same turn, open a question panel asking the
+user what they see above it without scrolling.
+
+- Expected while the rule is needed: the user sees a one- or two-sentence summary that is not
+  the 20 lines, or nothing.
+- If the user sees all 20 lines verbatim on two separate runs, the rule is a candidate for
+  retirement, not for deletion; short text has come through verbatim before while long text did
+  not.
+- Validated on: Opus 5.5, Claude Code 2.1.300, 2026-10-15 — summary only ("This is just a 20-line
+  test text block for the panel re-test ... no action needed on my part").

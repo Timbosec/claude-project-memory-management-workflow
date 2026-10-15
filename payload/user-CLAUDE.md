@@ -73,6 +73,14 @@
   as prose ending the turn, closing with "I'll need your decision on how to proceed. Tell me when
   you're ready.", then a bare AskUserQuestion carrying a two-line recap next turn.
   → `[one-decision-at-a-time]`
+- **Anything the user must read goes in the text that ends your turn.** Text written before a
+  tool call (a question panel, a shell command, a file edit) reaches the user only as a one- or
+  two-sentence summary written by another model, and the summary can change what it says. When
+  context has to come before a decision, end the turn on it and say what you'll do next and that
+  you're waiting ("tell me when you're ready and I'll put up the question"). Otherwise, put what
+  the user needs inside the question itself or its previews. Source: the Opus 5.5 "what's new"
+  page, on progress updates.
+  → `[end-of-turn-text]`
 - **Write the sentence so it carries its own meaning; keep the symbol as a trailing pointer, not
   the carrier of the fact.** The test is on your own text, never on the reader: if replacing the
   identifier with what it *does* loses nothing, it was never doing the work. "The classifier now
