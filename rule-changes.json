@@ -1,0 +1,317 @@
+{
+  "_comment": "Why each shipped rule and file changed, read by install.py and never installed. Each list holds the versions the bundle has published, oldest first, as the sha256 of the rule body (rules) or of the file (files) with a one-line note saying why it differs from the version before it; only the first entry may have an empty note. A {\"removed\": true} entry ends a rule or file the bundle no longer ships. Notes are read by strangers: no task numbers, no commit hashes.",
+  "rules": {
+    "prompt-lessons-home": [
+      {
+        "sha256": "2c3407f0f66f5f39141d04897b7d3304762d4415cc07ea0385244055dc517efb",
+        "note": ""
+      }
+    ],
+    "standing-docs-home": [
+      {
+        "sha256": "de3530bd04df8ba400f19dac83000cf9fab8e03853b840cce837fc2c4c2ee67d",
+        "note": ""
+      }
+    ],
+    "executor-briefs-home": [
+      {
+        "sha256": "73a9e40bd4d8687d94b3ace78bbba42faee8d12d27b83ece4bbf63a3a96af3c4",
+        "note": ""
+      },
+      {
+        "sha256": "81a45e5dd53b2ab2a1bdd21a3f55953a59731bd25410cf97cdfcd901f4e29e51",
+        "note": "No longer lists \"pinned expectations\". That rule was removed from `writing-executor-briefs.md` because it rested on a single incident, and the routing rule says one case does not make a rule."
+      }
+    ],
+    "lesson-routing": [
+      {
+        "sha256": "df15034fbdfa2650f1d4af517382f31e38f4d66e7f415a8f95b848c6c8a00bfe",
+        "note": ""
+      },
+      {
+        "sha256": "9ea3820c57004452012539a5e02d7808b04a66f1050db01e88c750538f43b4f4",
+        "note": "Adds one exception: a single case the user rules too costly to wait on goes into its home now, untagged, with the reason recorded in the ledger's origin log. The sentence explaining why \"provisional\" tags fail is gone; probes showed routing behaves the same without it."
+      }
+    ],
+    "search-silence": [
+      {
+        "sha256": "99a042af9bbd5281bad67f5dc84abf07d55ab2293fff13671c3224adea72e683",
+        "note": ""
+      }
+    ],
+    "verify-at-source": [
+      {
+        "sha256": "3c023fc8df19204815fff58583a37ebc4ec7716d59c271fcd7e908deeadfd748",
+        "note": ""
+      }
+    ],
+    "high-level-answers": [
+      {
+        "sha256": "2d4109412251abfa927e9744a77fc5ca79df5e27dd7b96d77bfd1d3b48798e71",
+        "note": ""
+      }
+    ],
+    "one-decision-at-a-time": [
+      {
+        "sha256": "5d6c36ac9ab60c8d99ff1b8f162cc7d8ef322cbeafb90c52b9b4ea4b69a67fe8",
+        "note": ""
+      }
+    ],
+    "end-of-turn-text": [
+      {
+        "sha256": "3049205d0a5602d4d535fde96c9e1d26c57251bc07f80ae723c4bbc62194c028",
+        "note": ""
+      },
+      {
+        "sha256": "99f9a6c7d584018cccdd49459a4b3147d29d095afa41c41839cb32482cdfaac4",
+        "note": "Replaces the rule against opening a question panel after prose, whose reason was wrong. Text written before any tool call, not only a question panel, reaches the user as another model's short summary, which can change its meaning, so anything they must read goes in the text that ends the turn."
+      }
+    ],
+    "self-carrying-sentences": [
+      {
+        "sha256": "e9b0ee3f44ad07cd33fa1e34eabc7fcb71d88205d66c57aec39b2af3e110acea",
+        "note": ""
+      }
+    ],
+    "observable-vs-inferred": [
+      {
+        "sha256": "f808cab422ffca55f94c1b150596bdb19de62973ba3432667f2eaea8674d0592",
+        "note": ""
+      }
+    ],
+    "rule-into-code": [
+      {
+        "sha256": "0ac1baac6bcaaa6f4265f8ea517d5bd843994ea09ed54096f6f231d4421eb3eb",
+        "note": ""
+      }
+    ],
+    "run-and-read-output": [
+      {
+        "sha256": "1e47b7598596f339a5aa56eabe17f8f8889f8bd771c4fc4066fbd597160f99c2",
+        "note": ""
+      }
+    ],
+    "second-real-example": [
+      {
+        "sha256": "01f7dd675be63769516dd459aaad41077db1756026f5d4beffa2cc52b47dddb5",
+        "note": ""
+      }
+    ],
+    "existence-vs-magnitude": [
+      {
+        "sha256": "ea99cad7ac640780df6de051de54ff53472e4e634e79d5bbb67f4d41646d8bc1",
+        "note": ""
+      }
+    ],
+    "write-for-readers": [
+      {
+        "sha256": "2fb0f6362d82c1cd577fbe3dc66fd9517d9cf5fd94fa1976f89ba89d17970570",
+        "note": ""
+      }
+    ],
+    "broken-instrument": [
+      {
+        "sha256": "c9d6310d4ff906e409f070a6d8918b5e93484d8cb093f7adf2396a1ea3636e9d",
+        "note": ""
+      },
+      {
+        "removed": true,
+        "note": "Removed: it rested on a single incident, and the routing rule says one case does not make a rule."
+      }
+    ]
+  },
+  "files": {
+    "prompt-lessons.md": [
+      {
+        "sha256": "504342c94110fc759b1218751c2cf63c69067dc6c3ba3db4a485fbdb731603f5",
+        "note": ""
+      },
+      {
+        "sha256": "6151434c93c0cf54c106cdfb346086535d28560c3688833c87afe0b5904dabb9",
+        "note": "Points at the new end-of-turn-text rule in place of the old question-panel rule."
+      }
+    ],
+    "writing-standing-docs.md": [
+      {
+        "sha256": "bc2e2c1868ed9e3098560b01478dc8b5225ef7eb7214447dea809dbbadfe3821",
+        "note": ""
+      },
+      {
+        "sha256": "86f92804c0753363e72d12218095f0a25f5b2155e18b210fdfbc5baee11ac5dc",
+        "note": "Rules based on a single incident removed, as the routing rule requires."
+      }
+    ],
+    "writing-executor-briefs.md": [
+      {
+        "sha256": "bf7472fdc0348c368dfc13c4f5c12317ebc949177428bd078f2c12eccfcb293a",
+        "note": ""
+      },
+      {
+        "sha256": "c745be05c8a9847e5ca8e0648dd9eb47e851afca4e7c37b11fa030c4906586c1",
+        "note": "Rules based on a single incident removed, as the routing rule requires. Three stay even so, because an executor uses them at every checkpoint, where a repeat would cost too much to wait for a second case. All three are about showing that a new test really catches the bug it was written for, rather than passing whatever the code does: if the fix changed how a function is called, undoing it makes the test crash rather than fail, which proves nothing, so put the old behaviour back behind the new call instead; undo only the change being tested, not the whole file, so a failure has one possible cause; and when the test covers code that already worked, so there is no fix to undo, break the code deliberately and check the test fails."
+      }
+    ],
+    "doc-test-probes.md": [
+      {
+        "sha256": "301fe9cdb7a347c2973c0d0e8cfeb36bc4c5bad7890fc2b45a79487c71d8f370",
+        "note": ""
+      },
+      {
+        "sha256": "5b00a476defc87b705c43b9296ea33b058c752e669beb75de8b423a9a895b5a9",
+        "note": "Adds probes for the routing rule's new exception (one checks it works when the user rules a case too costly to wait on, one checks it stays the user's call), and a probe showing whether text written before a tool call still reaches the user only as a summary, with the model and version it was last checked on."
+      }
+    ],
+    "skills/finalise/scripts/check_memory_index.py": [
+      {
+        "sha256": "78394ed759e90fc787596a59045a83f5be1b571d8f683f91c3b36ccd1ac49f42",
+        "note": ""
+      }
+    ],
+    "skills/finalise/scripts/test_check_memory_index.py": [
+      {
+        "sha256": "e202a8f8adb861e60f290667a4f07ac13449d6d7ceac1c5954a70f230554c0f3",
+        "note": ""
+      }
+    ],
+    "skills/finalise/scripts/check_thread_state.py": [
+      {
+        "sha256": "da55d177f28c5bb9f6b9fa5a48b7e21a107ad5f87364f6c1fcb3eb994aa4d324",
+        "note": ""
+      }
+    ],
+    "skills/finalise/scripts/test_check_thread_state.py": [
+      {
+        "sha256": "e1e8f424fefe0b0811e4765507f3c579d4720f9c55a4157d37e3f476df079747",
+        "note": ""
+      }
+    ],
+    "skills/finalise/scripts/write_next_up.py": [
+      {
+        "sha256": "fd53d712d98ebeee9cf4e202d3299f6da4a9dfeb28e0efa0ae9b71a195932b4f",
+        "note": ""
+      }
+    ],
+    "skills/finalise/scripts/test_write_next_up.py": [
+      {
+        "sha256": "3da89c1f7946e799dcf607197a5b2663628a0f6fa302fd2170c319ea4fbf3b3b",
+        "note": ""
+      }
+    ],
+    "skills/finalise/scripts/context_budget_report.py": [
+      {
+        "sha256": "1607a60309bff0034a80de45156ab878b1b4d8a402850f7bc2518041d9735c59",
+        "note": ""
+      }
+    ],
+    "skills/finalise/scripts/test_context_budget_report.py": [
+      {
+        "sha256": "89671c4813f24b2638ebd2030be5f304df7e734eacc023bae1dd8ee2a7155d7f",
+        "note": ""
+      }
+    ],
+    "skills/finalise/SKILL.md": [
+      {
+        "sha256": "4b4141db3f9c6b5d0c353de4d914bfae346f3268d7198bb56c006ae5fb091240",
+        "note": ""
+      },
+      {
+        "sha256": "34126266580cb2d71c316893dd2a15e2bec58dad03036c81d0b4b55d739acbac",
+        "note": "Answers to `/finalize` as well as `/finalise`. Pushes without asking only where a `CLAUDE.md` explicitly pre-authorizes routine pushes; otherwise it still asks."
+      }
+    ],
+    "skills/bootstrap-project/SKILL.md": [
+      {
+        "sha256": "2fa9b5e1b99043082de0433df144324ff6aef504cbe0f18755153f1369dfbcb2",
+        "note": ""
+      }
+    ],
+    "skills/bootstrap-project/scripts/scaffold.py": [
+      {
+        "sha256": "d7d8c1ef8dfa8589c245c12f4bd337d6d2f1c012aaf47bcb82d4f69300912dd1",
+        "note": ""
+      }
+    ],
+    "skills/bootstrap-project/scripts/test_scaffold.py": [
+      {
+        "sha256": "05f7b74aca1353cebbdb4336e9ccafd2394f038a1c04b8625ca349374f7b08aa",
+        "note": ""
+      }
+    ],
+    "skills/bootstrap-project/templates/backlog.md": [
+      {
+        "sha256": "aba12d6a6003ca858fd29933e5afca3b42879a80feb7a1ec7e3b84dbedfeb72a",
+        "note": ""
+      }
+    ],
+    "skills/bootstrap-project/templates/decisions.md": [
+      {
+        "sha256": "5801fcd58f4d1ed2e2009182a0c5566e5073b3b9b03d8087c7ad0a8b54872e0d",
+        "note": ""
+      }
+    ],
+    "skills/bootstrap-project/templates/lesson-candidates.md": [
+      {
+        "sha256": "67b91dd2e90adca7a4cfda0afe621a795fdac24c2340b8305d2d18542ddc20d1",
+        "note": ""
+      }
+    ],
+    "skills/bootstrap-project/templates/project-CLAUDE.md": [
+      {
+        "sha256": "d2d2c1f60557c68dbb444e141e9e0d2df546c6b7a4fa6a48b80c8ec7df14fa72",
+        "note": ""
+      }
+    ],
+    "skills/next/SKILL.md": [
+      {
+        "sha256": "d9065129189047361e0ba4e423a9a7b0882e17a1a87376d43f585810967f621a",
+        "note": ""
+      }
+    ],
+    "commands/memory-audit.md": [
+      {
+        "sha256": "0038bc95123c5d316063fc98f5a83dde7ac1a9bdb64d4bbbcc398f7aa83d0188",
+        "note": ""
+      }
+    ],
+    "hooks/remind_finalise.py": [
+      {
+        "sha256": "f04e2065c3d9f27596f970de9e025b6c0be34bdcf1c8e26fb05bbd15ec2a16e9",
+        "note": ""
+      }
+    ],
+    "hooks/test_remind_finalise.py": [
+      {
+        "sha256": "cd495bc94bbc8844b73674ed9efa87b79b71522c233097e907bf60837f030223",
+        "note": ""
+      }
+    ],
+    "lesson-candidates.md": [
+      {
+        "sha256": "1936345b22a8e09ced379e4d4efea546b151863b12dbe77f0e43747f05fc36db",
+        "note": ""
+      },
+      {
+        "sha256": "aa1d437f9df7ef88ae28c03267db8d425df9ca457416c8bd76e1986d191efcee",
+        "note": "The ledger template gains a field recording a severity ruling, for a rule promoted on one case."
+      }
+    ],
+    "under-explained-cases.md": [
+      {
+        "sha256": "b25b958754af035006a99655c59ef78c1c5853ad3f75011fd556259dcb1ed215",
+        "note": ""
+      }
+    ],
+    "hooks/block_subagent_record_edit.py": [
+      {
+        "sha256": "4ee12576d1cf36ce16a801bf05d55cfc24e1d0eea4208e8d04b61a04f704ca9a",
+        "note": ""
+      }
+    ],
+    "hooks/test_block_subagent_record_edit.py": [
+      {
+        "sha256": "754b54c8fe5fd2f932d7119312886b9f1414068d3e69803947ac8c1a393fa9b5",
+        "note": ""
+      }
+    ]
+  }
+}

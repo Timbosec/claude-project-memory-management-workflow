@@ -11,6 +11,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import tempfile
 import unittest
 from unittest import mock
@@ -357,6 +358,123 @@ class NotesSinceTest(unittest.TestCase):
     def test_an_entry_with_no_fingerprint_is_never_matched(self):
         entries = [{"sha256": "a", "note": "one"}, {"removed": True, "note": "two"}]
         self.assertEqual(install.notes_since(entries, None), ["one", "two"])
+
+
+REAL = os.path.join(REPO, "rule-changes.json")
+PLACEHOLDER = "<say in one line why this differs from the version before it>"
+
+
+def paste_entry(key, entry):
+    """What to add to the list for `key` (a rule ID or a file path), ready to paste."""
+    return "  %s: append %s" % (json.dumps(key), json.dumps(entry))
+
+
+def current_entry(fingerprint):
+    return {"sha256": fingerprint, "note": PLACEHOLDER}
+
+
+class RealFileTest(unittest.TestCase):
+    """rule-changes.json as shipped: it has to stay in step with the rules and files it covers.
+
+    A failure prints the entry to add. Whoever changes a rule or a file adds an entry to its list
+    with the new fingerprint and a note saying why. (Editing the last entry in place is fine for
+    a change that has not been pushed yet.)
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.changes, problem = install.load_rule_changes(REAL)
+        if problem:
+            raise AssertionError("rule-changes.json can't be used: %s" % problem)
+        cls.rules = dict(install.split_rules(read(SHIPPED)))
+        manifest = json.loads(read(os.path.join(REPO, "manifest.json")))
+        # the shared CLAUDE.md is covered by its rules
+        cls.files = {e["target"]: install.sha256_of(os.path.join(REPO, e["source"]))
+                     for e in manifest["files"] if e["kind"] != "shared"}
+
+    def lists(self):
+        for section in ("rules", "files"):
+            for key, entries in self.changes[section].items():
+                yield section, key, entries
+
+    def check(self, problems):
+        if problems:
+            self.fail("rule-changes.json is out of step with the bundle:\n" +
+                      "\n".join(problems))
+
+    def test_every_current_rule_ends_with_its_current_wording(self):
+        problems = []
+        for rule_id, body in self.rules.items():
+            fingerprint = install.body_sha256(body)
+            entries = self.changes["rules"].get(rule_id)
+            if not entries:
+                problems.append("rule [%s] has no list; add under \"rules\":\n%s"
+                                % (rule_id, paste_entry(rule_id, current_entry(fingerprint))))
+            elif entries[-1].get("sha256") != fingerprint:
+                problems.append("rule [%s] was reworded; its last entry is not the current "
+                                "wording:\n%s" % (rule_id, paste_entry(
+                                    rule_id, current_entry(fingerprint))))
+        self.check(problems)
+
+    def test_every_current_file_ends_with_its_current_hash(self):
+        problems = []
+        for target, fingerprint in self.files.items():
+            entries = self.changes["files"].get(target)
+            if not entries:
+                problems.append("file %s has no list; add under \"files\":\n%s"
+                                % (target, paste_entry(target, current_entry(fingerprint))))
+            elif entries[-1].get("sha256") != fingerprint:
+                problems.append("file %s changed; its last entry is not the current "
+                                "file:\n%s" % (target, paste_entry(
+                                    target, current_entry(fingerprint))))
+        self.check(problems)
+
+    def test_a_rule_no_longer_in_the_bundle_ends_with_a_removed_entry(self):
+        removed = {"removed": True, "note": PLACEHOLDER}
+        problems = ["rule [%s] is no longer in the bundle:\n%s" % (k, paste_entry(k, removed))
+                    for k, entries in self.changes["rules"].items()
+                    if k not in self.rules and not (entries and entries[-1].get("removed"))]
+        self.check(problems)
+
+    def test_a_file_no_longer_in_the_bundle_ends_with_a_removed_entry(self):
+        removed = {"removed": True, "note": PLACEHOLDER}
+        problems = ["file %s is no longer in the bundle:\n%s" % (k, paste_entry(k, removed))
+                    for k, entries in self.changes["files"].items()
+                    if k not in self.files and not (entries and entries[-1].get("removed"))]
+        self.check(problems)
+
+    def test_a_removed_entry_is_last_and_belongs_to_nothing_still_shipped(self):
+        problems = []
+        for section, key, entries in self.lists():
+            shipped = self.rules if section == "rules" else self.files
+            if any(e.get("removed") for e in entries[:-1]):
+                problems.append("%s: a removed entry that is not the last" % key)
+            if entries and entries[-1].get("removed") and key in shipped:
+                problems.append("%s: ends as removed but the bundle still ships it" % key)
+        self.check(problems)
+
+    def test_only_the_first_entry_of_a_list_may_have_an_empty_note(self):
+        problems = ["%s: entry %d has no note; replace %s" % (key, i + 1, json.dumps(e))
+                    for _section, key, entries in self.lists()
+                    for i, e in enumerate(entries) if i > 0 and not e.get("note", "").strip()]
+        self.check(problems)
+
+    def test_every_entry_has_a_fingerprint_or_is_a_removal(self):
+        problems = ["%s: the list has no entries" % key
+                    for _section, key, entries in self.lists() if not entries]
+        problems += ["%s: entry %d has neither sha256 nor removed" % (key, i + 1)
+                     for _section, key, entries in self.lists()
+                     for i, e in enumerate(entries) if not e.get("sha256") and not e.get("removed")]
+        self.check(problems)
+
+    def test_notes_are_for_strangers_so_no_task_numbers_or_commit_hashes(self):
+        problems = []
+        for _section, key, entries in self.lists():
+            for e in entries:
+                note = e.get("note", "")
+                if re.search(r"#\d", note) or re.search(r"\b[0-9a-f]{7,40}\b", note, re.I):
+                    problems.append("%s: a note carries a task number or a hash: %s" % (key, note))
+        self.check(problems)
 
 
 if __name__ == "__main__":
