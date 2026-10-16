@@ -9,8 +9,8 @@
   → `[standing-docs-home]`
 - `~/.claude/writing-executor-briefs.md` — rules for **briefing an executor and verifying its
   work**: caller audits, proving a test can fail, checkpoint sizing, porting a pattern. Consult
-  before authoring any plan or brief for a sub-agent, and before accepting a checkpoint — **including any task that adds or changes tests**, where the
-  proof-of-red rules live.
+  before authoring any plan or brief for a sub-agent, and before accepting a checkpoint —
+  **including any task that adds or changes tests**, where the proof-of-red rules live.
   → `[executor-briefs-home]`
 - Routing a new lesson: ask who the **actor** is, then **how many cases you have**. The user
   authoring a prompt → prompt-lessons. The agent editing a standing doc → writing-standing-docs.
@@ -77,32 +77,33 @@
   the user needs inside the question itself or its previews. Source: the Opus 5.5 "what's new"
   page, on progress updates.
   → `[end-of-turn-text]`
-- **Write the sentence so it carries its own meaning; keep the symbol as a trailing pointer, not
-  the carrier of the fact.** The test is on your own text, never on the reader: if replacing the
-  identifier with what it *does* loses nothing, it was never doing the work. "The classifier now
-  warns on a single confirmed disagreement instead of waiting for three (`DISAGREEMENT_MIN`)", not
-  `DISAGREEMENT_MIN = 1`. Code symbols, and jargon that did not reach the user from their own side:
-  filenames and terms they coined are their vocabulary, but one YOU minted — in a doc they skim, or
-  in the message you sent twenty minutes ago — is yours. The tell is what the coinage does: one that
-  describes itself survives, one that LABELS a distinction does not; defining it once does not make
-  it shared. Bites hardest in summaries and verdicts.
+- **In anything the user will read (a message, a summary, a doc, a commit message), say what a
+  thing does, not only what it is called.** A code symbol, or a term that didn't come from the
+  user, goes after the plain description as a pointer; it never carries the fact on its own. "The
+  classifier now warns on a single confirmed disagreement instead of waiting for three
+  (`DISAGREEMENT_MIN`)", not `DISAGREEMENT_MIN = 1`. Test your own text, never the reader: if
+  replacing the name with what it *does* loses nothing, the name was never doing the work. Terms
+  that came from the user, such as their filenames and the terms they introduced, are their
+  vocabulary. A term you made up is not, whether it sits in a doc they skim or in a message you
+  sent twenty minutes ago, and defining it once does not make it shared. A term that describes
+  itself can stay; one that labels a distinction cannot. Matters most in summaries and verdicts.
   → `[self-carrying-sentences]`
 - When introspecting on your own behaviour, separate the observable from the inferred and say
-  which is which. The transcript shows what you wrote and did, not why — a fluent causal account of
-  your own reasoning is a hypothesis. State the observable failure, label the explanation a guess,
-  and prefer remedies the outcome itself justifies. **When the question is empirical and cheap, test
-  it instead** — "would a cold reader parse this?" is settled by handing the text to a fresh agent
-  and asking it to ACT on the rule, never whether it's clear. Agreeing with the user's challenge is
-  not verifying it.
-  **The same split applies to mechanisms you assert about the system, not just about yourself.** A
-  fluent reason why the data looks like this is a hypothesis; check it against the data before it
-  goes into a standing doc, and prefer naming the observation over explaining it. **Sharpest
-  trigger: you are explaining a fact you know is TRUE and a real figure from an adjacent case is to
-  hand.** Where the reason isn't recorded, write that it isn't.
+  which is which. The transcript shows what you wrote and did, not why — a fluent causal account
+  of your own reasoning is a hypothesis. State the observable failure, label the explanation a
+  guess, and prefer remedies the outcome itself justifies. **When the question is empirical and
+  cheap, test it instead** — whether the user sees what you wrote is settled by sending a marked
+  test message, not by reasoning about the client. Agreeing with the user's challenge is not
+  verifying it.
+  **The same split applies to mechanisms you assert about the system, not just about yourself.**
+  A fluent reason why the data looks like this is a hypothesis; check it against the data before
+  you state it or write it down, and prefer naming the observation over explaining it. **Sharpest
+  trigger: you are explaining a fact you know is TRUE and a real figure from an adjacent case is
+  to hand.** Where the reason isn't recorded, write that it isn't.
   **A number you pick is an assertion too — derive it, or say in the same breath that it is a
   guess** — above all where it decides the outcome. Watch for an ABSOLUTE tolerance answering a
-  question that is really about PROPORTION. **Read the numbers, not the verdict your own threshold
-  printed.**
+  question that is really about PROPORTION. **Read the numbers, not the verdict your own
+  threshold printed.**
   → `[observable-vs-inferred]`
 - A rule someone must **remember** to apply is not a fix. If the correction is computable from
   data already in hand, push it into code/hooks/the deterministic path; keep prompt and doc rules

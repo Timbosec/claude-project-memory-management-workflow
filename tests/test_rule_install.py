@@ -271,7 +271,7 @@ class RulesFileVerbatimTest(RuleInstallCase):
         self.assertTrue(bullet.endswith("\n  \u2192 `[write-for-readers]`"))
         self.assertIn("New wording:\n" + indented(bullet) + "\n", self.rules_file())
         # the other rule of that upgrade is shown the same way
-        self.assertIn(indented(self.bullet("- **Write the sentence so it carries",
+        self.assertIn(indented(self.bullet("- **In anything the user will read",
                                            "`[self-carrying-sentences]`")), self.rules_file())
 
     def test_a_mid_bullet_tag_and_the_paragraph_break_after_it_are_kept(self):

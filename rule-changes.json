@@ -79,6 +79,10 @@
       {
         "sha256": "2746434e38a736b00aed395cf0ac48317a7d2b6d7a06b5cd7cb5845c636f4d91",
         "note": "Shortened: sentences that only explained why the rule matters, not when it applies, were cut. Agents given the old and the new wording acted the same in the same test scenarios."
+      },
+      {
+        "sha256": "a152ee2e6755969d7c9db48c3e3035212348638079dc8590a9165650e86fea54",
+        "note": "Reworded so its opening says when it applies (anything the user will read), with plain words in place of \"coinage\" and \"minted\". Agents given the old and the new wording acted the same in the same test scenarios."
       }
     ],
     "observable-vs-inferred": [
@@ -89,6 +93,10 @@
       {
         "sha256": "8f7d566ccad244a393240a65d016541cfdcfa8ca00bc74bdd2564a309ea792aa",
         "note": "Shortened: sentences that only explained why the rule matters, not when it applies, were cut. Agents given the old and the new wording acted the same in the same test scenarios."
+      },
+      {
+        "sha256": "2b88162d9e60bbe95e5cbbff5772c70b883f33b23e6e9cfcdb9269797af68f95",
+        "note": "The method for testing a rule's wording on a fresh agent moved to writing-standing-docs.md, where rule writing is covered; this rule keeps \"test it instead\" with an example that is not about docs. Agents acted the same in the same test scenarios."
       }
     ],
     "rule-into-code": [
@@ -165,6 +173,10 @@
       {
         "sha256": "86f92804c0753363e72d12218095f0a25f5b2155e18b210fdfbc5baee11ac5dc",
         "note": "Rules based on a single incident removed, as the routing rule requires."
+      },
+      {
+        "sha256": "069777b7d3714e9ff5154eb606545e4735aab7c2c92c3c3ec6b47a3e17404805",
+        "note": "The cold-test rule gains the method moved from the user-level rules file: have a fresh agent act on a wording, never ask it whether the wording is clear."
       }
     ],
     "writing-executor-briefs.md": [
