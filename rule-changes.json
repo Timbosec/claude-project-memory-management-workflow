@@ -309,6 +309,10 @@
       {
         "sha256": "0038bc95123c5d316063fc98f5a83dde7ac1a9bdb64d4bbbcc398f7aa83d0188",
         "note": ""
+      },
+      {
+        "sha256": "00b998ae073f3d9ac67da9b6afaaa9eab8ffdbff15570d12d9b55e7a0095768b",
+        "note": "Part 1 adds a rule-by-rule pass over both CLAUDE.md files: where each rule should load, which sentences are only reasons or bookkeeping and can go, and a check of each trim before it is proposed."
       }
     ],
     "hooks/remind_finalise.py": [
