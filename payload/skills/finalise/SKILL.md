@@ -257,11 +257,20 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      rules across the four user-scope homes still carrying a "Provisional" single-case marker;
      per-file and total bytes of the three always-loaded surfaces (`~/.claude/CLAUDE.md`,
      `<project root>/CLAUDE.md`, `MEMORY.md`); and the total's delta against the previous logged
-     reading. **The only threshold anywhere in this check is MEMORY.md's existing 200-line /
-     25,600-byte limit** (enforced above, by `check_memory_index.py` — this script reports its
-     bytes but does not re-gate them). Neither CLAUDE.md has a documented cap, so this never
-     flags a number against one; it's a growth log, not a budget check, until the user picks a
-     line from the observed range.
+     reading; then **bookkeeping in those three files**, each item with its line number: a dated
+     note in brackets (`(2026-08-10, task 4: ...)`), the word "Provisional", "cold-tested" in any
+     case, and a `CLAUDE.md` longer than the 200 lines Claude Code's documentation recommends
+     (longer files consume more context and reduce adherence). A dated note on a standing
+     permission (its bullet says "authorized" or "authorised") is not listed, and `MEMORY.md` is
+     not length-checked here. When there is nothing to list it prints `none`. **Every listed item
+     needs an explicit response — move it out (to the project's decision log or the lesson
+     ledger's origin log) or say why it stays; silence is not one**, the same rule as for
+     `check_thread_state.py`'s flags. **The only limit that gates anywhere in this check is
+     MEMORY.md's existing 200-line / 25,600-byte limit** (enforced above, by
+     `check_memory_index.py` — this script reports its bytes but does not re-gate them). The
+     200-line `CLAUDE.md` figure is the documentation's own, not one picked here, and it is only
+     listed, never gated on; the byte figures are a growth log, not a budget check, until the user
+     picks a line from the observed range.
 
 6. **Write/replace the `Next up` block in `backlog.md`.** The live block at the top of that file
    (after the intro, before `## Open`) is the worked example of the shape — read it rather than

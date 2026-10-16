@@ -227,12 +227,20 @@
       {
         "sha256": "1607a60309bff0034a80de45156ab878b1b4d8a402850f7bc2518041d9735c59",
         "note": ""
+      },
+      {
+        "sha256": "fb6c4714a0c7235d2cd31908e21dae3820e3bc73bb61d220370391e00d20e076",
+        "note": "Also lists bookkeeping in the files loaded every session: dated notes in brackets, \"Provisional\" and \"cold-tested\" tags, and a CLAUDE.md longer than the 200 lines Claude Code's documentation recommends. A dated note on a standing permission is not listed."
       }
     ],
     "skills/finalise/scripts/test_context_budget_report.py": [
       {
         "sha256": "89671c4813f24b2638ebd2030be5f304df7e734eacc023bae1dd8ee2a7155d7f",
         "note": ""
+      },
+      {
+        "sha256": "6c41ee468b1598bd0be9d42cb58f7f6f2c3c213d7db9b005bb9939c942299403",
+        "note": "Tests for the bookkeeping list."
       }
     ],
     "skills/finalise/SKILL.md": [
@@ -243,6 +251,10 @@
       {
         "sha256": "34126266580cb2d71c316893dd2a15e2bec58dad03036c81d0b4b55d739acbac",
         "note": "Answers to `/finalize` as well as `/finalise`. Pushes without asking only where a `CLAUDE.md` explicitly pre-authorizes routine pushes; otherwise it still asks."
+      },
+      {
+        "sha256": "c8e83a5396f7d7c2fc4b64190e30baaea92984ee081c3655527a468dc90f5f0b",
+        "note": "Step 5 asks for a response to each item the budget report lists as bookkeeping: move it out of the always-loaded file, or say why it stays."
       }
     ],
     "skills/bootstrap-project/SKILL.md": [

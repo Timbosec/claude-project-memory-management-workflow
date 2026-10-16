@@ -468,6 +468,218 @@ class TestBuildReportEndToEnd(unittest.TestCase):
             self.assertEqual(rows[0]["date"], "2026-08-18")
 
 
+# ---------------------------------------------------------------------------
+# Bookkeeping in always-loaded files: scan_bookkeeping, and its place in build_report/format
+# ---------------------------------------------------------------------------
+
+class TestScanBookkeeping(unittest.TestCase):
+    def test_dated_note_on_one_line_is_listed_with_its_line_number(self):
+        text = (
+            "# Rules\n"
+            "- A clean rule.\n"
+            "- Keep the cache warm (2026-08-10, task 4: two deaths on one task.)\n"
+        )
+        found = cbr.scan_bookkeeping(text)
+        self.assertEqual(len(found), 1)
+        line, kind, matched = found[0]
+        self.assertEqual((line, kind), (3, "dated note"))
+        self.assertEqual(matched, "(2026-08-10, task 4: two deaths on one task.)")
+
+    def test_dated_note_wrapped_across_lines_is_listed_at_the_opening_bracket(self):
+        text = (
+            "- A rule that runs long, and then the note opens here (the case\n"
+            "  was seen on\n"
+            "  2026-08-10, task 4: it wrapped\n"
+            "  twice.) and the rule goes on.\n"
+        )
+        found = cbr.scan_bookkeeping(text)
+        self.assertEqual(len(found), 1)
+        self.assertEqual(found[0][0], 1)
+        self.assertEqual(found[0][1], "dated note")
+        self.assertIn("2026-08-10, task 4: it wrapped twice.)", found[0][2])
+
+    def test_a_note_with_a_bracket_inside_it_is_one_finding(self):
+        text = "- A rule (2026-08-10, see the bullet (above) for why.) goes on.\n"
+        found = cbr.scan_bookkeeping(text)
+        self.assertEqual([f[1] for f in found], ["dated note"])
+        self.assertEqual(found[0][2], "(2026-08-10, see the bullet (above) for why.)")
+
+    def test_a_long_note_is_truncated(self):
+        text = "- Rule (2026-08-10, " + "word " * 60 + ")\n"
+        matched = cbr.scan_bookkeeping(text)[0][2]
+        self.assertLessEqual(len(matched), cbr.SNIPPET_CHARS)
+        self.assertTrue(matched.endswith("..."))
+
+    def test_a_bracket_without_a_date_is_not_listed(self):
+        text = "- A rule (for example, when the file is long) and a second (see below).\n"
+        self.assertEqual(cbr.scan_bookkeeping(text), [])
+
+    def test_a_bare_date_outside_brackets_is_not_listed(self):
+        text = (
+            "- Relocated 2026-08-17 from the old home; the rule is unchanged.\n"
+            "- Another rule (no date here) that ends. Then on 2026-09-01 a sentence.\n"
+        )
+        self.assertEqual(cbr.scan_bookkeeping(text), [])
+
+    def test_a_date_in_a_later_bracket_does_not_borrow_an_earlier_one(self):
+        # The note is the span that holds the date, so the line reported is that span's own
+        # opening bracket, not the first bracket in the bullet.
+        text = (
+            "- A rule (an undated aside) that goes on for a while\n"
+            "  and then (2026-08-10: the note) ends.\n"
+        )
+        found = cbr.scan_bookkeeping(text)
+        self.assertEqual([(f[0], f[2]) for f in found], [(2, "(2026-08-10: the note)")])
+
+    def test_permission_bullet_skips_its_dated_note_but_not_its_tag(self):
+        text = (
+            "- **Routine commits and pushes are pre-authorized: push after each commit.**\n"
+            "  Stage explicit paths. (the user,\n"
+            "  2026-10-10.) Also (Provisional -- one case.)\n"
+        )
+        found = cbr.scan_bookkeeping(text)
+        self.assertEqual([(f[0], f[1]) for f in found], [(3, "provisional")])
+
+    def test_permission_wording_on_another_line_of_the_bullet_still_excuses_the_note(self):
+        text = (
+            "- Routine pushes are pre-authorized, and the user said so\n"
+            "  at the time (the user, 2026-10-10.) Nothing else to add.\n"
+        )
+        self.assertEqual(cbr.scan_bookkeeping(text), [])
+
+    def test_british_spelling_also_excuses_the_dated_note(self):
+        text = "- The user authorised this (the user, 2026-10-10.)\n"
+        self.assertEqual(cbr.scan_bookkeeping(text), [])
+
+    def test_permission_wording_in_one_bullet_does_not_excuse_the_next(self):
+        text = (
+            "- Pushes are pre-authorized (the user, 2026-10-10.)\n"
+            "- An unrelated rule (2026-08-10, task 4: a note.)\n"
+        )
+        found = cbr.scan_bookkeeping(text)
+        self.assertEqual([(f[0], f[1]) for f in found], [(2, "dated note")])
+
+    def test_permission_wording_in_a_paragraph_before_does_not_excuse_a_bullet(self):
+        text = (
+            "Pushes need no authorization here.\n"
+            "\n"
+            "- An unrelated rule (2026-08-10, task 4: a note.)\n"
+        )
+        found = cbr.scan_bookkeeping(text)
+        self.assertEqual([(f[0], f[1]) for f in found], [(3, "dated note")])
+
+    def test_provisional_is_listed_and_is_case_sensitive(self):
+        text = (
+            "- A rule (Provisional -- one case.)\n"
+            "- A rule about provisional licences.\n"
+        )
+        found = cbr.scan_bookkeeping(text)
+        self.assertEqual([(f[0], f[1]) for f in found], [(1, "provisional")])
+        self.assertTrue(found[0][2].startswith("Provisional -- one case."))
+
+    def test_cold_tested_is_listed_in_any_case(self):
+        text = (
+            "- A rule. Cold-tested 2026-08-19 on a fresh agent.\n"
+            "- Another rule, cold-tested twice.\n"
+            "- A third, COLD-TESTED.\n"
+            "- A fourth, cold tested without a hyphen.\n"
+        )
+        found = cbr.scan_bookkeeping(text)
+        self.assertEqual([(f[0], f[1]) for f in found],
+                         [(1, "cold-tested"), (2, "cold-tested"), (3, "cold-tested")])
+        self.assertEqual(found[0][2], "Cold-tested 2026-08-19 on a fresh agent.")
+
+    def test_clean_text_has_no_findings(self):
+        text = "# Rules\n\n- A clean rule.\n  Continued (with a bracket).\n"
+        self.assertEqual(cbr.scan_bookkeeping(text), [])
+
+
+class TestBookkeepingReport(unittest.TestCase):
+    def _paths(self, tmp, global_text="", project_text="", memory_text=""):
+        paths = {}
+        for key, name, text in [("global_claude", "global.md", global_text),
+                                ("project_claude", "project.md", project_text),
+                                ("memory_index", "MEMORY.md", memory_text)]:
+            paths[key] = os.path.join(tmp, name)
+            with open(paths[key], "w", encoding="utf-8") as f:
+                f.write(text)
+        for key in ("prompt_lessons", "writing_standing_docs", "writing_executor_briefs",
+                    "ledger", "history"):
+            paths[key] = os.path.join(tmp, "absent-" + key)
+        return paths
+
+    def _report(self, **texts):
+        with tempfile.TemporaryDirectory() as tmp:
+            return cbr.build_report(self._paths(tmp, **texts), date(2026, 8, 18))
+
+    @staticmethod
+    def _lines(n):
+        return "".join(f"line {i}\n" for i in range(1, n + 1))
+
+    def test_clean_files_print_none_and_return_an_empty_list(self):
+        report = self._report(global_text="- A clean rule.\n", project_text="# P\ntext\n",
+                              memory_text="- [a](a.md) -- a hook\n")
+        self.assertEqual(report["bookkeeping"], [])
+        text = cbr.format_report(report)
+        self.assertTrue(text.endswith("Bookkeeping in always-loaded files:\n  none"))
+
+    def test_the_section_follows_the_always_loaded_surfaces(self):
+        text = cbr.format_report(self._report())
+        self.assertLess(text.index("Always-loaded surfaces:"),
+                        text.index("Bookkeeping in always-loaded files:"))
+
+    def test_findings_name_the_file_the_line_and_the_text(self):
+        report = self._report(
+            global_text="- One.\n- Two (2026-08-10, a note.)\n",
+            project_text="- Rule. Cold-tested 2026-08-19.\n",
+            memory_text="# Index\n\n- Entry (Provisional -- one case.)\n")
+        found = [(f["file"], f["line"], f["kind"]) for f in report["bookkeeping"]]
+        self.assertEqual(found, [("~/.claude/CLAUDE.md", 2, "dated note"),
+                                 ("project CLAUDE.md", 1, "cold-tested"),
+                                 ("MEMORY.md", 3, "provisional")])
+        text = cbr.format_report(report)
+        self.assertIn("  ~/.claude/CLAUDE.md:2  dated note: (2026-08-10, a note.)", text)
+        self.assertIn("  project CLAUDE.md:1  cold-tested: Cold-tested 2026-08-19.", text)
+        self.assertIn("  MEMORY.md:3  provisional: Provisional -- one case.)", text)
+        self.assertNotIn("  none", text)
+
+    def test_a_201_line_claude_md_is_listed_with_its_count_and_reason(self):
+        report = self._report(global_text=self._lines(201), project_text=self._lines(201))
+        lengths = [f for f in report["bookkeeping"] if f["kind"] == "length"]
+        self.assertEqual([f["file"] for f in lengths],
+                         ["~/.claude/CLAUDE.md", "project CLAUDE.md"])
+        self.assertIn("201 lines", lengths[0]["text"])
+        text = cbr.format_report(report)
+        self.assertIn("~/.claude/CLAUDE.md  201 lines, over the 200", text)
+        self.assertIn("reduce adherence", text)
+
+    def test_a_200_line_claude_md_is_not_listed(self):
+        report = self._report(global_text=self._lines(200), project_text=self._lines(200))
+        self.assertEqual(report["bookkeeping"], [])
+
+    def test_a_201_line_memory_index_is_not_listed(self):
+        report = self._report(memory_text=self._lines(201))
+        self.assertEqual(report["bookkeeping"], [])
+
+    def test_findings_never_change_the_exit_code(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = self._paths(tmp, global_text="- Rule (2026-08-10, a note.)\n"
+                                                 "- Rule (Provisional.)\n" + self._lines(250))
+            argv = ["context_budget_report.py",
+                    "--global-claude", paths["global_claude"],
+                    "--project-claude", paths["project_claude"],
+                    "--memory-index", paths["memory_index"],
+                    "--history", paths["history"], "--today", "2026-08-18", "--no-write"]
+            old_argv = cbr.sys.argv
+            cbr.sys.argv = argv
+            try:
+                with self.assertRaises(SystemExit) as ctx:
+                    cbr.main()
+                self.assertEqual(ctx.exception.code, 0)
+            finally:
+                cbr.sys.argv = old_argv
+
+
 if __name__ == "__main__":
     unittest.main()
 

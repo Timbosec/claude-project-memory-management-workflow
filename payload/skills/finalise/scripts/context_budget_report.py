@@ -3,16 +3,19 @@
 
 Reports -- never gates (exit 0 always, same convention as check_thread_state.py). The problem
 this watches is growth: the surfaces loaded into every session (both CLAUDE.mds, MEMORY.md) can
-balloon unnoticed over weeks of edits, with nothing else tracking it over time. There is exactly
-ONE threshold anywhere in this file, and it is not new: MEMORY.md's 200-line / 25,600-byte load
-limit, already enforced by check_memory_index.py. Everything else here is a bare figure or a
-delta against logged history -- never an invented budget. A flat byte threshold on the combined
-total was considered and rejected: picked without being derived from anything, a number like that
-risks going red on the very first real run and staying red forever. Permanently-red checks get
-ignored, which is worse than no check -- so this prints numbers and leaves picking a line to the
-user, once the log has a few weeks of real observations in it.
+balloon unnoticed over weeks of edits, with nothing else tracking it over time. Two figures here
+are limits rather than bare readings, and neither is invented: MEMORY.md's 200-line / 25,600-byte
+load limit, already enforced by check_memory_index.py, and the 200 lines per CLAUDE.md that Claude
+Code's own documentation recommends (code.claude.com/docs/en/memory, "Size": longer files consume
+more context and reduce adherence). The second is only ever listed, never gated on. Everything
+else here is a bare figure or a delta against logged history -- never an invented budget. A flat
+byte threshold on the combined total was considered and rejected: picked without being derived
+from anything, a number like that risks going red on the very first real run and staying red
+forever. Permanently-red checks get ignored, which is worse than no check -- so this prints
+numbers and leaves picking a line to the user, once the log has a few weeks of real observations
+in it.
 
-Four things printed:
+Five things printed:
   1. Lesson candidates in lesson-candidates.md awaiting a second case -- count and the oldest
      one's age in days. A candidate entry is identified by carrying a "First observed:" field
      (the Candidate schema requires it; the Origin log schema has "Home:"/"Promoted:" instead),
@@ -31,10 +34,19 @@ Four things printed:
      the project's context_budget_log.csv (created lazily on first run; its absence is normal,
      not a fault). The delta is computed against the PRE-write history, so a same-day re-run
      compares against yesterday's row, not against the row this run is about to write.
+  5. Bookkeeping in those same three files, listed with its line number: a dated note in
+     brackets ("(2026-08-10, task 4: ...)", wrapped lines joined, so a note split across lines is
+     found at the line of its opening bracket), the word "Provisional", and "cold-tested" in any
+     case; plus either CLAUDE.md running over 200 lines. Dated notes in a bullet that mentions
+     authorizing or authorising something are skipped -- a standing permission should show who
+     gave it and when -- but only the dated note: any tag in that bullet is still listed.
+     MEMORY.md gets no length check here (check_memory_index.py gates it). Each file is listed
+     for the reader to answer, never failed on.
 
 Run:  PYTHONPATH=~/.claude/skills/finalise/scripts python3 context_budget_report.py
 """
 import argparse
+import bisect
 import csv
 import os
 import re
@@ -83,6 +95,22 @@ HISTORY_FIELDS = ["date", "global_claude_bytes", "project_claude_bytes",
 
 MARKER = "Provisional"
 
+# Claude Code's documented size target per CLAUDE.md file -- the documentation's figure, not one
+# chosen here (code.claude.com/docs/en/memory, "Size").
+CLAUDE_MD_LINE_LIMIT = 200
+LENGTH_REASON = "longer files consume more context and reduce adherence"
+SNIPPET_CHARS = 100
+
+_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+_HEADING_RE = re.compile(r"#{1,6} ")
+_PERMISSION_RE = re.compile(r"authori[zs]", re.IGNORECASE)
+# (kind, pattern) for the two bookkeeping words; a dated note in brackets is found by
+# bracket-matching instead (see _dated_notes), since a pattern can't match nested brackets.
+_TAG_PATTERNS = [
+    ("provisional", re.compile(re.escape(MARKER))),
+    ("cold-tested", re.compile(r"cold-tested", re.IGNORECASE)),
+]
+
 
 def read_text(path):
     """UTF-8 file text, or '' if the file doesn't exist yet. The ledger and the history log are
@@ -109,6 +137,88 @@ def split_top_level_bullets(text):
     if current is not None:
         bullets.append("\n".join(current))
     return bullets
+
+
+def split_blocks(text):
+    """[[(line_number, line), ...], ...] -- the bullets and paragraphs of `text`, 1-based line
+    numbers kept. A block ends at a blank line or a heading, and a new column-0 '- ' starts a new
+    block; an indented line after a blank line still belongs to the bullet above it (a nested
+    paragraph). This is not split_top_level_bullets: that one lets a section's last bullet absorb
+    the heading and prose after it, which would let one bullet's wording excuse another's text."""
+    blocks, current, after_blank = [], [], False
+    for number, line in enumerate(text.splitlines(), start=1):
+        if not line.strip():
+            after_blank = True
+            continue
+        starts_new = (not current or line.startswith("- ") or _HEADING_RE.match(line)
+                      or _HEADING_RE.match(current[0][1])
+                      or (after_blank and not line[0].isspace()))
+        if starts_new and current:
+            blocks.append(current)
+            current = []
+        current.append((number, line))
+        after_blank = False
+    if current:
+        blocks.append(current)
+    return blocks
+
+
+def _join_block(block):
+    """(joined text, sorted offsets, line numbers): the block's lines stripped and joined with
+    single spaces, plus where each line starts in the joined text so a match offset maps back to
+    the line it began on."""
+    parts, starts, numbers, pos = [], [], [], 0
+    for number, line in block:
+        piece = line.strip()
+        starts.append(pos)
+        numbers.append(number)
+        parts.append(piece)
+        pos += len(piece) + 1
+    return " ".join(parts), starts, numbers
+
+
+def _snippet(joined, start, end=None):
+    chunk = joined[start:end if end is not None else len(joined)]
+    return chunk if len(chunk) <= SNIPPET_CHARS else chunk[:SNIPPET_CHARS - 3] + "..."
+
+
+def _dated_notes(joined):
+    """[(start, end)] of each outermost (...) span containing a YYYY-MM-DD date. Brackets are
+    matched by depth, so a note with a bracket inside it is one span; an opening bracket that
+    never closes within the block is not a note."""
+    spans, depth, open_at = [], 0, None
+    for i, ch in enumerate(joined):
+        if ch == "(":
+            if depth == 0:
+                open_at = i
+            depth += 1
+        elif ch == ")" and depth > 0:
+            depth -= 1
+            if depth == 0 and _DATE_RE.search(joined[open_at:i + 1]):
+                spans.append((open_at, i + 1))
+    return spans
+
+
+def scan_bookkeeping(text):
+    """[(line_number, kind, matched_text)] for the bookkeeping that costs context in a file
+    loaded every session without changing what the agent does. kind is 'dated note',
+    'provisional' or 'cold-tested'. A dated note is skipped when its own bullet/paragraph mentions
+    authorizing/authorising something (a standing permission should show who gave it and when);
+    that skips only the dated note, never a tag in the same bullet."""
+    found = []
+    for block in split_blocks(text):
+        joined, starts, numbers = _join_block(block)
+
+        def line_of(offset):
+            return numbers[bisect.bisect_right(starts, offset) - 1]
+
+        if not _PERMISSION_RE.search(joined):
+            for start, end in _dated_notes(joined):
+                found.append((line_of(start), "dated note", _snippet(joined, start, end)))
+        for kind, pattern in _TAG_PATTERNS:
+            for m in pattern.finditer(joined):
+                found.append((line_of(m.start()), kind, _snippet(joined, m.start())))
+    return sorted(found, key=lambda f: (f[0], f[1]))
 
 
 def extract_section(text, heading_line, boundary_prefix):
@@ -234,6 +344,21 @@ def build_report(paths, today):
     memory_bytes = len(memory_text.encode("utf-8"))
     total_bytes = global_bytes + project_bytes + memory_bytes
     global_lines = len(global_text.splitlines())
+    project_lines = len(project_text.splitlines())
+
+    bookkeeping = []
+    for label, text, length_checked in [
+            ("~/.claude/CLAUDE.md", global_text, True),
+            ("project CLAUDE.md", project_text, True),
+            ("MEMORY.md", memory_text, False)]:
+        for line, kind, matched in scan_bookkeeping(text):
+            bookkeeping.append({"file": label, "line": line, "kind": kind, "text": matched})
+        n_lines = len(text.splitlines())
+        if length_checked and n_lines > CLAUDE_MD_LINE_LIMIT:
+            bookkeeping.append({"file": label, "line": None, "kind": "length",
+                                "text": f"{n_lines} lines, over the {CLAUDE_MD_LINE_LIMIT} "
+                                        f"Claude Code's documentation recommends "
+                                        f"({LENGTH_REASON})"})
 
     n_candidates, oldest_age_days = count_candidates_awaiting(ledger_text, today)
 
@@ -272,6 +397,8 @@ def build_report(paths, today):
         "memory_bytes": memory_bytes,
         "total_bytes": total_bytes,
         "global_lines": global_lines,
+        "project_lines": project_lines,
+        "bookkeeping": bookkeeping,
         "n_candidates": n_candidates,
         "oldest_age_days": oldest_age_days,
         "home_counts": home_counts,
@@ -311,6 +438,15 @@ def format_report(report):
         sign = "+" if delta >= 0 else ""
         lines.append(f"  total: {report['total_bytes']:,} bytes "
                      f"({sign}{delta:,} since {prev['date']})")
+
+    lines.append("")
+    lines.append("Bookkeeping in always-loaded files:")
+    if not report["bookkeeping"]:
+        lines.append("  none")
+    for item in report["bookkeeping"]:
+        where = item["file"] if item["line"] is None else f"{item['file']}:{item['line']}"
+        label = "" if item["kind"] == "length" else f"{item['kind']}: "
+        lines.append(f"  {where}  {label}{item['text']}")
     return "\n".join(lines)
 
 
