@@ -366,6 +366,18 @@
         "sha256": "754b54c8fe5fd2f932d7119312886b9f1414068d3e69803947ac8c1a393fa9b5",
         "note": ""
       }
+    ],
+    "rules/standing-docs.md": [
+      {
+        "sha256": "33f3591cadcf1253dae3f5ac34b6174cc0d6a9f2f6703db49184ffabca3f61fa",
+        "note": "New: loads a pointer to writing-standing-docs.md whenever Claude reads or edits a CLAUDE.md, skill, memory or other instruction file in the session's project, so the doc-editing rules are read without relying on the CLAUDE.md pointer alone."
+      }
+    ],
+    "rules/tests.md": [
+      {
+        "sha256": "5729bbd12714af81daf2b6077801829c963d7cb593d1d8003b0c1ae38995f7b3",
+        "note": "New: loads a pointer to writing-executor-briefs.md whenever Claude reads or edits a test file in the session's project, so its rules on proving a new test can fail are read without relying on the CLAUDE.md pointer alone."
+      }
     ]
   }
 }

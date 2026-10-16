@@ -30,6 +30,20 @@
       "executable": false
     },
     {
+      "source": "payload/rules/tests.md",
+      "target": "rules/tests.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/rules/standing-docs.md",
+      "target": "rules/standing-docs.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
       "source": "payload/doc-test-probes.md",
       "target": "doc-test-probes.md",
       "kind": "owned",
