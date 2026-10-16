@@ -37,6 +37,10 @@
       {
         "sha256": "99a042af9bbd5281bad67f5dc84abf07d55ab2293fff13671c3224adea72e683",
         "note": ""
+      },
+      {
+        "sha256": "24d41f47d7eeceb9d5bc19cac8b256a005f456f6c1c398d15245b492bdf24d9d",
+        "note": "Shortened: sentences that only explained why the rule matters, not when it applies, were cut. A check for lost meaning found every instruction kept."
       }
     ],
     "verify-at-source": [
@@ -71,12 +75,20 @@
       {
         "sha256": "e9b0ee3f44ad07cd33fa1e34eabc7fcb71d88205d66c57aec39b2af3e110acea",
         "note": ""
+      },
+      {
+        "sha256": "2746434e38a736b00aed395cf0ac48317a7d2b6d7a06b5cd7cb5845c636f4d91",
+        "note": "Shortened: sentences that only explained why the rule matters, not when it applies, were cut. Agents given the old and the new wording acted the same in the same test scenarios."
       }
     ],
     "observable-vs-inferred": [
       {
         "sha256": "f808cab422ffca55f94c1b150596bdb19de62973ba3432667f2eaea8674d0592",
         "note": ""
+      },
+      {
+        "sha256": "8f7d566ccad244a393240a65d016541cfdcfa8ca00bc74bdd2564a309ea792aa",
+        "note": "Shortened: sentences that only explained why the rule matters, not when it applies, were cut. Agents given the old and the new wording acted the same in the same test scenarios."
       }
     ],
     "rule-into-code": [
@@ -95,12 +107,20 @@
       {
         "sha256": "01f7dd675be63769516dd459aaad41077db1756026f5d4beffa2cc52b47dddb5",
         "note": ""
+      },
+      {
+        "sha256": "83864ebccca5e7186d82ccbc74e818355f2ff25c762dc2910b97349bb48ccdfd",
+        "note": "Shortened: sentences that only explained why the rule matters, not when it applies, were cut. Agents given the old and the new wording acted the same in the same test scenarios. One clause stayed because the test showed it was needed: an amendment does not inherit the maturity of the rule it extends."
       }
     ],
     "existence-vs-magnitude": [
       {
         "sha256": "ea99cad7ac640780df6de051de54ff53472e4e634e79d5bbb67f4d41646d8bc1",
         "note": ""
+      },
+      {
+        "sha256": "14f03aba9d058ff36d056682dcbd3846b2a246a5198c3a81724fbea2790c01c2",
+        "note": "Shortened: sentences that only explained why the rule matters, not when it applies, were cut. A check for lost meaning found every instruction kept."
       }
     ],
     "write-for-readers": [

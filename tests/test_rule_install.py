@@ -277,8 +277,8 @@ class RulesFileVerbatimTest(RuleInstallCase):
     def test_a_mid_bullet_tag_and_the_paragraph_break_after_it_are_kept(self):
         # second-real-example has two paragraphs, and its tag ends the first one
         self.user_edits()
-        old = self.shipped.replace("Corroborated cases cannot falsify it",
-                                   "Corroborated cases can never falsify it", 1)
+        old = self.shipped.replace("must be validated where it stands ALONE",
+                                   "must be checked where it stands ALONE", 1)
         self.assertNotEqual(old, self.shipped)
         self.last_had(old)
         out = self.ok()
@@ -287,10 +287,10 @@ class RulesFileVerbatimTest(RuleInstallCase):
         bullet = self.shipped[start:self.shipped.index("- A defect's")].rstrip()
         text = self.rules_file()
         self.assertIn("New wording:\n" + indented(bullet) + "\n", text)
-        self.assertIn("appears. \u2192 `[second-real-example]`\n      **A check added as", text)
+        self.assertIn("boundary.** \u2192 `[second-real-example]`\n      **A check added as", text)
         old_part = text[text.index("Old wording:"):text.index("New wording:")]
-        self.assertIn("can never falsify it", old_part)
-        self.assertIn("appears. \u2192 `[second-real-example]`\n      **A check added as",
+        self.assertIn("must be checked where it stands ALONE", old_part)
+        self.assertIn("boundary.** \u2192 `[second-real-example]`\n      **A check added as",
                       old_part)
 
     def test_blank_lines_inside_a_rule_stay_empty_not_padded(self):

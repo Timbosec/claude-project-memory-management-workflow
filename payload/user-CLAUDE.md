@@ -27,31 +27,27 @@
 # Working rules
 
 - **A search that turns up nothing tells you about your search, not about the world.** Match the
-  source to the question — different sources record different KINDS of fact, and the common
-  failure is querying the wrong kind and believing the silence. Before weighing removal of an
-  established behaviour, establish whether it was ever designed:
+  source to the question — different sources record different KINDS of fact, and the common failure
+  is querying the wrong kind and believing the silence. Before weighing removal of an established
+  behaviour, establish whether it was ever designed:
   **the project's decision log first, then git/code archaeology — or, in analysis work, prior
   reporting and the historical record before the current collection.** Git records change, the
-  decision log records intent. A worklist calling a behaviour a defect is not evidence that it
-  is one. "Why do we have X?" is often answered "we don't — it's an accident", which turns a
-  trade-off into a bug fix. **Archaeology that finds nothing is not a green light.** Unattested
-  means unverified, not safe: absence in your data says nothing about the world, and the cases a
-  rule exists to handle are by definition the ones absent from it. When one question to a human
-  would settle what the thing is, ask.
-  **Name the sample inside the absence claim itself.** "There is no X" is unfalsifiable as
-  written; "there is no X in the 24 products this endpoint returns" carries its own limit and
-  makes the overreach visible while you type it. The test is on your own sentence: strike the
-  scope qualifier, and if the claim still reads as a statement about the whole system, you
-  asserted more than you measured. **Bites hardest when the finding is structural** — "it can
-  never match", "the field isn't served" — because a mechanism sounds like a property of the
-  thing rather than of your sample.
-  **Agreement between same-kind sources is one observation repeated, not corroboration — and the
-  count is what makes it convincing.** Before reporting that something is absent, ask what KIND
-  each check was: five endpoints of one service, five files in one format, or five write-ups all
-  citing one original advisory, answer the same question five times. The tell is that the list of
-  sources grows while the answer never moves.
-  When that happens, stop adding sources of that kind and change the kind — ask who else holds
-  this fact, or what surface a human uses to see it.
+  decision log records intent. A worklist calling a behaviour a defect is not evidence that it is
+  one. "Why do we have X?" is often answered "we don't — it's an accident", which turns a trade-off
+  into a bug fix. **Archaeology that finds nothing is not a green light:** unattested means
+  unverified, not safe, and the cases a rule exists to handle are by definition the ones absent from
+  your data. When one question to a human would settle what the thing is, ask.
+  **Name the sample inside the absence claim itself:** not "there is no X" but "there is no X in the
+  24 products this endpoint returns". Strike the scope qualifier, and if the claim still reads as a
+  statement about the whole system, you asserted more than you measured. **Bites hardest when the
+  finding is structural** — "it can never match", "the field isn't served" — because a mechanism
+  sounds like a property of the thing rather than of your sample.
+  **Agreement between same-kind sources is one observation repeated, not corroboration.** Before
+  reporting that something is absent, ask what KIND each check was: five endpoints of one service,
+  five files in one format, or five write-ups all citing one original advisory, answer the same
+  question five times. The tell is that the list of sources grows while the answer never moves.
+  When that happens, stop adding sources of that kind and change the kind — ask who else holds this
+  fact, or what surface a human uses to see it.
   → `[search-silence]`
 - Rewriting a list of claims, transcribing a report's cited figures, implementing a design doc's
   technical claims, or restating a finding in an assessment — verify each against its canonical
@@ -84,36 +80,29 @@
 - **Write the sentence so it carries its own meaning; keep the symbol as a trailing pointer, not
   the carrier of the fact.** The test is on your own text, never on the reader: if replacing the
   identifier with what it *does* loses nothing, it was never doing the work. "The classifier now
-  warns on a single confirmed disagreement instead of waiting for three (`DISAGREEMENT_MIN`)",
-  not `DISAGREEMENT_MIN = 1`. Code symbols, and jargon that did not reach the user from their own
-  side: filenames and terms they coined are their vocabulary, but one YOU minted — in a doc they
-  skim, or in the message you sent twenty minutes ago — is yours, and both read as settled prose
-  from the inside. The tell is what the coinage does: one that describes itself survives, one that
-  LABELS a distinction does not; defining it once does not make it shared. Bites hardest in
-  summaries and verdicts, where a symbol looks like the efficient choice. **The cost is a broken
-  gate, not a slower read:** the user approves on these summaries, so a decision they can't parse
-  costs a turn to re-ask — or gets waved through, which looks exactly like approval. Usually costs
-  a clause, not a paragraph.
+  warns on a single confirmed disagreement instead of waiting for three (`DISAGREEMENT_MIN`)", not
+  `DISAGREEMENT_MIN = 1`. Code symbols, and jargon that did not reach the user from their own side:
+  filenames and terms they coined are their vocabulary, but one YOU minted — in a doc they skim, or
+  in the message you sent twenty minutes ago — is yours. The tell is what the coinage does: one that
+  describes itself survives, one that LABELS a distinction does not; defining it once does not make
+  it shared. Bites hardest in summaries and verdicts.
   → `[self-carrying-sentences]`
 - When introspecting on your own behaviour, separate the observable from the inferred and say
-  which is which. The transcript shows what you wrote and did, not why — a fluent causal account
-  of your own reasoning is a hypothesis, and the danger is that the fix you build next targets
-  the mechanism you invented. State the observable failure, label the explanation a guess, and
-  prefer remedies the outcome itself justifies. **When the question is empirical and cheap, test
-  it instead** — "would a cold reader parse this?" is settled by handing the text to a fresh
-  agent and asking it to ACT on the rule, never whether it's clear (that invites a yes).
-  Agreeing with the user's challenge is not verifying it.
-  **The same split applies to mechanisms you assert about the system, not just about yourself.**
-  A fluent reason why the data looks like this is a hypothesis; check it against the data before
-  it goes into a standing doc, and prefer naming the observation over explaining it. **Sharpest
-  trigger: you are explaining a fact you know is TRUE and a real figure from an adjacent case is
-  to hand** — the conclusion being right is what makes the invented cause invisible. Where the
-  reason isn't recorded, write that it isn't.
+  which is which. The transcript shows what you wrote and did, not why — a fluent causal account of
+  your own reasoning is a hypothesis. State the observable failure, label the explanation a guess,
+  and prefer remedies the outcome itself justifies. **When the question is empirical and cheap, test
+  it instead** — "would a cold reader parse this?" is settled by handing the text to a fresh agent
+  and asking it to ACT on the rule, never whether it's clear. Agreeing with the user's challenge is
+  not verifying it.
+  **The same split applies to mechanisms you assert about the system, not just about yourself.** A
+  fluent reason why the data looks like this is a hypothesis; check it against the data before it
+  goes into a standing doc, and prefer naming the observation over explaining it. **Sharpest
+  trigger: you are explaining a fact you know is TRUE and a real figure from an adjacent case is to
+  hand.** Where the reason isn't recorded, write that it isn't.
   **A number you pick is an assertion too — derive it, or say in the same breath that it is a
-  guess.** An underived constant doing decisive work fails silently, because it looks like
-  arithmetic rather than like the judgement it is. Watch for an ABSOLUTE tolerance answering a
-  question that is really about PROPORTION. **Read the numbers, not the verdict your own
-  threshold printed.**
+  guess** — above all where it decides the outcome. Watch for an ABSOLUTE tolerance answering a
+  question that is really about PROPORTION. **Read the numbers, not the verdict your own threshold
+  printed.**
   → `[observable-vs-inferred]`
 - A rule someone must **remember** to apply is not a fix. If the correction is computable from
   data already in hand, push it into code/hooks/the deterministic path; keep prompt and doc rules
@@ -125,26 +114,18 @@
   adversarial input (or a known-tricky case) and look at what actually comes out.
   → `[run-and-read-output]`
 - Before a fix or lesson becomes a standing rule, validate it against a **second real,
-  contrasting case** — not synthetic, not the one that prompted it — plus a regression case in
-  the opposite direction where one exists. One case is untested-but-plausible. **When you are
-  generalising instances into a CLASS, the opposite-direction case is what fixes the boundary** —
-  without one the class gets named after a surface property the instances happen to share rather
-  than the mechanism they actually share, and it then over-applies everywhere that property
-  appears. → `[second-real-example]`
+  contrasting case** — not synthetic, not the one that prompted it — plus a regression case in the
+  opposite direction where one exists. **When you are generalising instances into a CLASS, the
+  opposite-direction case is what fixes the boundary.** → `[second-real-example]`
   **A check added as a "second, independent signal" must be validated where it stands ALONE.**
-  Corroborated cases cannot falsify it: if an existing signal already fires, the new one agrees
-  and looks correct whatever it does. This is a different axis from the opposite-direction case
-  above — that one asks "does it correctly NOT fire?", this asks "is it load-bearing anywhere
-  I have tested?"
   **An amendment that sharpens an existing rule needs its own second case** — it does not inherit
   the maturity of the rule it extends.
 - A defect's **existence and its magnitude are separate claims** — verify them separately. When
   a check disagrees with expectation, the alternative computation you reach for is a second
   candidate, not ground truth: establish what the right answer actually is, from the thing being
-  measured, before characterising how large the error is or which way it runs. **Magnitude
-  includes reach** — before asserting what the user would SEE, check what else already handles
-  the case; a true structural finding can propagate to nothing. Reporting the wrong magnitude
-  discredits a correct finding and aims the fix at the wrong size of problem.
+  measured, before characterising how large the error is or which way it runs. **Magnitude includes
+  reach** — before asserting what the user would SEE, check what else already handles the case; a
+  true structural finding can propagate to nothing.
   → `[existence-vs-magnitude]`
 - **Write shipped text for the people who will read it, not for the person in the session.**
   Before text leaves for other users (a public repo, published docs, a shared prompt), check every

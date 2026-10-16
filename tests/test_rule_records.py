@@ -177,7 +177,7 @@ class RecordFileRefusalTest(RuleRecordCase):
                 before = read(self.t("workflow-bundle/install-record.json"))
                 r = self.refused("record", "CLAUDE.md", "--decision", decision)
                 self.assertIn("write-for-readers", r.stderr)
-                self.assertNotIn("search-silence", r.stderr)
+                self.assertNotIn("high-level-answers", r.stderr)
                 self.assertEqual(read(self.t("workflow-bundle/install-record.json")), before)
                 self.assertEqual(read(self.t("workflow-bundle/base/CLAUDE.md.base")), base)
 
@@ -187,6 +187,9 @@ class RecordFileRefusalTest(RuleRecordCase):
         self.ok("record-rule", "lesson-routing", "--decision", "taken")
         self.ok("record-rule", "end-of-turn-text", "--decision", "taken")
         self.ok("record-rule", "write-for-readers", "--decision", "taken")
+        for rid in ("search-silence", "self-carrying-sentences", "observable-vs-inferred",
+                    "second-real-example", "existence-vs-magnitude"):
+            self.ok("record-rule", rid, "--decision", "taken")
         r = self.ok("record", "CLAUDE.md", "--decision", "merged")
         self.assertNotIn("until it is edited again", r.stdout)
         self.assertIn("editing the file does not list it again", r.stdout)
@@ -213,6 +216,9 @@ class RecordFileRefusalTest(RuleRecordCase):
         self.ok("record-rule", "lesson-routing", "--decision", "taken")
         self.ok("record-rule", "end-of-turn-text", "--decision", "taken")
         self.ok("record-rule", "write-for-readers", "--decision", "taken")
+        for rid in ("search-silence", "observable-vs-inferred", "second-real-example",
+                    "existence-vs-magnitude"):
+            self.ok("record-rule", rid, "--decision", "taken")
         rules = self.record()["rules"]
         rules["self-carrying-sentences"] = {"decision": "dropped", "reason": "too wordy",
                                             "body_sha256": "0" * 64}
