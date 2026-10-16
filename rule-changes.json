@@ -138,6 +138,12 @@
         "removed": true,
         "note": "Removed: it rested on a single incident, and the routing rule says one case does not make a rule."
       }
+    ],
+    "measure-reach": [
+      {
+        "sha256": "1d321f26f4328cad56076d9f86fc8f4c6c4a2dbe0b099392f5fc38f3dab08b03",
+        "note": "Added: a fix scoped to the one example a report names can leave the same cause in place elsewhere, so the rule has the agent check how far the cause reaches first."
+      }
     ]
   },
   "files": {

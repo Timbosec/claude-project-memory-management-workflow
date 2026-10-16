@@ -188,7 +188,7 @@ class RecordFileRefusalTest(RuleRecordCase):
         self.ok("record-rule", "end-of-turn-text", "--decision", "taken")
         self.ok("record-rule", "write-for-readers", "--decision", "taken")
         for rid in ("search-silence", "self-carrying-sentences", "observable-vs-inferred",
-                    "second-real-example", "existence-vs-magnitude"):
+                    "second-real-example", "existence-vs-magnitude", "measure-reach"):
             self.ok("record-rule", rid, "--decision", "taken")
         r = self.ok("record", "CLAUDE.md", "--decision", "merged")
         self.assertNotIn("until it is edited again", r.stdout)
@@ -217,7 +217,7 @@ class RecordFileRefusalTest(RuleRecordCase):
         self.ok("record-rule", "end-of-turn-text", "--decision", "taken")
         self.ok("record-rule", "write-for-readers", "--decision", "taken")
         for rid in ("search-silence", "observable-vs-inferred", "second-real-example",
-                    "existence-vs-magnitude"):
+                    "existence-vs-magnitude", "measure-reach"):
             self.ok("record-rule", rid, "--decision", "taken")
         rules = self.record()["rules"]
         rules["self-carrying-sentences"] = {"decision": "dropped", "reason": "too wordy",

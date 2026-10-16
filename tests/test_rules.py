@@ -41,12 +41,12 @@ def shipped_text():
 
 class SplitRulesTest(unittest.TestCase):
 
-    def test_shipped_file_parses_to_16_rules_with_16_unique_ids(self):
+    def test_shipped_file_parses_to_17_rules_with_17_unique_ids(self):
         rules = install.split_rules(shipped_text())
-        self.assertEqual(len(rules), 16)
+        self.assertEqual(len(rules), 17)
         ids = [rule_id for rule_id, _body in rules]
         self.assertNotIn(None, ids)
-        self.assertEqual(len(set(ids)), 16)
+        self.assertEqual(len(set(ids)), 17)
         self.assertTrue(KEPT_TAGS <= set(ids))
 
     def test_shipped_bodies_hold_no_id_tag_and_no_extra_whitespace(self):
@@ -160,9 +160,10 @@ class RealRulesToRaiseTest(unittest.TestCase):
                           ("observable-vs-inferred", "changed"),
                           ("second-real-example", "changed"),
                           ("existence-vs-magnitude", "changed"),
+                          ("measure-reach", "new"),
                           (None, "removed"), (None, "removed")])
-        self.assertTrue(items[8]["old"].startswith("- Never call a blocking-panel tool"))
-        self.assertTrue(items[9]["old"].startswith("- **A broken instrument's reading"))
+        self.assertTrue(items[9]["old"].startswith("- Never call a blocking-panel tool"))
+        self.assertTrue(items[10]["old"].startswith("- **A broken instrument's reading"))
 
     def test_the_version_before_the_shipped_text_rule_raises_exactly_that_rule(self):
         items = install.rules_to_raise(fixture_text("user-CLAUDE-a6c5979.md"),
@@ -174,11 +175,12 @@ class RealRulesToRaiseTest(unittest.TestCase):
                           ("observable-vs-inferred", "changed"),
                           ("second-real-example", "changed"),
                           ("existence-vs-magnitude", "changed"),
+                          ("measure-reach", "new"),
                           ("write-for-readers", "new"), (None, "removed"), (None, "removed")])
-        self.assertIsNone(items[8]["old"])
-        self.assertTrue(items[8]["new"].startswith("- **Write shipped text for the people"))
-        self.assertTrue(items[8]["first_line"].startswith("- **Write shipped text"))
-        self.assertIsNone(items[8]["reason"])
+        self.assertIsNone(items[9]["old"])
+        self.assertTrue(items[9]["new"].startswith("- **Write shipped text for the people"))
+        self.assertTrue(items[9]["first_line"].startswith("- **Write shipped text"))
+        self.assertIsNone(items[9]["reason"])
 
 
 class RulesToRaiseTest(unittest.TestCase):
@@ -284,11 +286,12 @@ class IdlessBaseTest(unittest.TestCase):
                           ("observable-vs-inferred", "changed"),
                           ("second-real-example", "changed"),
                           ("existence-vs-magnitude", "changed"),
+                          ("measure-reach", "new"),
                           ("write-for-readers", "new"), (None, "removed"), (None, "removed")])
         changed = items[4]
         self.assertTrue(changed["old"].startswith("- **Write the sentence so it carries"))
         self.assertNotEqual(changed["old"], changed["new"])
-        self.assertIsNone(items[8]["old"])
+        self.assertIsNone(items[9]["old"])
 
     def test_pairing_is_by_first_line_with_the_id_tag_stripped(self):
         base = "- the same first line\n  old second line\n"

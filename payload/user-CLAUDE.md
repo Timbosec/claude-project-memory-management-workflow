@@ -127,6 +127,13 @@
   reach** — before asserting what the user would SEE, check what else already handles the case; a
   true structural finding can propagate to nothing.
   → `[existence-vs-magnitude]`
+- **Before scoping a fix to a report's own example, measure how far the underlying cause
+  actually reaches.** A report names one instance; the shared cause behind it is a separate,
+  unmeasured question, and the report's own boundary is not evidence of the cause's boundary. A
+  cheap check before finalizing the fix — reading the shared code path, or sweeping for the same
+  category elsewhere in the same document — usually costs the same as fixing only the named
+  instance.
+  → `[measure-reach]`
 - **Write shipped text for the people who will read it, not for the person in the session.**
   Before text leaves for other users (a public repo, published docs, a shared prompt), check every
   route, pointer and piece of history in it: does the reader have what it points at, and does the
