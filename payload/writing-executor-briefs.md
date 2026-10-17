@@ -19,15 +19,17 @@ This file is not auto-loaded, so its length is paid only when it is read.
   limit resets, and scope the resume to the single remaining step.** It keeps context a fresh agent
   would have to re-derive, but it returns with the whole build still in mind, so say what to leave
   alone.
-- Before an executor changes a shared symbol, make it report every caller as its own checkpoint
-  — an audit, not a gate; what a plan omits is where the surprises are. **Verify the remedy
-  separately from the findings** — run the proposed fix against the failing case; correct facts
-  routinely carry a fix that misses them.
-  **A caller audit finds what INVOKES a symbol; it cannot find what depends on what the symbol's
-  answers MEAN.** Scope by where the fact is expressed or re-derived, not by what calls it: a site
-  that reconstructs a value's significance is a consumer even when it never names your symbol. The
-  question that finds them is "what does this change make newly true, and who already answers that
-  question for themselves?" (The boundary: caller scope answers reach, never meaning.)
+- **Before an executor changes a shared symbol, make it report every caller as its own checkpoint.**
+  It is an audit, not a gate: what a plan omits is where the surprises are.
+- **When findings come with a proposed fix, from an audit, a review or your own investigation,
+  verify the fix separately from the findings:** run it against the failing case. Correct findings
+  routinely come with a fix that misses them.
+- **When a shared symbol changes, also find what depends on what its answers mean; a caller audit
+  cannot.** Callers show how far a change reaches, never what it means to the code relying on it.
+  Scope this search by where the fact is expressed or re-derived, not by what calls the symbol: a
+  site that reconstructs a value's significance is a consumer even when it never names your symbol.
+  The question that finds them is "what does this change make newly true, and who already answers
+  that question for themselves?"
 - **Briefing a sub-agent that will add or change tests, or accepting its tests:** load the
   `proving-tests-can-fail` skill first. It holds the rules on proving a test can fail; spell out
   in the brief the ones the sub-agent must follow, rather than relying on it to load the skill.
