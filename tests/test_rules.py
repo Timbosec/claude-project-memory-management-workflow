@@ -149,8 +149,8 @@ class RealRulesToRaiseTest(unittest.TestCase):
         # reworded as end-of-turn-text; its first line differs, so it pairs with nothing and shows
         # as new beside the old bullet's removal. Five rules were since trimmed to their
         # instructions; their first lines are unchanged, so each pairs with its old bullet. The
-        # self-carrying-sentences rule was then reworded from its first line, so it shows as new
-        # beside the old bullet's removal, like the panel rule.
+        # self-carrying-sentences and observable-vs-inferred rules were then reworded from their
+        # first lines, so each shows as new beside its old bullet's removal, like the panel rule.
         base = fixture_text("user-CLAUDE-4ac01a8.md")
         self.assertEqual({rid for rid, _ in install.split_rules(base)} - {None},
                          {"one-decision-at-a-time", "rule-into-code", "second-real-example"})
@@ -159,14 +159,16 @@ class RealRulesToRaiseTest(unittest.TestCase):
                          [("executor-briefs-home", "changed"), ("lesson-routing", "changed"),
                           ("search-silence", "changed"),
                           ("end-of-turn-text", "new"), ("self-carrying-sentences", "new"),
-                          ("observable-vs-inferred", "changed"),
+                          ("observable-vs-inferred", "new"),
                           ("second-real-example", "changed"),
                           ("existence-vs-magnitude", "changed"),
                           ("measure-reach", "new"),
-                          (None, "removed"), (None, "removed"), (None, "removed")])
+                          (None, "removed"), (None, "removed"), (None, "removed"),
+                          (None, "removed")])
         self.assertTrue(items[9]["old"].startswith("- Never call a blocking-panel tool"))
         self.assertTrue(items[10]["old"].startswith("- **Write the sentence so it carries"))
-        self.assertTrue(items[11]["old"].startswith("- **A broken instrument's reading"))
+        self.assertTrue(items[11]["old"].startswith("- When introspecting on your own behaviour"))
+        self.assertTrue(items[12]["old"].startswith("- **A broken instrument's reading"))
 
     def test_the_version_before_the_shipped_text_rule_raises_exactly_that_rule(self):
         items = install.rules_to_raise(fixture_text("user-CLAUDE-a6c5979.md"),
@@ -175,12 +177,12 @@ class RealRulesToRaiseTest(unittest.TestCase):
                          [("executor-briefs-home", "changed"), ("lesson-routing", "changed"),
                           ("search-silence", "changed"),
                           ("end-of-turn-text", "new"), ("self-carrying-sentences", "new"),
-                          ("observable-vs-inferred", "changed"),
+                          ("observable-vs-inferred", "new"),
                           ("second-real-example", "changed"),
                           ("existence-vs-magnitude", "changed"),
                           ("measure-reach", "new"),
                           ("write-for-readers", "new"), (None, "removed"), (None, "removed"),
-                          (None, "removed")])
+                          (None, "removed"), (None, "removed")])
         self.assertIsNone(items[9]["old"])
         self.assertTrue(items[9]["new"].startswith("- **Write shipped text for the people"))
         self.assertTrue(items[9]["first_line"].startswith("- **Write shipped text"))
@@ -279,25 +281,27 @@ class IdlessBaseTest(unittest.TestCase):
 
     def test_a_reworded_rule_pairs_with_its_earlier_version_in_the_real_old_base(self):
         # f596cd7 predates the shipped-text rule and the current wording of the
-        # observable-vs-inferred rule, whose first line is unchanged, so it pairs as changed.
-        # The self-carrying-sentences rule's first line changed, so it shows as new beside the
-        # old bullet's removal.
+        # second-real-example rule, whose first line is unchanged, so it pairs as changed.
+        # The self-carrying-sentences and observable-vs-inferred rules' first lines changed, so
+        # each shows as new beside its old bullet's removal.
         base = fixture_text("user-CLAUDE-f596cd7.md")
         items = install.rules_to_raise(base, shipped_text(), {})
         self.assertEqual([(i["id"], i["status"]) for i in items],
                          [("executor-briefs-home", "changed"), ("lesson-routing", "changed"),
                           ("search-silence", "changed"),
                           ("end-of-turn-text", "new"), ("self-carrying-sentences", "new"),
-                          ("observable-vs-inferred", "changed"),
+                          ("observable-vs-inferred", "new"),
                           ("second-real-example", "changed"),
                           ("existence-vs-magnitude", "changed"),
                           ("measure-reach", "new"),
                           ("write-for-readers", "new"), (None, "removed"), (None, "removed"),
-                          (None, "removed")])
-        changed = items[5]
-        self.assertEqual(changed["id"], "observable-vs-inferred")
-        self.assertTrue(changed["old"].startswith("- When introspecting on your own behaviour"))
+                          (None, "removed"), (None, "removed")])
+        changed = items[6]
+        self.assertEqual(changed["id"], "second-real-example")
+        self.assertTrue(changed["old"].startswith("- Before a fix or lesson becomes a standing"))
         self.assertNotEqual(changed["old"], changed["new"])
+        self.assertIsNone(items[5]["old"])
+        self.assertTrue(items[12]["old"].startswith("- When introspecting on your own behaviour"))
         self.assertIsNone(items[9]["old"])
 
     def test_pairing_is_by_first_line_with_the_id_tag_stripped(self):

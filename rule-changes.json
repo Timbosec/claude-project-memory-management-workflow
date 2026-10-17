@@ -109,6 +109,10 @@
       {
         "sha256": "2b88162d9e60bbe95e5cbbff5772c70b883f33b23e6e9cfcdb9269797af68f95",
         "note": "The method for testing a rule's wording on a fresh agent moved to writing-standing-docs.md, where rule writing is covered; this rule keeps \"test it instead\" with an example that is not about docs. Agents acted the same in the same test scenarios."
+      },
+      {
+        "sha256": "8a392d986faf9c71fe180a480907ae43c48a220c6c5cb97162b90e823799d937",
+        "note": "Reworded in plainer words, and narrowed to its first part: explaining your own behaviour. The parts on explaining how a system or its data works and on picking numbers were removed: real sessions on a current model already did both without the rule. Its opening line changed, so a copy from before rules had IDs shows it as new beside the old rule's removal."
       }
     ],
     "rule-into-code": [
