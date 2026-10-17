@@ -130,7 +130,8 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      amendment to it, not a duplicate entry
    - `~/.claude/writing-standing-docs.md` — **read before writing any approved candidate**;
      it carries the operative rules for editing standing docs and memory bodies
-     (contract-vs-snapshot, canonical-plus-pointers, replace-not-join, audience-referent)
+     (contract-vs-snapshot, canonical-plus-pointers, replace-not-join, audience-referent), and
+     the list a new or reworded rule must pass before it is proposed
 
 3. **Propose each candidate for its own approval — write nothing until the user approves it.**
    Build the list of undocumented decisions/updates from steps 1-2.

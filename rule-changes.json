@@ -81,8 +81,8 @@
         "note": "Shortened: sentences that only explained why the rule matters, not when it applies, were cut. Agents given the old and the new wording acted the same in the same test scenarios."
       },
       {
-        "sha256": "a152ee2e6755969d7c9db48c3e3035212348638079dc8590a9165650e86fea54",
-        "note": "Reworded so its opening says when it applies (anything the user will read), with plain words in place of \"coinage\" and \"minted\". Agents given the old and the new wording acted the same in the same test scenarios."
+        "sha256": "8b4415415cfe33ae0b71e8021e50d701337b3591ae3d9bdda982120ddd7b4514",
+        "note": "Reworded so its opening says when it applies (what the agent tells the user, not docs it writes), with plain words in place of \"coinage\" and \"minted\". Agents given the old and the new wording acted the same in the same test scenarios."
       }
     ],
     "observable-vs-inferred": [
@@ -175,8 +175,8 @@
         "note": "Rules based on a single incident removed, as the routing rule requires."
       },
       {
-        "sha256": "069777b7d3714e9ff5154eb606545e4735aab7c2c92c3c3ec6b47a3e17404805",
-        "note": "The cold-test rule gains the method moved from the user-level rules file: have a fresh agent act on a wording, never ask it whether the wording is clear."
+        "sha256": "11d8e6ea40c8fcbed76e1a04b5974fef40344bdb200b20397cb517d37f2126f9",
+        "note": "The cold-test rule gains the method moved from the user-level rules file: have a fresh agent act on a wording, never ask it whether the wording is clear. A new closing section lists what a new or reworded rule must pass before it is proposed: its opening names the situation, it does one job in the right place, nothing in it goes out of date, and it contradicts no other rule."
       }
     ],
     "writing-executor-briefs.md": [
@@ -267,6 +267,10 @@
       {
         "sha256": "c8e83a5396f7d7c2fc4b64190e30baaea92984ee081c3655527a468dc90f5f0b",
         "note": "Step 5 asks for a response to each item the budget report lists as bookkeeping: move it out of the always-loaded file, or say why it stays."
+      },
+      {
+        "sha256": "5c61a6ec8e24aba7cdbfa3e7938481266d275fc7c5734d54c7db107f4ba5e3a0",
+        "note": "Step 2 also points at the list in writing-standing-docs.md that a new or reworded rule must pass before it is proposed."
       }
     ],
     "skills/bootstrap-project/SKILL.md": [
@@ -325,6 +329,10 @@
       {
         "sha256": "00b998ae073f3d9ac67da9b6afaaa9eab8ffdbff15570d12d9b55e7a0095768b",
         "note": "Part 1 adds a rule-by-rule pass over both CLAUDE.md files: where each rule should load, which sentences are only reasons or bookkeeping and can go, and a check of each trim before it is proposed."
+      },
+      {
+        "sha256": "46805b2ab266d01080a3f2cccfee3ccb23fe256cccc40c99ab39c4c177d0652f",
+        "note": "The rule-by-rule pass checks each rule against the list in writing-standing-docs.md instead of its own, and no longer tells the reviewer to cut the short reasons that say what a rule protects."
       }
     ],
     "hooks/remind_finalise.py": [

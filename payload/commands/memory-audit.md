@@ -78,7 +78,8 @@ prefix with `./` or use `--`.
 - Verify every command/path/skill-name actually exists and works (test one).
 - Flag rules that contradict the current code or skills.
 - Trim persona/vague lines: not "zero effect," but they dilute adherence and cost
-  context — keep only concrete, verifiable instructions.
+  context — keep concrete, verifiable instructions and the short reasons that say what they
+  protect.
 - **Judge a trim by WHERE the file loads, not by its size.** Only the always-loaded surfaces
   (both CLAUDE.mds and MEMORY.md) cost context every session; the other rule homes load on
   demand, so bytes cut from them reclaim none of that budget — judge those on whether the rule
@@ -87,15 +88,10 @@ prefix with `./` or use `--`.
 - A rule that duplicates one in another home is the same defect as a duplicate memory —
   resolve to one canonical home and leave a pointer, per canonical-plus-pointers.
 - **Go through both CLAUDE.mds rule by rule**, since they load every session. For each rule:
-  1. **Where it should load.** Every session, if it can matter in most sessions; only for some
-     tasks, by moving it to a `.claude/rules/` file with `paths` frontmatter (it loads when a
-     matching file is read or edited) or to a skill; or as a hook, if it must hold every time
-     and code can check it (`rule-into-code`).
-  2. **What each sentence does.** Label it: instruction, trigger (when the rule applies),
-     example, reason, or bookkeeping (dates, case notes, maturity tags). Bookkeeping moves to
-     the project's decision log or the lesson ledger's origin log. Draft a trim that cuts the
-     reasons that don't say when the rule applies, and keep everything else.
-  3. **Check the trim before proposing it.** Give a fresh agent the old and new wording and ask
+  1. **Check it against the list** in `~/.claude/writing-standing-docs.md`, "Before a new or
+     reworded rule goes in", and draft a change for each line it fails: a move, a cut or a
+     rewording.
+  2. **Check the draft before proposing it.** Give a fresh agent the old and new wording and ask
      it to list every instruction, condition, scope qualifier, trigger or example the new one
      drops or weakens. Run that twice, then put back whatever sets where the rule applies.
      Where the cut sentences are reasons that might help an agent handle cases the rule doesn't
@@ -104,7 +100,8 @@ prefix with `./` or use `--`.
      each run three times with each wording, then compared by an agent that sees only the
      answers. A match covers only those scenarios. Run fresh agents as
      `~/.claude/doc-test-probes.md` describes at its top.
-  A rule with nothing to move or cut needs no decision: list it as checked.
+     Then run the list's cold read on the new wording.
+  A rule that passes every line needs no decision: list it as checked.
 
 ### Part 2 — Auto-memory audit (MEMORY.md + every topic file)
 
@@ -249,7 +246,7 @@ If a probe surfaces wrong/conflicting memory, that entry is a deletion candidate
 - Conflicts resolved: which won and why (cite the code/skill checked)
 - CLAUDE.md edits (incl. decisions.md pointer)
 - Rule-home edits: which home, which rule, and whether it was trimmed, moved or de-duplicated
-- The CLAUDE.md rule-by-rule pass: for each rule, where it should load, the proposed trim and
+- The CLAUDE.md rule-by-rule pass: for each rule, the lines it failed, the proposed change and
   what the checks found, with a recommendation. Take these with the user one rule at a time.
 - Ledger outcomes: each waiting candidate → promoted (naming the second case) / still waiting /
   retired; plus every rule whose "Provisional" marker was resolved or left standing

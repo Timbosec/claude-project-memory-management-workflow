@@ -47,3 +47,34 @@ there.
   approving itself. After any such pass, verify every second-person pronoun still
   resolves to the agent. → `[audience-referent]`
 
+## Before a new or reworded rule goes in
+
+Check the rule against each line and fix what fails before proposing it. The same list is what
+`/memory-audit` checks existing rules against.
+
+- **Its opening names the situation it covers, not only a fact about it**, so a reader who
+  stops after the first sentence knows when it applies. The action can imply the situation
+  ("Default to a high-level answer" covers every answer); it needs no "When ..." clause. For a
+  skill, the description says what it does and when to use it.
+- **Claude wouldn't do it without the rule.** If Claude already behaves this way, or could read
+  the fact from the code, cut the rule or, if it must hold every time, make it a hook.
+- **It doesn't repeat itself, explain what Claude already knows, or carry bookkeeping.** Dates,
+  case notes and maturity tags go to the origin log. A short reason that says what the rule
+  protects stays: Claude generalises from it. A clause saying how to carry the rule out is not
+  repetition, and a rule that has no reason needs none added.
+- **It does one job, in the place that loads when it's needed:** `CLAUDE.md` if it matters in
+  most sessions, a `.claude/rules/` file with `paths` if only for some files, a skill if only for
+  some tasks, a hook if it must hold every time and code can check it.
+- **Nothing in it goes out of date:** no fact about the tool or model that a later version could
+  change, and no wording tied to a date or to "now", such as "the new API" or "currently". Where it
+  rests on how a model or client behaves, record the model and version it was checked on beside
+  its probe in `~/.claude/doc-test-probes.md`, never in the rule.
+- **Its standing matches its evidence**, as the routing rule in `~/.claude/CLAUDE.md` sets out.
+- **It contradicts no other rule** in `CLAUDE.md` or the rule files, and none of the guidance
+  Claude Code adds on its own, such as its commit instructions.
+- **Each thing the file names keeps one name throughout:** a defined term, a file, a tool or a
+  step. Ordinary words can vary.
+
+Then give a fresh agent only the rule and ask it when the rule applies and what it would do, as
+the cold-test rule above describes. An answer that misses the situation or the action means the
+opening or a term needs work.
