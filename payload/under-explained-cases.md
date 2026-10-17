@@ -1,10 +1,10 @@
 # Under-explained cases — evidence log
 
 Real instances where the user had to ask what something meant. Evidence for the
-`~/.claude/CLAUDE.md` § Working rules bullet **"Write the sentence so it carries its own
-meaning; keep the symbol as a trailing pointer, not the carrier of the fact."**
+`~/.claude/CLAUDE.md` § Working rules rule with the ID `self-carrying-sentences`: in what you
+tell the user, say what a thing does, not only what it is called.
 
-**Why this file exists.** A clarity rule tested only against sentences the agent wrote to test
+**Why this file exists.** A rule like that tested only against sentences the agent wrote to test
 it passes them and says little about real use. These captured cases, real moments where the user
 was confused, are the corpus the rule is evaluated against.
 

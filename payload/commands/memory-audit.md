@@ -25,7 +25,7 @@ User-scope rule homes — standing rules, and they go stale like any other doc:
   - ~/.claude/writing-executor-briefs.md (the agent briefing an executor or verifying it)
   ~/.claude/CLAUDE.md appears twice on purpose — audited as an instruction file above, and as
   a rule home here. The actor test that assigns a rule to one of these is stated in `/finalise`
-  step 2 (`~/.claude/skills/finalise/SKILL.md`, "who's the actor?"); apply it from there, don't
+  step 1 (`~/.claude/skills/finalise/SKILL.md`, "who's the actor?"); apply it from there, don't
   re-derive it.
 Lesson ledgers — NOT rule homes; nothing in them is in force. Audit per Part 2.6, not Part 2:
   - ~/.claude/lesson-candidates.md    (first cases awaiting a second; origin logs of promoted rules)
@@ -52,8 +52,6 @@ defects found in them. Editing them would resolve a conflict by rewriting the so
 instead of the copy, and would bypass the reference's own gates (test runs after a constant
 changes, completeness checks).
 Out of scope entirely: unrelated projects.
-Read files directly with the Read tool. (`/memory` only lists loaded files; it
-can't open auto-memory topic files for you.)
 Before editing any of the above, read `~/.claude/writing-standing-docs.md` — it carries the
 operative rules for this work (contract-vs-snapshot, canonical-plus-pointers, replace-not-join,
 audience-referent).
@@ -100,7 +98,7 @@ prefix with `./` or use `--`.
      each run three times with each wording, then compared by an agent that sees only the
      answers. A match covers only those scenarios. Run fresh agents as
      `~/.claude/doc-test-probes.md` describes at its top.
-     Then run the list's cold read on the new wording.
+     Then run the list's cold test on the new wording.
   A rule that passes every line needs no decision: list it as checked.
 
 ### Part 2 — Auto-memory audit (MEMORY.md + every topic file)

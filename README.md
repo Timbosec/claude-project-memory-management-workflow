@@ -17,22 +17,24 @@ Nothing historical ships with it: every ledger, log and backlog starts empty.
 2. **Pick up work.** Run `/next`. It reads the "Next up" recommendation at the top of
    `backlog.md` and stops for you to choose. Once you've picked an item, it drafts a plan or a
    brief for a sub-agent, and waits for your approval before touching any file.
-3. **Work as normal.** The rule files in `~/.claude` load into every session and shape how Claude
-   plans, briefs sub-agents, edits docs and reports back. If you've installed the optional guard,
+3. **Work as normal.** `~/.claude/CLAUDE.md` loads into every session and shapes how Claude
+   reports back. It points Claude to the rule files it reads when it plans, briefs sub-agents or
+   edits docs. If you've installed the optional guard,
    a sub-agent can't edit the project's record files (`CLAUDE.md`, `backlog.md`, `decisions.md`,
    memory). After each `git commit`, a hook reminds Claude to run `/finalise` before the session
    ends.
 4. **Close the session.** Run `/finalise` (or `/finalize`) before `/clear`. It sweeps the
    conversation for decisions, fixes and lessons that exist only in the chat and proposes a home
-   for each, one approval at a time. It then moves any loose work into `backlog.md`, runs integrity checks, and
-   rewrites "Next up" so the next session's `/next` starts from it.
+   for each, one approval at a time. It then moves any loose work into `backlog.md`, runs
+   integrity checks, and rewrites "Next up" so the next session's `/next` starts from it.
 5. **Audit occasionally.** Run `/memory-audit` from time to time. It checks the rule files, both
    `CLAUDE.md`s and memory against each other for contradictions, duplication and staleness. It
    shows you the whole plan before changing anything.
 
 ## How a lesson becomes a rule
 
-`~/.claude/CLAUDE.md` and the rule files beside it load into every session on the machine.
+`~/.claude/CLAUDE.md` loads into every session on the machine, and the rule files beside it apply
+in every project.
 Everything else, the backlog, decision log, project `CLAUDE.md`, memory and project ledger, stays
 in its own project. A lesson seen once goes into a ledger (the project's, or the global
 `~/.claude/lesson-candidates.md`), not into a rule. It becomes a standing rule only when a second,

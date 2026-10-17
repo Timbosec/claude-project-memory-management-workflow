@@ -55,7 +55,8 @@ nothing, the same failure as a "provisional" note on a rule.
 
 **What a test looks like where one does exist.** A fixed setup that puts the claim in front of
 something able to prove it wrong, written down before the answer is known. The worked example is
-the harness for the clarity rule in `~/.claude/under-explained-cases.md`:
+the harness in `~/.claude/under-explained-cases.md` for the rule with the ID
+`self-carrying-sentences`:
 
     - a prompt template composed BEFORE any case had been collected, so a later author who
       has read the answers cannot shape it around them;

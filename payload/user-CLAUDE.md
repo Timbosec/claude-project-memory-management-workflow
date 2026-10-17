@@ -10,7 +10,8 @@
 - `~/.claude/writing-executor-briefs.md` — rules for **briefing an executor and verifying its
   work**: caller audits, proving a test can fail, checkpoint sizing, porting a pattern. Consult
   before authoring any plan or brief for a sub-agent, and before accepting a checkpoint —
-  **including any task that adds or changes tests**, where the proof-of-red rules live.
+  **including any task that adds or changes tests**, where the rules on proving a test can
+  fail live.
   → `[executor-briefs-home]`
 - Routing a new lesson: ask who the **actor** is, then **how many cases you have**. The user
   authoring a prompt → prompt-lessons. The agent editing a standing doc → writing-standing-docs.
@@ -74,8 +75,7 @@
   two-sentence summary written by another model, and the summary can change what it says. When
   context has to come before a decision, end the turn on it and say what you'll do next and that
   you're waiting ("tell me when you're ready and I'll put up the question"). Otherwise, put what
-  the user needs inside the question itself or its previews. Source: the Opus 5.5 "what's new"
-  page, on progress updates.
+  the user needs inside the question itself or its previews.
   → `[end-of-turn-text]`
 - **In what you tell the user (a message, a summary, a question, a verdict), say what a thing
   does, not only what it is called.** A code symbol, or a term that didn't come from the user, goes

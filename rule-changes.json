@@ -21,6 +21,10 @@
       {
         "sha256": "81a45e5dd53b2ab2a1bdd21a3f55953a59731bd25410cf97cdfcd901f4e29e51",
         "note": "No longer lists \"pinned expectations\". That rule was removed from `writing-executor-briefs.md` because it rested on a single incident, and the routing rule says one case does not make a rule."
+      },
+      {
+        "sha256": "60a4f9308006be618f8fa71b531360be4b7dd458637a03e4969573966631adf4",
+        "note": "Names the test rules by what they do (proving a test can fail) in place of \"proof-of-red\", a name the file it points at never uses."
       }
     ],
     "lesson-routing": [
@@ -69,6 +73,10 @@
       {
         "sha256": "99f9a6c7d584018cccdd49459a4b3147d29d095afa41c41839cb32482cdfaac4",
         "note": "Replaces the rule against opening a question panel after prose, whose reason was wrong. Text written before any tool call, not only a question panel, reaches the user as another model's short summary, which can change its meaning, so anything they must read goes in the text that ends the turn."
+      },
+      {
+        "sha256": "d6d747d669df43f16aa5d455de8a1e65e585490dbca0d1daa5139634b09d8190",
+        "note": "Drops the sentence naming the model the rule was checked on; that record belongs beside its probe in doc-test-probes.md, which has it."
       }
     ],
     "self-carrying-sentences": [
@@ -269,8 +277,8 @@
         "note": "Step 5 asks for a response to each item the budget report lists as bookkeeping: move it out of the always-loaded file, or say why it stays."
       },
       {
-        "sha256": "5c61a6ec8e24aba7cdbfa3e7938481266d275fc7c5734d54c7db107f4ba5e3a0",
-        "note": "Step 2 also points at the list in writing-standing-docs.md that a new or reworded rule must pass before it is proposed."
+        "sha256": "8268804246d56c4b13bd1d62aacd1c83b2152eb86ac8d780e086ecd0498c641e",
+        "note": "Step 2 also points at the list in writing-standing-docs.md that a new or reworded rule must pass before it is proposed. Corrected two pointers: the user-level rule on plain wording lets the user's own terms stand (it never exempted project jargon), and the replace-not-join rule lives in writing-standing-docs.md."
       }
     ],
     "skills/bootstrap-project/SKILL.md": [
@@ -319,6 +327,10 @@
       {
         "sha256": "d9065129189047361e0ba4e423a9a7b0882e17a1a87376d43f585810967f621a",
         "note": ""
+      },
+      {
+        "sha256": "b03a4d0fdf848e2565adfcddd1684046381d67de58fd9a9b447e334d88975d1a",
+        "note": "Names the executor-briefs rules by what they cover, in place of \"proof-of-red\", a name that file never uses."
       }
     ],
     "commands/memory-audit.md": [
@@ -331,8 +343,8 @@
         "note": "Part 1 adds a rule-by-rule pass over both CLAUDE.md files: where each rule should load, which sentences are only reasons or bookkeeping and can go, and a check of each trim before it is proposed."
       },
       {
-        "sha256": "46805b2ab266d01080a3f2cccfee3ccb23fe256cccc40c99ab39c4c177d0652f",
-        "note": "The rule-by-rule pass checks each rule against the list in writing-standing-docs.md instead of its own, and no longer tells the reviewer to cut the short reasons that say what a rule protects."
+        "sha256": "24ebbb60032a4bfb76ce6047d97148329ba7865526bb0682f13f86b4b20498d2",
+        "note": "The rule-by-rule pass checks each rule against the list in writing-standing-docs.md instead of its own, and no longer tells the reviewer to cut the short reasons that say what a rule protects. The actor test is cited as /finalise step 1 (it said step 2), the checklist's last step is called the cold test as that file calls it, and a line about /memory that no longer matched Claude Code was cut."
       }
     ],
     "hooks/remind_finalise.py": [
@@ -355,12 +367,20 @@
       {
         "sha256": "aa1d437f9df7ef88ae28c03267db8d425df9ca457416c8bd76e1986d191efcee",
         "note": "The ledger template gains a field recording a severity ruling, for a rule promoted on one case."
+      },
+      {
+        "sha256": "15e3993f44ba534eb86fc931d54f35ebc2301b52e917b2ff0ae6d2ae0f826524",
+        "note": "Names the rule the harness tests by its ID, self-carrying-sentences, not \"the clarity rule\"."
       }
     ],
     "under-explained-cases.md": [
       {
         "sha256": "b25b958754af035006a99655c59ef78c1c5853ad3f75011fd556259dcb1ed215",
         "note": ""
+      },
+      {
+        "sha256": "bfa1a925ca030484051dd53183a25f1969529d687005b956ab82bbe4376887e1",
+        "note": "Names the rule this log serves by its ID and current wording; it quoted the rule's old opening."
       }
     ],
     "hooks/block_subagent_record_edit.py": [

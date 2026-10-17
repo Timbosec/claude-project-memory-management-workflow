@@ -167,8 +167,8 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      numbers, keys, filenames, function and column names from your own sentence; if what
      is left no longer says what goes wrong, the identifiers were carrying the meaning and the
      line needs rewriting. Keep them as trailing pointers, never as the subject. **This is
-     stricter than `~/.claude/CLAUDE.md`'s general version, which exempts project jargon** —
-     that exemption assumes a reader holding the session in mind, and at session close the user
+     stricter than `~/.claude/CLAUDE.md`'s general version, which lets the user's own terms
+     stand** — that assumes a reader holding the session in mind, and at session close the user
      is triaging a queue drawn from hours of work. Brief and high-level beats precise and dense;
      the exact wording sits in the preview pane either way.
 
@@ -200,8 +200,8 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      file + index line per the memory-writing convention), commit it if it's not a
      memory-directory write (see the commit note above), then move to the next candidate. When
      updating any standing doc, re-read the
-     enclosing section afterwards and remove wording the new text supersedes (prompt-lessons
-     `replace-not-join`).
+     enclosing section afterwards and remove wording the new text supersedes
+     (`writing-standing-docs.md`, "Superseding text must replace, not join").
    - If rejected: skip it — don't write it anywhere, don't log the rejection, just move on.
    - If there are zero candidates, say so and skip straight to step 4.
 
