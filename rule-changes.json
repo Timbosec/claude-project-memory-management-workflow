@@ -23,8 +23,8 @@
         "note": "No longer lists \"pinned expectations\". That rule was removed from `writing-executor-briefs.md` because it rested on a single incident, and the routing rule says one case does not make a rule."
       },
       {
-        "sha256": "60a4f9308006be618f8fa71b531360be4b7dd458637a03e4969573966631adf4",
-        "note": "Names the test rules by what they do (proving a test can fail) in place of \"proof-of-red\", a name the file it points at never uses."
+        "sha256": "7cd342a7cf5cc69de1e6061eb8a7eb32a4577fd422bab02f5b21318e15cae003",
+        "note": "No longer sends test work to writing-executor-briefs.md: the rules on proving a test can fail moved to the proving-tests-can-fail skill, which loads itself when tests are added or changed."
       }
     ],
     "lesson-routing": [
@@ -197,8 +197,8 @@
         "note": "Rules based on a single incident removed, as the routing rule requires. Three stay even so, because an executor uses them at every checkpoint, where a repeat would cost too much to wait for a second case. All three are about showing that a new test really catches the bug it was written for, rather than passing whatever the code does: if the fix changed how a function is called, undoing it makes the test crash rather than fail, which proves nothing, so put the old behaviour back behind the new call instead; undo only the change being tested, not the whole file, so a failure has one possible cause; and when the test covers code that already worked, so there is no fix to undo, break the code deliberately and check the test fails."
       },
       {
-        "sha256": "1975b16a3340f2f9b3c59200580612692d371be91ef05e2ef88c742c31fb43f9",
-        "note": "The rule on proving a test can fail now opens by saying when it applies (any passing test taken as evidence), suggests writing the test before the fix, and says a deliberate break that doesn't change what the code does can't be caught by any test."
+        "sha256": "6709b5dc22b6ffe117905eed1f98f5e44fccadc9777479c6aa14473a42df9812",
+        "note": "The rules on proving a test can fail moved to the new proving-tests-can-fail skill, split into seven rules that each open on when they apply; this file keeps a pointer for briefing a sub-agent that writes tests."
       }
     ],
     "doc-test-probes.md": [
@@ -333,8 +333,8 @@
         "note": ""
       },
       {
-        "sha256": "b03a4d0fdf848e2565adfcddd1684046381d67de58fd9a9b447e334d88975d1a",
-        "note": "Names the executor-briefs rules by what they cover, in place of \"proof-of-red\", a name that file never uses."
+        "sha256": "03cc14758c7fa2182535266b1460bd8339dfe3e5851c07f4f36a557d30eef7be",
+        "note": "No longer names the test rules among what writing-executor-briefs.md holds; they moved to the proving-tests-can-fail skill."
       }
     ],
     "commands/memory-audit.md": [
@@ -407,8 +407,14 @@
     ],
     "rules/tests.md": [
       {
-        "sha256": "5729bbd12714af81daf2b6077801829c963d7cb593d1d8003b0c1ae38995f7b3",
-        "note": "New: loads a pointer to writing-executor-briefs.md whenever Claude reads or edits a test file in the session's project, so its rules on proving a new test can fail are read without relying on the CLAUDE.md pointer alone."
+        "sha256": "bed4f2c8371ec3c89d4c5e6887ac82ffccdc5f69bc171e01e1ab16aa66374441",
+        "note": "Loads when Claude opens a test file and tells it to load the proving-tests-can-fail skill."
+      }
+    ],
+    "skills/proving-tests-can-fail/SKILL.md": [
+      {
+        "sha256": "ceca660cfb789173a61bd609dca5ebffcf5b6099a86800509d5d00e69fb36e23",
+        "note": "New skill: the rules on proving a test can fail before trusting it (write the test first, revert only the fix, break working code on purpose to check new tests). Claude loads it when adding or changing tests; in tests it loaded every time, including when the request never mentioned tests."
       }
     ]
   }

@@ -8,5 +8,4 @@ paths:
   - "**/tests/**"
   - "**/test/**"
 ---
-Adding or changing tests: first read `~/.claude/writing-executor-briefs.md` and apply its
-rules on proving that a new test can fail.
+Adding or changing tests: first load the `proving-tests-can-fail` skill.

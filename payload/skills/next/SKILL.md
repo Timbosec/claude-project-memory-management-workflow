@@ -21,7 +21,7 @@ description: Surfaces the recommended next backlog item (from backlog.md's "Next
    off the Open list entirely.
 4. Once an item is chosen:
    - **Code-writing work**: read `~/.claude/writing-executor-briefs.md` in full before drafting
-     anything — its rules on checkpoint sizing, caller audits and proving a test can fail can change
+     anything — its rules on checkpoint sizing and caller audits can change
      independently of this skill, so read it fresh rather than trusting a summary here. If the
      project's `CLAUDE.md` has rules for how hard to verify a change or how execution is
      delegated, follow them. Planning stays in this session.

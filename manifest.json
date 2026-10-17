@@ -170,6 +170,13 @@
       "executable": false
     },
     {
+      "source": "payload/skills/proving-tests-can-fail/SKILL.md",
+      "target": "skills/proving-tests-can-fail/SKILL.md",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
       "source": "payload/commands/memory-audit.md",
       "target": "commands/memory-audit.md",
       "kind": "owned",
