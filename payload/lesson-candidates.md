@@ -45,7 +45,7 @@ Capture of a *candidate* needs no approval; it records an observation, not an in
     - What a second case would need to show: <including the opposite direction, which
       bounds the claim rather than supporting it>
     - Would live in: <prompt-lessons | writing-standing-docs | writing-executor-briefs |
-      CLAUDE.md Working rules>  (per the actor test)
+      proving-tests-can-fail skill | CLAUDE.md Working rules>  (per the actor test)
     - Status: awaiting a second contrasting case
 
 **Most candidates have no test, and that is normal.** They are settled by a second real case

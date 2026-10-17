@@ -21,14 +21,14 @@ updates that are needed before clearing context.
 **Every file this skill writes gets committed immediately, not batched at the end — write and
 commit together, at each step below that writes something.** Two repos are in play: `<project
 root>` (decisions.md, backlog.md) and `~/.claude` (CLAUDE.md, prompt-lessons.md,
-writing-standing-docs.md, writing-executor-briefs.md, lesson-candidates.md,
-under-explained-cases.md). Commit in whichever repo the file lives in. **Ask before pushing
-either repo, unless a `CLAUDE.md` explicitly pre-authorizes routine pushes of it — the project's
-for `<project root>`, the project's or the user-level `~/.claude/CLAUDE.md` for `~/.claude` —
-then push and say so in step 7.** Never infer it from anything else (a past push, a memory note, a
-decision log): it's a per-machine decision the user makes explicitly, and `CLAUDE.md` is where
-it is loaded as an instruction. A push can't be scoped to one subdirectory either (it sends the
-whole branch), which is a second reason a `~/.claude` push needs that explicit say-so.
+writing-standing-docs.md, writing-executor-briefs.md, skills/proving-tests-can-fail/SKILL.md,
+lesson-candidates.md, under-explained-cases.md). Commit in whichever repo the file lives in.
+**Ask before pushing either repo, unless a `CLAUDE.md` explicitly pre-authorizes routine pushes of
+it — the project's for `<project root>`, the project's or the user-level `~/.claude/CLAUDE.md` for
+`~/.claude` — then push and say so in step 7.** Never infer it from anything else (a past push, a
+memory note, a decision log): it's a per-machine decision the user makes explicitly, and `CLAUDE.md`
+is where it is loaded as an instruction. A push can't be scoped to one subdirectory either (it sends
+the whole branch), which is a second reason a `~/.claude` push needs that explicit say-so.
 **Either may not be a git repo.** Where `<project root>` or `~/.claude` isn't one, its writes are
 saved to disk but not committed: say so once and carry on. Never offer to initialise a repo.
 
@@ -94,11 +94,12 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      projects' ledgers, potentially in a very different discipline — a vague symptom description
      risks a false match on wording alone where the two cases don't actually share a mechanism.
      Name what's actually going on.
-     For (a) only, **who's the actor?** — four user-scope homes (`/memory-audit` applies this
+     For (a) only, **who's the actor?** — five user-scope homes (`/memory-audit` applies this
      test from here, so it holds whatever the user's `CLAUDE.md` says): the user authoring a
      prompt/brief → `prompt-lessons.md`; the agent editing a standing doc or memory →
      `~/.claude/writing-standing-docs.md`; the agent briefing an executor or verifying its
-     checkpoint → `~/.claude/writing-executor-briefs.md`; the agent at any other moment →
+     checkpoint → `~/.claude/writing-executor-briefs.md`; the agent proving a test can fail →
+     `~/.claude/skills/proving-tests-can-fail/SKILL.md`; the agent at any other moment →
      `~/.claude/CLAUDE.md` § Working rules. An amendment re-derives its home
      rather than inheriting the home of the rule it extends.
      **Split, don't dual-write** — a candidate can have BOTH a rule-shaped core (global or
@@ -107,7 +108,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      residue to memory/decisions.md with a one-way reference naming the lesson tag (e.g.
      "generalised as prompt-lessons [tag]", or "recorded as a project rule, see CLAUDE.md").
      prompt-lessons.md carries no links to *project* files — its origin log names the project as
-     prose — but it does point to the other three user-scope homes when a rule's operative clause
+     prose — but it does point to the other four user-scope homes when a rule's operative clause
      lives there, with the origin log staying canonical for rationale. Never write the full
      candidate in two homes — that's the restatement-drift the canonical-plus-pointers lesson
      exists to prevent.
@@ -310,9 +311,10 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
   about **the user authoring** a prompt or brief. Doesn't transfer → memory/decisions.md.
   Transfers but governs the agent editing a standing doc → `~/.claude/writing-standing-docs.md`.
   Transfers but governs the agent briefing an executor or verifying its checkpoint →
-  `~/.claude/writing-executor-briefs.md`. Transfers and governs the agent at any other moment →
-  `~/.claude/CLAUDE.md` § Working rules. (All four user-scope files are written ONLY on the
-  user's explicit approval, same as every other candidate.)
+  `~/.claude/writing-executor-briefs.md`. Transfers but governs the agent proving a test can fail
+  → `~/.claude/skills/proving-tests-can-fail/SKILL.md`. Transfers and governs the agent at any
+  other moment → `~/.claude/CLAUDE.md` § Working rules. (All five user-scope files are written ONLY
+  on the user's explicit approval, same as every other candidate.)
 
 ## Scope
 

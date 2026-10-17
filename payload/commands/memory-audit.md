@@ -23,6 +23,7 @@ User-scope rule homes — standing rules, and they go stale like any other doc:
   - ~/.claude/prompt-lessons.md          (the user authoring a prompt or brief)
   - ~/.claude/writing-standing-docs.md   (the agent editing a standing doc or memory)
   - ~/.claude/writing-executor-briefs.md (the agent briefing an executor or verifying it)
+  - ~/.claude/skills/proving-tests-can-fail/SKILL.md (the agent proving a test can fail)
   ~/.claude/CLAUDE.md appears twice on purpose — audited as an instruction file above, and as
   a rule home here. The actor test that assigns a rule to one of these is stated in `/finalise`
   step 1 (`~/.claude/skills/finalise/SKILL.md`, "who's the actor?"); apply it from there, don't
@@ -72,7 +73,7 @@ prefix with `./` or use `--`.
    files, which unverified claims) so a later "continue" run resumes from that list
    deterministically instead of reconstructing the queue from backups/git/mtimes.
 
-### Part 1 — Instruction-file review (both CLAUDE.mds + the other three rule homes)
+### Part 1 — Instruction-file review (both CLAUDE.mds + the other four rule homes)
 - Verify every command/path/skill-name actually exists and works (test one).
 - Flag rules that contradict the current code or skills.
 - Trim persona/vague lines: not "zero effect," but they dilute adherence and cost

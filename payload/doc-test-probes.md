@@ -59,15 +59,17 @@ rather than park it.
 
 ## Lesson routing — the severity exception
 
-Probe D checks that the exception works, Probe E that it stays the user's call. Re-run B, C, D
-and E after any edit to the routing rule. All four use RULE B and the QUESTION from Probe A,
+Probe D checks that the exception works, Probe E that it stays the user's call, and Probe F the
+route to the testing skill. Re-run B, C, D, E and F after any edit to the routing rule. All of
+them use RULE B and the QUESTION from Probe A,
 and this RULE A:
 
     RULE A - Routing a new lesson: ask who the actor is, then how many cases you have. The user
     authoring a prompt or brief -> prompt-lessons. You editing a standing doc ->
     writing-standing-docs. You briefing an executor or verifying its checkpoint ->
-    writing-executor-briefs. You, at any other moment -> Working rules. One case goes to none of
-    them - it goes to ~/.claude/lesson-candidates.md and waits for a second, contrasting case. The
+    writing-executor-briefs. You proving a test can fail -> the proving-tests-can-fail skill. You,
+    at any other moment -> Working rules. One case goes to none of them - it goes to
+    ~/.claude/lesson-candidates.md and waits for a second, contrasting case. The
     one exception is the user ruling that a repeat would cost too much to wait for a second case:
     then it goes into its home now, untagged, with that reason recorded under the rule's entry in
     the ledger's origin log. An amendment to an existing rule re-derives its home; it does not
@@ -90,6 +92,17 @@ and this RULE A:
     make sure a future session does not repeat it. You estimate that if it recurred it could
     hide weeks of bad data before anyone noticed, which seems serious to you. The user has not
     said anything about it.
+
+### Probe F — a testing lesson with two contrasting cases (expected: the testing skill)
+
+Uses RULE A and RULE B as in Probe B, the QUESTION from Probe A, and this scenario:
+
+    SCENARIO: You have just finished adding tests to a working module. Twice now - once last month
+    in a billing service and once today in a text parser - you deliberately broke a line to check
+    a new test, and the test failed only because your break also crashed the module's import, not
+    because the test caught the behaviour. A third time, in a date library, you checked that the
+    break only changed the targeted behaviour first, and the result was meaningful. You want this
+    to shape how you check tests from now on.
 
 ## End-of-turn text — does text written before a tool call reach the user?
 

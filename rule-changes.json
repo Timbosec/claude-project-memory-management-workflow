@@ -35,6 +35,10 @@
       {
         "sha256": "9ea3820c57004452012539a5e02d7808b04a66f1050db01e88c750538f43b4f4",
         "note": "Adds one exception: a single case the user rules too costly to wait on goes into its home now, untagged, with the reason recorded in the ledger's origin log. The sentence explaining why \"provisional\" tags fail is gone; probes showed routing behaves the same without it."
+      },
+      {
+        "sha256": "afacd8cf028831f775aa218def1dc2a0b0715af3fbfdf45e3130982dd795c115",
+        "note": "Adds the proving-tests-can-fail skill as a fifth home for lessons, for the agent proving a test can fail. Its probes were re-run (B to F, three runs each) and all routed as expected."
       }
     ],
     "search-silence": [
@@ -209,6 +213,10 @@
       {
         "sha256": "5b00a476defc87b705c43b9296ea33b058c752e669beb75de8b423a9a895b5a9",
         "note": "Adds probes for the routing rule's new exception (one checks it works when the user rules a case too costly to wait on, one checks it stays the user's call), and a probe showing whether text written before a tool call still reaches the user only as a summary, with the model and version it was last checked on."
+      },
+      {
+        "sha256": "163fef86478e0ec04111bf480d43a33d8507190c69156e9eeb7a0e379f15e340",
+        "note": "The routing probes carry the rule's new fifth home, and a new Probe F checks that a testing lesson with two contrasting cases routes to the proving-tests-can-fail skill."
       }
     ],
     "skills/finalise/scripts/check_memory_index.py": [
@@ -281,8 +289,8 @@
         "note": "Step 5 asks for a response to each item the budget report lists as bookkeeping: move it out of the always-loaded file, or say why it stays."
       },
       {
-        "sha256": "8268804246d56c4b13bd1d62aacd1c83b2152eb86ac8d780e086ecd0498c641e",
-        "note": "Step 2 also points at the list in writing-standing-docs.md that a new or reworded rule must pass before it is proposed. Corrected two pointers: the user-level rule on plain wording lets the user's own terms stand (it never exempted project jargon), and the replace-not-join rule lives in writing-standing-docs.md."
+        "sha256": "c71b6f66c0a96aa2acc6f6f3f083ea32f070012526284c7c3ed6a8fdb509a902",
+        "note": "Step 2 also points at the list in writing-standing-docs.md that a new or reworded rule must pass before it is proposed. Corrected two pointers: the user-level rule on plain wording lets the user's own terms stand (it never exempted project jargon), and the replace-not-join rule lives in writing-standing-docs.md. Adds the proving-tests-can-fail skill as a fifth home for lessons, for the agent proving a test can fail. The routing test and the list of files it commits name it."
       }
     ],
     "skills/bootstrap-project/SKILL.md": [
@@ -347,8 +355,8 @@
         "note": "Part 1 adds a rule-by-rule pass over both CLAUDE.md files: where each rule should load, which sentences are only reasons or bookkeeping and can go, and a check of each trim before it is proposed."
       },
       {
-        "sha256": "24ebbb60032a4bfb76ce6047d97148329ba7865526bb0682f13f86b4b20498d2",
-        "note": "The rule-by-rule pass checks each rule against the list in writing-standing-docs.md instead of its own, and no longer tells the reviewer to cut the short reasons that say what a rule protects. The actor test is cited as /finalise step 1 (it said step 2), the checklist's last step is called the cold test as that file calls it, and a line about /memory that no longer matched Claude Code was cut."
+        "sha256": "f69c56f3d960546e0a0ab42cf842cf4da339b36d93c9f41ab8fdc5933fd6cde7",
+        "note": "The rule-by-rule pass checks each rule against the list in writing-standing-docs.md instead of its own, and no longer tells the reviewer to cut the short reasons that say what a rule protects. The actor test is cited as /finalise step 1 (it said step 2), the checklist's last step is called the cold test as that file calls it, and a line about /memory that no longer matched Claude Code was cut. Adds the proving-tests-can-fail skill as a fifth home for lessons, for the agent proving a test can fail. The audit's list of rule homes includes it."
       }
     ],
     "hooks/remind_finalise.py": [
@@ -373,8 +381,8 @@
         "note": "The ledger template gains a field recording a severity ruling, for a rule promoted on one case."
       },
       {
-        "sha256": "15e3993f44ba534eb86fc931d54f35ebc2301b52e917b2ff0ae6d2ae0f826524",
-        "note": "Names the rule the harness tests by its ID, self-carrying-sentences, not \"the clarity rule\"."
+        "sha256": "37c908ba9c949aeff3f0aae9fe5369149ee050edc29b43645246d36c166935fc",
+        "note": "Names the rule the harness tests by its ID, self-carrying-sentences, not \"the clarity rule\". The candidate template's \"Would live in\" list includes the proving-tests-can-fail skill."
       }
     ],
     "under-explained-cases.md": [
