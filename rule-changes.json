@@ -201,8 +201,8 @@
         "note": "Rules based on a single incident removed, as the routing rule requires. Three stay even so, because an executor uses them at every checkpoint, where a repeat would cost too much to wait for a second case. All three are about showing that a new test really catches the bug it was written for, rather than passing whatever the code does: if the fix changed how a function is called, undoing it makes the test crash rather than fail, which proves nothing, so put the old behaviour back behind the new call instead; undo only the change being tested, not the whole file, so a failure has one possible cause; and when the test covers code that already worked, so there is no fix to undo, break the code deliberately and check the test fails."
       },
       {
-        "sha256": "6709b5dc22b6ffe117905eed1f98f5e44fccadc9777479c6aa14473a42df9812",
-        "note": "The rules on proving a test can fail moved to the new proving-tests-can-fail skill, split into seven rules that each open on when they apply; this file keeps a pointer for briefing a sub-agent that writes tests."
+        "sha256": "797dee4abbb5e5271ce1566d2e0fb86daef66eb79aa737220236b1f00157f3b2",
+        "note": "The rules on proving a test can fail moved to the new proving-tests-can-fail skill, split into seven rules that each open on when they apply; this file keeps a pointer for briefing a sub-agent that writes tests. The rule on sizing delegated checkpoints is split into four, each opening on when it applies, and no longer says sub-agents are cut off routinely or without a report, since Claude Code now tells Claude when a run is cut off."
       }
     ],
     "doc-test-probes.md": [

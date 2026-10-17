@@ -5,17 +5,20 @@ checkpoints. Consult before writing either, and before approving a checkpoint.
 
 This file is not auto-loaded, so its length is paid only when it is read.
 
-- **A delegated build will be interrupted mid-flight; size and commit the work so that costs
-  little.** Session limits kill sub-agents routinely, leaving an unreported, partly-applied
-  tree. Keep each checkpoint small enough to lose, and commit a verified one before starting
-  the next rather than batching. At that same moment, append one line to the backlog item —
-  the commit hash and the plan file's path, not a restated checkpoint number or summary that
-  could drift out of sync with the plan itself. When one dies, establish where it stopped from
-  the tree and the test suite, not by asking the agent — the pointer only shortens the search
-  for which plan and commit apply, it doesn't replace verifying against ground truth. Resuming
-  the same agent after the reset preserves context a fresh one would re-derive — but scope the
-  resume to the single remaining step and say what to leave alone, because it returns with the
-  whole build still in mind.
+- **When you delegate a build, size and commit the work so an interruption costs little.** A usage
+  limit can end a sub-agent's run partway, leaving a partly applied tree; Claude is told the run was
+  cut off, but not what state the tree is in. Keep each checkpoint small enough to lose, and commit
+  a verified one before starting the next rather than batching.
+- **When you commit a verified checkpoint of a delegated build, append one line to the backlog item
+  before starting the next: the commit hash and the plan file's path.** Not a restated checkpoint
+  number or summary, which could drift out of step with the plan itself.
+- **When a sub-agent dies mid-build, establish where it stopped from the working tree and the test
+  suite, not by asking it.** The backlog line only narrows which plan and commit apply; it doesn't
+  replace checking the tree and the tests.
+- **When an interrupted sub-agent's build is to continue, prefer resuming that same agent once its
+  limit resets, and scope the resume to the single remaining step.** It keeps context a fresh agent
+  would have to re-derive, but it returns with the whole build still in mind, so say what to leave
+  alone.
 - Before an executor changes a shared symbol, make it report every caller as its own checkpoint
   — an audit, not a gate; what a plan omits is where the surprises are. **Verify the remedy
   separately from the findings** — run the proposed fix against the failing case; correct facts
