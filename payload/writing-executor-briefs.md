@@ -25,35 +25,39 @@ This file is not auto-loaded, so its length is paid only when it is read.
   that reconstructs a value's significance is a consumer even when it never names your symbol. The
   question that finds them is "what does this change make newly true, and who already answers that
   question for themselves?" (The boundary: caller scope answers reach, never meaning.)
-- A regression test that never went red proves nothing: **revert the fix and confirm it
-  fails**, assert at the layer the bug lived at, and mutate the *value* not just the guard —
-  a test bounded by the thing it checks agrees with it whatever it says, and a revert that
+- **A passing test shows the code works only if it fails on code that doesn't. Before you trust one,
+  run it against a broken version and watch it fail.** Where you can, write the test before the fix
+  and watch it fail on the unfixed code; then there is nothing to revert. For a regression test
+  written after the fix, the broken version is the code with the fix reverted: **revert the fix and
+  confirm it fails**, assert at the layer the bug lived at, and mutate the *value* not just the
+  guard — a test bounded by the thing it checks agrees with it whatever it says, and a revert that
   hangs is not a pass.
-  **When the fix changed a SIGNATURE, a bare revert proves nothing either** — the tests fail
-  with TypeError/AttributeError on the call, which shows the signature moved, not that the
-  behaviour did. Restore the PRE-FIX SEMANTICS against the NEW signature instead (accept the
-  new parameter, ignore it), so the only thing that can fail is the behaviour under test.
-  **The same trap without a signature change: the pre-fix code reaches the SAME coarse outcome
-  by a different route.** A test asserting only that outcome stays green on revert and proves
-  nothing — it agrees with the code whatever the code says. Assert a finer field the new path
-  ALONE can produce (a diagnostic string, a count), not just the status.
+  **When the fix changed a SIGNATURE, a bare revert proves nothing either** — the tests fail with
+  TypeError/AttributeError on the call, which shows the signature moved, not that the behaviour did.
+  Restore the PRE-FIX SEMANTICS against the NEW signature instead (accept the new parameter, ignore
+  it), so the only thing that can fail is the behaviour under test.
+  **The same trap without a signature change: the pre-fix code reaches the SAME coarse outcome by a
+  different route.** A test asserting only that outcome stays green on revert and proves nothing —
+  it agrees with the code whatever the code says. Assert a finer field the new path ALONE can
+  produce (a diagnostic string, a count), not just the status.
   **Revert only the change under test, not the whole file.** A blanket stash undoes every edit in
   the checkpoint at once, so a red result cannot say which one caused it — and a test that would
   also fail for an unrelated reverted reason reads as proof. Restore just the stage the claim is
   about, leave the rest in place, and the failure has one possible cause.
   **When there is no fix to revert — the tests are new coverage over code that already works —
-  mutate instead.** A test that has never been red is not evidence until you have watched it fail.
-  Change the production line it targets, one change at a time, reverting each before the next, and
-  require every new test to go red under at least one; a test that survives all of them is
-  asserting something other than what it claims. **Record which tests went red under which
-  mutation, not a count** — the mapping is what shows each test is anchored to the behaviour it
-  names, and a bare total hides a test that is riding on someone else's assertion.
-  **The mutation is an instrument; the tests it did NOT target are how you check it.** Running
-  only the targeted tests cannot distinguish a valid perturbation from one that could never have
-  worked — an invalid one often passes its targets for free, because breaking the correct case
-  produces exactly what a negative test asserts. Untargeted tests staying green is the instrument
-  reading clean; a wide spillover means the mutation is coarser than it was described as, which
-  changes what its red result proves.
+  mutate instead:** break the code yourself. Change the production line each test targets, one
+  change at a time, reverting each before the next, and require every new test to go red under at
+  least one. First check that each change actually alters what the code does: one that doesn't can't
+  be caught by any test, so a test surviving it proves nothing either way. A test that survives
+  every change that does is asserting something other than what it claims. **Record which tests went
+  red under which mutation, not a count** — the mapping is what shows each test is anchored to the
+  behaviour it names, and a bare total hides a test that is riding on someone else's assertion.
+  **The mutation is an instrument; the tests it did NOT target are how you check it.** Running only
+  the targeted tests cannot distinguish a valid perturbation from one that could never have worked —
+  an invalid one often passes its targets for free, because breaking the correct case produces
+  exactly what a negative test asserts. Untargeted tests staying green is the instrument reading
+  clean; a wide spillover means the mutation is coarser than it was described as, which changes what
+  its red result proves.
 - **Copying a working pattern: name what makes it safe at the source, check the target has it.**
   Before reusing a pattern in a new context, name the specific property that made it safe where it
   came from, and check the new target actually has that property — a pattern that looks identical

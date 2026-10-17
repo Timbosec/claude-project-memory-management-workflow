@@ -195,6 +195,10 @@
       {
         "sha256": "c745be05c8a9847e5ca8e0648dd9eb47e851afca4e7c37b11fa030c4906586c1",
         "note": "Rules based on a single incident removed, as the routing rule requires. Three stay even so, because an executor uses them at every checkpoint, where a repeat would cost too much to wait for a second case. All three are about showing that a new test really catches the bug it was written for, rather than passing whatever the code does: if the fix changed how a function is called, undoing it makes the test crash rather than fail, which proves nothing, so put the old behaviour back behind the new call instead; undo only the change being tested, not the whole file, so a failure has one possible cause; and when the test covers code that already worked, so there is no fix to undo, break the code deliberately and check the test fails."
+      },
+      {
+        "sha256": "1975b16a3340f2f9b3c59200580612692d371be91ef05e2ef88c742c31fb43f9",
+        "note": "The rule on proving a test can fail now opens by saying when it applies (any passing test taken as evidence), suggests writing the test before the fix, and says a deliberate break that doesn't change what the code does can't be caught by any test."
       }
     ],
     "doc-test-probes.md": [
