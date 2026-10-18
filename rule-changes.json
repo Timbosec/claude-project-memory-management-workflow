@@ -297,8 +297,8 @@
         "note": "Step 5 asks for a response to each item the budget report lists as bookkeeping: move it out of the always-loaded file, or say why it stays."
       },
       {
-        "sha256": "8c91d6696bf2f1c2adb8ed8677cc2844a167b1e06f10fe3603dbbc6768ed4d5c",
-        "note": "Step 2 also points at the list in writing-standing-docs.md that a new or reworded rule must pass before it is proposed. Corrected two pointers: the user-level rule on plain wording lets the user's own terms stand (it never exempted project jargon), and the replace-not-join rule lives in writing-standing-docs.md. Adds the proving-tests-can-fail skill as a fifth home for lessons, for the agent proving a test can fail. The routing test and the list of files it commits name it. \"What NOT to record\" no longer repeats the routing tests; it points to step 1's, which also corrects its old claim that every lesson that doesn't transfer goes to memory or decisions.md."
+        "sha256": "e43e88d5e48a9df99494c01a20d07e9257c41cf939ed10bb822c76a0656e6b04",
+        "note": "Step 2 also points at the list in writing-standing-docs.md that a new or reworded rule must pass before it is proposed. Corrected two pointers: the user-level rule on plain wording lets the user's own terms stand (it never exempted project jargon), and the replace-not-join rule lives in writing-standing-docs.md. Adds the proving-tests-can-fail skill as a fifth home for lessons (step 1 now counts five), for the agent proving a test can fail. The routing test and the list of files it commits name it. \"What NOT to record\" no longer repeats the routing tests; it points to step 1's, which also corrects its old claim that every lesson that doesn't transfer goes to memory or decisions.md."
       }
     ],
     "skills/bootstrap-project/SKILL.md": [

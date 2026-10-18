@@ -70,7 +70,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      *generalisable* approach than the original prompt asked for or than was done intuitively —
      a reusable rule, not a one-off fact. Routing test, three-way:
      (a) **generalises across projects/disciplines?** — append to `~/.claude/lesson-candidates.md`,
-     gated on a second, contrasting case from anywhere; promotes to one of the four global
+     gated on a second, contrasting case from anywhere; promotes to one of the five global
      user-scope homes below.
      (b) **recurs within this project, and is genuinely rule-shaped** — something you'd want
      enforced every time this project is worked on, not just known about? — append to `<project
