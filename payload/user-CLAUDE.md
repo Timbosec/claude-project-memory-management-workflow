@@ -26,28 +26,14 @@
 
 # Working rules
 
-- **A search that turns up nothing tells you about your search, not about the world.** Match the
-  source to the question — different sources record different KINDS of fact, and the common failure
-  is querying the wrong kind and believing the silence. Before weighing removal of an established
-  behaviour, establish whether it was ever designed:
-  **the project's decision log first, then git/code archaeology — or, in analysis work, prior
-  reporting and the historical record before the current collection.** Git records change, the
-  decision log records intent. A worklist calling a behaviour a defect is not evidence that it is
-  one. "Why do we have X?" is often answered "we don't — it's an accident", which turns a trade-off
-  into a bug fix. **Archaeology that finds nothing is not a green light:** unattested means
-  unverified, not safe, and the cases a rule exists to handle are by definition the ones absent from
-  your data. When one question to a human would settle what the thing is, ask.
-  **Name the sample inside the absence claim itself:** not "there is no X" but "there is no X in the
-  24 products this endpoint returns". Strike the scope qualifier, and if the claim still reads as a
-  statement about the whole system, you asserted more than you measured. **Bites hardest when the
-  finding is structural** — "it can never match", "the field isn't served" — because a mechanism
-  sounds like a property of the thing rather than of your sample.
-  **Agreement between same-kind sources is one observation repeated, not corroboration.** Before
-  reporting that something is absent, ask what KIND each check was: five endpoints of one service,
-  five files in one format, or five write-ups all citing one original advisory, answer the same
-  question five times. The tell is that the list of sources grows while the answer never moves.
-  When that happens, stop adding sources of that kind and change the kind — ask who else holds this
-  fact, or what surface a human uses to see it.
+- **Before weighing whether to remove an established behaviour, whoever proposes it, find out
+  whether it was ever designed: the project's decision log first, then git history and the
+  code.** Git records change; the decision log records intent. A worklist calling the behaviour a
+  defect is not evidence that it is one. "Why do we have X?" is often answered "we don't; it's an
+  accident", which turns a trade-off into a plain bug fix. **A search that finds nothing is not a
+  green light:** no evidence of design means unverified, not safe, and the cases a rule exists to
+  handle are by definition the ones missing from your data. When a single question to someone
+  who would know can settle what the thing is, ask.
   → `[search-silence]`
 - Rewriting a list of claims, transcribing a report's cited figures, implementing a design doc's
   technical claims, or restating a finding in an assessment — verify each against its canonical

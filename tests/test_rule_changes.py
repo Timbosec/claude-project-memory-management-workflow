@@ -40,7 +40,7 @@ def sha(text):
 
 class ChangesCase(unittest.TestCase):
 
-    SEARCH = "A search that turns up nothing tells you about your search"
+    SEARCH = "Before weighing whether to remove an established behaviour"
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()

@@ -48,7 +48,7 @@ def snapshot(root):
 
 class RuleInstallCase(unittest.TestCase):
 
-    SEARCH = "A search that turns up nothing tells you about your search"
+    SEARCH = "Before weighing whether to remove an established behaviour"
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -100,7 +100,7 @@ class RuleInstallCase(unittest.TestCase):
         self.save_record(record)
 
     def reworded(self):
-        old = self.shipped.replace(self.SEARCH, "A search that turns up nothing tells you less", 1)
+        old = self.shipped.replace(self.SEARCH, "Before weighing whether to remove a behaviour", 1)
         self.assertNotEqual(old, self.shipped)
         return old
 
@@ -168,9 +168,9 @@ class BundleChangeTest(RuleInstallCase):
         self.assertIn("Status: changed", text)
         old, new = text.index("Old wording:"), text.index("New wording:")
         self.assertLess(old, new)
-        self.assertIn("tells you less", text[old:new])
-        self.assertNotIn("tells you about your search", text[old:new])
-        self.assertIn("tells you about your search", text[new:])
+        self.assertIn("remove a behaviour, whoever", text[old:new])
+        self.assertNotIn("remove an established behaviour", text[old:new])
+        self.assertIn("remove an established behaviour", text[new:])
         self.assertNotIn("== lesson-routing", text)
 
     def test_a_dry_run_lists_the_rule_but_writes_nothing_and_prints_no_path(self):

@@ -149,40 +149,42 @@ class RealRulesToRaiseTest(unittest.TestCase):
         # reworded as end-of-turn-text; its first line differs, so it pairs with nothing and shows
         # as new beside the old bullet's removal. Five rules were since trimmed to their
         # instructions; their first lines are unchanged, so each pairs with its old bullet. The
-        # self-carrying-sentences and observable-vs-inferred rules were then reworded from their
-        # first lines, so each shows as new beside its old bullet's removal, like the panel rule.
+        # self-carrying-sentences, observable-vs-inferred and search-silence rules were then
+        # reworded from their first lines, so each shows as new beside its old bullet's removal,
+        # like the panel rule.
         base = fixture_text("user-CLAUDE-4ac01a8.md")
         self.assertEqual({rid for rid, _ in install.split_rules(base)} - {None},
                          {"one-decision-at-a-time", "rule-into-code", "second-real-example"})
         items = install.rules_to_raise(base, shipped_text(), {})
         self.assertEqual([(i["id"], i["status"]) for i in items],
                          [("executor-briefs-home", "changed"), ("lesson-routing", "changed"),
-                          ("search-silence", "changed"),
+                          ("search-silence", "new"),
                           ("end-of-turn-text", "new"), ("self-carrying-sentences", "new"),
                           ("observable-vs-inferred", "new"),
                           ("second-real-example", "changed"),
                           ("existence-vs-magnitude", "changed"),
                           ("measure-reach", "new"),
                           (None, "removed"), (None, "removed"), (None, "removed"),
-                          (None, "removed")])
-        self.assertTrue(items[9]["old"].startswith("- Never call a blocking-panel tool"))
-        self.assertTrue(items[10]["old"].startswith("- **Write the sentence so it carries"))
-        self.assertTrue(items[11]["old"].startswith("- When introspecting on your own behaviour"))
-        self.assertTrue(items[12]["old"].startswith("- **A broken instrument's reading"))
+                          (None, "removed"), (None, "removed")])
+        self.assertTrue(items[9]["old"].startswith("- **A search that turns up nothing"))
+        self.assertTrue(items[10]["old"].startswith("- Never call a blocking-panel tool"))
+        self.assertTrue(items[11]["old"].startswith("- **Write the sentence so it carries"))
+        self.assertTrue(items[12]["old"].startswith("- When introspecting on your own behaviour"))
+        self.assertTrue(items[13]["old"].startswith("- **A broken instrument's reading"))
 
     def test_the_version_before_the_shipped_text_rule_raises_exactly_that_rule(self):
         items = install.rules_to_raise(fixture_text("user-CLAUDE-a6c5979.md"),
                                        shipped_text(), {})
         self.assertEqual([(i["id"], i["status"]) for i in items],
                          [("executor-briefs-home", "changed"), ("lesson-routing", "changed"),
-                          ("search-silence", "changed"),
+                          ("search-silence", "new"),
                           ("end-of-turn-text", "new"), ("self-carrying-sentences", "new"),
                           ("observable-vs-inferred", "new"),
                           ("second-real-example", "changed"),
                           ("existence-vs-magnitude", "changed"),
                           ("measure-reach", "new"),
                           ("write-for-readers", "new"), (None, "removed"), (None, "removed"),
-                          (None, "removed"), (None, "removed")])
+                          (None, "removed"), (None, "removed"), (None, "removed")])
         self.assertIsNone(items[9]["old"])
         self.assertTrue(items[9]["new"].startswith("- **Write shipped text for the people"))
         self.assertTrue(items[9]["first_line"].startswith("- **Write shipped text"))
@@ -282,26 +284,27 @@ class IdlessBaseTest(unittest.TestCase):
     def test_a_reworded_rule_pairs_with_its_earlier_version_in_the_real_old_base(self):
         # f596cd7 predates the shipped-text rule and the current wording of the
         # second-real-example rule, whose first line is unchanged, so it pairs as changed.
-        # The self-carrying-sentences and observable-vs-inferred rules' first lines changed, so
-        # each shows as new beside its old bullet's removal.
+        # The search-silence, self-carrying-sentences and observable-vs-inferred rules' first
+        # lines changed, so each shows as new beside its old bullet's removal.
         base = fixture_text("user-CLAUDE-f596cd7.md")
         items = install.rules_to_raise(base, shipped_text(), {})
         self.assertEqual([(i["id"], i["status"]) for i in items],
                          [("executor-briefs-home", "changed"), ("lesson-routing", "changed"),
-                          ("search-silence", "changed"),
+                          ("search-silence", "new"),
                           ("end-of-turn-text", "new"), ("self-carrying-sentences", "new"),
                           ("observable-vs-inferred", "new"),
                           ("second-real-example", "changed"),
                           ("existence-vs-magnitude", "changed"),
                           ("measure-reach", "new"),
                           ("write-for-readers", "new"), (None, "removed"), (None, "removed"),
-                          (None, "removed"), (None, "removed")])
+                          (None, "removed"), (None, "removed"), (None, "removed")])
         changed = items[6]
         self.assertEqual(changed["id"], "second-real-example")
         self.assertTrue(changed["old"].startswith("- Before a fix or lesson becomes a standing"))
         self.assertNotEqual(changed["old"], changed["new"])
         self.assertIsNone(items[5]["old"])
-        self.assertTrue(items[12]["old"].startswith("- When introspecting on your own behaviour"))
+        self.assertTrue(items[10]["old"].startswith("- **A search that turns up nothing"))
+        self.assertTrue(items[13]["old"].startswith("- When introspecting on your own behaviour"))
         self.assertIsNone(items[9]["old"])
 
     def test_pairing_is_by_first_line_with_the_id_tag_stripped(self):
@@ -408,7 +411,7 @@ class LoadManifestRefusalTest(unittest.TestCase):
         self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
         self.assertIn("Nothing was written", r.stderr)
         self.assertIn("this rule has no ID", r.stderr)
-        self.assertIn("A search that turns up nothing", r.stderr)
+        self.assertIn("Before weighing whether to remove an established behaviour", r.stderr)
         self.assertFalse(written)
 
     def test_a_repeated_id_stops_the_install(self):

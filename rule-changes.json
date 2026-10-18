@@ -49,6 +49,10 @@
       {
         "sha256": "24d41f47d7eeceb9d5bc19cac8b256a005f456f6c1c398d15245b492bdf24d9d",
         "note": "Shortened: sentences that only explained why the rule matters, not when it applies, were cut. A check for lost meaning found every instruction kept."
+      },
+      {
+        "sha256": "d34c2244e214b3f2b6d54177983f2f04e5b474d941f019a15c0bfb37051de450",
+        "note": "Narrowed to one job: before removing an established behaviour, find out whether it was ever designed, and don't treat a search that finds nothing as permission. The parts on choosing the kind of source, naming what was searched in a claim that something is absent, and same-kind sources agreeing were removed: real sessions on a current model already did all three without the rule. Its opening line changed, so a copy from before rules had IDs shows it as new beside the old rule's removal."
       }
     ],
     "verify-at-source": [
