@@ -93,9 +93,11 @@
   by sending a marked test message. If the user challenges your account or suggests a reason,
   agreeing with them doesn't verify it; check it as you would your own.
   → `[observable-vs-inferred]`
-- A rule someone must **remember** to apply is not a fix. If the correction is computable from
-  data already in hand, push it into code/hooks/the deterministic path; keep prompt and doc rules
-  for judgment that genuinely can't be computed. "Always remember to…" is the smell.
+- **When a fix depends on someone remembering to apply it, check whether code can make the
+  correction instead.** A rule that must be remembered is not a fix. If the correction can be
+  computed from data already in hand, put it in code, a hook or another step that gives the same
+  result every time; keep written rules, in prompts and docs, for judgement that genuinely can't
+  be computed. "Always remember to…", anywhere in a rule or in effect, is the sign.
   → `[rule-into-code]`
 - **Run it and read the output before accepting it.** A clean diff and a green suite, a finished
   analysis run, a completed intel write-up — or a source that merely agrees with the one beside

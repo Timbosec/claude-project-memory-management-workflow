@@ -36,11 +36,11 @@ there.
   the **enclosing section** as a future reader and delete or amend whatever the new text
   supersedes. Docs have no test suite; the read-back is the red-test gate. Scope is the
   enclosing section or rule-cluster, not the whole file. → `[replace-not-join]`
-- **A cold test that only checks whether the rule fires proves half of it.** Include cases
-  the rule must leave ALONE — over-application is invisible to a pass-only test, and it is
-  how a rule turns into padding. Run each case more than once; single runs mislead. **Test a
-  wording by handing it to a fresh agent and asking it to ACT on the rule, never whether the
-  rule is clear** — that question invites a yes.
+- **When you test a rule, hand it to a fresh agent (a cold test) and include cases the rule must
+  leave alone, not only ones where it should apply.** A test that only checks whether the rule
+  applies proves half of it: applying it where it doesn't belong goes unseen, and that is how a
+  rule turns into padding. Run each case more than once; single runs mislead. **Ask the agent to
+  act on the rule, never whether the rule is clear:** that question invites a yes.
 - **In an agent-facing file, "you" is the agent.** The human is "the user", third
   person. De-personalising a file ("make this project-agnostic") can silently invert an
   approval gate — "await your approval" hands a human-in-the-loop check to the agent

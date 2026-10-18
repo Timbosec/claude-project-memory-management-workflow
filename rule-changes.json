@@ -129,6 +129,10 @@
       {
         "sha256": "0ac1baac6bcaaa6f4265f8ea517d5bd843994ea09ed54096f6f231d4421eb3eb",
         "note": ""
+      },
+      {
+        "sha256": "fd3be9c954365b636d1323560c85c6e2ad5184396ac0562dcb09263310e64ec9",
+        "note": "The opening now says when the rule applies: when a fix depends on someone remembering to apply it, check whether code can make the correction instead. Same rule otherwise, in plainer words."
       }
     ],
     "run-and-read-output": [
@@ -201,8 +205,8 @@
         "note": "Rules based on a single incident removed, as the routing rule requires."
       },
       {
-        "sha256": "d5a3c08654b1915196e98c665ed1995fd1e2bed8dcd8a3f5f92511248f577278",
-        "note": "The cold-test rule gains the method moved from the user-level rules file: have a fresh agent act on a wording, never ask it whether the wording is clear. A new closing section lists what a new or reworded rule must pass before it is proposed: its opening names the situation, Claude wouldn't do it unprompted (checked by running a session without it), it does one job in the right place, nothing in it goes out of date, it contradicts no other rule, and its wording is calm and concrete."
+        "sha256": "7674acb3019352c51145e00ca3b549da254259ccb0b05bd652faa712129fdf97",
+        "note": "The cold-test rule gains the method moved from the user-level rules file: have a fresh agent act on a wording, never ask it whether the wording is clear. A new closing section lists what a new or reworded rule must pass before it is proposed: its opening names the situation, Claude wouldn't do it unprompted (checked by running a session without it), it does one job in the right place, nothing in it goes out of date, it contradicts no other rule, and its wording is calm and concrete. The cold-test rule now opens with when it applies (when you test a rule) and drops capitals used for emphasis."
       }
     ],
     "writing-executor-briefs.md": [
