@@ -57,7 +57,9 @@ Check the rule against each line and fix what fails before proposing it. The sam
   ("Default to a high-level answer" covers every answer); it needs no "When ..." clause. For a
   skill, the description says what it does and when to use it.
 - **Claude wouldn't do it without the rule.** If Claude already behaves this way, or could read
-  the fact from the code, cut the rule or, if it must hold every time, make it a hook.
+  the fact from the code, cut the rule or, if it must hold every time, make it a hook. Check
+  this by running a real session without the rule on the case that prompted it, not by
+  judgement.
 - **It doesn't repeat itself, explain what Claude already knows, or carry bookkeeping.** Dates,
   case notes and maturity tags go to the origin log. A short reason that says what the rule
   protects stays: Claude generalises from it. A clause saying how to carry the rule out is not
@@ -74,6 +76,10 @@ Check the rule against each line and fix what fails before proposing it. The sam
   Claude Code adds on its own, such as its commit instructions.
 - **Each thing the file names keeps one name throughout:** a defined term, a file, a tool or a
   step. Ordinary words can vary.
+- **Its wording is calm and concrete.** No capitals or words like CRITICAL or MUST for emphasis:
+  they make a rule fire too readily. An abstract phrase gets a plain word or a short example. The
+  cold test below won't catch this, since an agent can often work out a phrase a person
+  would stumble on.
 
 Then give a fresh agent only the rule and ask it when the rule applies and what it would do, as
 the cold-test rule above describes. An answer that misses the situation or the action means the
