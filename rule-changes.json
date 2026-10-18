@@ -213,8 +213,8 @@
         "note": "Rules based on a single incident removed, as the routing rule requires."
       },
       {
-        "sha256": "9c2766047d21957b4460cab16106feca4e4f60dacb04705256d6437525bd0775",
-        "note": "The cold-test rule gains the method moved from the user-level rules file: have a fresh agent act on a wording, never ask it whether the wording is clear. A new closing section lists what a new or reworded rule must pass before it is proposed: its opening names the situation, Claude wouldn't do it unprompted (checked by running a session without it), it does one job in the right place, nothing in it goes out of date, it contradicts no other rule, and its wording is calm and concrete. The cold-test rule now opens with when it applies (when you test a rule) and drops capitals used for emphasis. The checklist's line on calm wording now follows Anthropic's prompting guidance: write a rule as a plain instruction, not a forceful one, so no capitals, bold on a single word, words like CRITICAL or MUST, or catch-alls like \"if in doubt, do X\"."
+        "sha256": "604e71339e6b33424c3c127d1cf391af62b72421fc029889d2f2ba3b472fdc30",
+        "note": "The cold-test rule gains the method moved from the user-level rules file: have a fresh agent act on a wording, never ask it whether the wording is clear. A new closing section lists what a new or reworded rule must pass before it is proposed: its opening names the situation, Claude wouldn't do it unprompted (checked by running a session without it), it does one job in the right place, nothing in it goes out of date, it contradicts no other rule, and its wording is calm and concrete. The cold-test rule now opens with when it applies (when you test a rule) and drops capitals used for emphasis. The checklist's line on calm wording now follows Anthropic's guidance: write a rule as a plain instruction, not a forceful one, and leave out catch-alls like \"if in doubt, do X\"; keep emphasis (capitals, IMPORTANT) for one rule that sessions show being skipped, on that line alone; put a rule that must hold every time in a hook."
       }
     ],
     "writing-executor-briefs.md": [
