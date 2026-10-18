@@ -35,6 +35,16 @@
   handle are by definition the ones missing from your data. When a single question to someone
   who would know can settle what the thing is, ask.
   → `[search-silence]`
+- **When you report that something isn't there, put what you searched, and how, into the claim
+  itself.** Not "there is no X" but "there is no X among the 24 products this endpoint returns",
+  or "none of these phrases appear in these files". A keyword search finds only the words you
+  searched for and misses the same idea worded differently, so read the whole files when they are
+  short enough; otherwise say the claim covers only the words you searched. If the claim still
+  sounds true of the whole system once what you searched is taken out, you have claimed more than
+  you checked. Take most care when the claim is about how something works ("it can never match",
+  "the field isn't served"): it then sounds like a fact about the system rather than about your
+  search.
+  → `[say-what-you-searched]`
 - Rewriting a list of claims, transcribing a report's cited figures, implementing a design doc's
   technical claims, or restating a finding in an assessment — verify each against its canonical
   source (the original telemetry, the raw dataset, the running code — whichever actually produced

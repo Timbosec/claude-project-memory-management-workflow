@@ -55,6 +55,12 @@
         "note": "Narrowed to one job: before removing an established behaviour, find out whether it was ever designed, and don't treat a search that finds nothing as permission. The parts on choosing the kind of source, naming what was searched in a claim that something is absent, and same-kind sources agreeing were removed: real sessions on a current model already did all three without the rule. Its opening line changed, so a copy from before rules had IDs shows it as new beside the old rule's removal."
       }
     ],
+    "say-what-you-searched": [
+      {
+        "sha256": "a40c44c9a0a898c23e7e1d11799c41a3fe37db165e1a9bdfa8c5b767488e0bdb",
+        "note": "New: when you report that something isn't there, say in the claim what you searched and how; a keyword search covers only its words. It restores, in plainer words, a part removed from the search-silence rule in the same release, after a real case on a current model showed it is still needed."
+      }
+    ],
     "verify-at-source": [
       {
         "sha256": "3c023fc8df19204815fff58583a37ebc4ec7716d59c271fcd7e908deeadfd748",
