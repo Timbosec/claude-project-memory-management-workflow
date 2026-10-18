@@ -66,9 +66,16 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      tuning the rule than many noisy ones, and a noisy corpus would drive changes off bad
      evidence. When the file reaches ~10 entries, propose a re-evaluation of the
      `~/.claude/CLAUDE.md` § Working rules bullet it serves.
-   - **Prompt-lesson opportunities**: moments where discussion arrived at a sharper,
-     *generalisable* approach than the original prompt asked for or than was done intuitively —
-     a reusable rule, not a one-off fact. Routing test, three-way:
+   - **Prompt-lesson opportunities**: mistakes that cost or nearly cost something, where the fix
+     is a reusable rule, not a one-off fact. A mistake counts when the user caught something you got wrong
+     (wrong by a standard that existed before they said so: the facts, the task, or an instruction
+     already in force; a preference they state for the first time is feedback, the "Feedback the
+     user gave" bullet above), when you took several attempts or turns to resolve something, or
+     when a wrong result reached, or was about to reach, a file, a plan, a report or the user. A
+     better approach reached in discussion with no failure behind it is a decision, recorded under
+     (c) below. The exception is a sharper way to write a prompt or brief, which you may suggest as
+     a prompt lesson; `~/.claude/prompt-lessons.md` is written only when the user asks.
+     Routing test, three-way:
      (a) **generalises across projects/disciplines?** — append to `~/.claude/lesson-candidates.md`,
      gated on a second, contrasting case from anywhere; promotes to one of the five global
      user-scope homes below.

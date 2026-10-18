@@ -297,8 +297,8 @@
         "note": "Step 5 asks for a response to each item the budget report lists as bookkeeping: move it out of the always-loaded file, or say why it stays."
       },
       {
-        "sha256": "e43e88d5e48a9df99494c01a20d07e9257c41cf939ed10bb822c76a0656e6b04",
-        "note": "Step 2 also points at the list in writing-standing-docs.md that a new or reworded rule must pass before it is proposed. Corrected two pointers: the user-level rule on plain wording lets the user's own terms stand (it never exempted project jargon), and the replace-not-join rule lives in writing-standing-docs.md. Adds the proving-tests-can-fail skill as a fifth home for lessons (step 1 now counts five), for the agent proving a test can fail. The routing test and the list of files it commits name it. \"What NOT to record\" no longer repeats the routing tests; it points to step 1's, which also corrects its old claim that every lesson that doesn't transfer goes to memory or decisions.md."
+        "sha256": "390206d059383ec1433884d668fbc2d02331663950d2bd3936a07af77c2aa986",
+        "note": "Step 2 also points at the list in writing-standing-docs.md that a new or reworded rule must pass before it is proposed. Corrected two pointers: the user-level rule on plain wording lets the user's own terms stand (it never exempted project jargon), and the replace-not-join rule lives in writing-standing-docs.md. Adds the proving-tests-can-fail skill as a fifth home for lessons (step 1 now counts five), for the agent proving a test can fail. The routing test and the list of files it commits name it. \"What NOT to record\" no longer repeats the routing tests; it points to step 1's, which also corrects its old claim that every lesson that doesn't transfer goes to memory or decisions.md. Step 1 now captures a lesson candidate only for a mistake that cost or nearly cost something: the user catching something wrong by a standard already in force (not a new preference, which is feedback), several attempts or turns, or a wrong result reaching or about to reach a file, plan, report or the user. A better approach with no failure behind it is recorded as a decision, except a sharper way to write a prompt or brief, which may still be suggested as a prompt lesson."
       }
     ],
     "skills/bootstrap-project/SKILL.md": [
@@ -389,8 +389,8 @@
         "note": "The ledger template gains a field recording a severity ruling, for a rule promoted on one case."
       },
       {
-        "sha256": "290260a058a9e7b20e5d0b209474dcfb02078be96abb4142798f0f8ac05c4b5c",
-        "note": "Names the rule the harness tests by its ID, self-carrying-sentences, not \"the clarity rule\". The candidate template's \"Would live in\" list includes the proving-tests-can-fail skill. Each case now records the model and Claude Code version it happened on, so a later review can tell which rules to re-check after a model change."
+        "sha256": "a6c5cd8895b2c1768bc366d20a04124e0b73e69526367a0215ff2e2bde67d70e",
+        "note": "Names the rule the harness tests by its ID, self-carrying-sentences, not \"the clarity rule\". The candidate template's \"Would live in\" list includes the proving-tests-can-fail skill. Each case now records the model and Claude Code version it happened on, so a later review can tell which rules to re-check after a model change. The capture section says what counts as a case: a mistake that cost or nearly cost something."
       }
     ],
     "under-explained-cases.md": [

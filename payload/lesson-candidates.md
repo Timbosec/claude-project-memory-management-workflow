@@ -29,6 +29,9 @@ promoted on evidence since accumulated, or retired, and which rules still carry 
 
 Written by `/finalise` step 1 when routing a lesson candidate, or appended the moment a case is
 noticed — a session-end sweep may run after compaction has destroyed the verbatim detail.
+A case is a mistake that cost or nearly cost something, as `/finalise` step 1's "Prompt-lesson
+opportunities" bullet defines it; a better approach with no failure behind it is a decision, not a
+case.
 
 Capture of a *candidate* needs no approval; it records an observation, not an instruction.
 *Promotion* to a rule is a normal `/finalise` candidate and goes through the approval flow.
