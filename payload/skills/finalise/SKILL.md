@@ -307,14 +307,8 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
 - Things already in decisions.md or memory with no new information
 - Code patterns or file structure (derivable from the codebase)
 - Git history (already in commits)
-- Mis-routed lessons — a prompt-lessons entry must both transfer to unrelated projects AND be
-  about **the user authoring** a prompt or brief. Doesn't transfer → memory/decisions.md.
-  Transfers but governs the agent editing a standing doc → `~/.claude/writing-standing-docs.md`.
-  Transfers but governs the agent briefing an executor or verifying its checkpoint →
-  `~/.claude/writing-executor-briefs.md`. Transfers but governs the agent proving a test can fail
-  → `~/.claude/skills/proving-tests-can-fail/SKILL.md`. Transfers and governs the agent at any
-  other moment → `~/.claude/CLAUDE.md` § Working rules. (All five user-scope files are written ONLY
-  on the user's explicit approval, same as every other candidate.)
+- Mis-routed lessons: before writing a lesson anywhere, apply the routing test and the actor test
+  in step 1's "Prompt-lesson opportunities" bullet.
 
 ## Scope
 
