@@ -389,8 +389,8 @@
         "note": "The ledger template gains a field recording a severity ruling, for a rule promoted on one case."
       },
       {
-        "sha256": "37c908ba9c949aeff3f0aae9fe5369149ee050edc29b43645246d36c166935fc",
-        "note": "Names the rule the harness tests by its ID, self-carrying-sentences, not \"the clarity rule\". The candidate template's \"Would live in\" list includes the proving-tests-can-fail skill."
+        "sha256": "290260a058a9e7b20e5d0b209474dcfb02078be96abb4142798f0f8ac05c4b5c",
+        "note": "Names the rule the harness tests by its ID, self-carrying-sentences, not \"the clarity rule\". The candidate template's \"Would live in\" list includes the proving-tests-can-fail skill. Each case now records the model and Claude Code version it happened on, so a later review can tell which rules to re-check after a model change."
       }
     ],
     "under-explained-cases.md": [

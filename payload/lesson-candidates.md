@@ -39,6 +39,7 @@ Capture of a *candidate* needs no approval; it records an observation, not an in
 
     ### <one-line claim, imperative>
     - First observed: <absolute date> · <project/task>
+    - Model: <model ID> · Claude Code <version, from `claude --version`>
     - Case: <what happened, what was concluded, what was actually true>
     - How to test it: <only where a test genuinely exists — see below. Otherwise write
       "no test — settled by a second real case" and stop.>
@@ -47,6 +48,10 @@ Capture of a *candidate* needs no approval; it records an observation, not an in
     - Would live in: <prompt-lessons | writing-standing-docs | writing-executor-briefs |
       proving-tests-can-fail skill | CLAUDE.md Working rules>  (per the actor test)
     - Status: awaiting a second contrasting case
+
+Record the model the same way for every later case, beside its date. A rule's cases can stop
+happening once the model changes, and the recorded model is how a later review can tell which
+rules to re-check.
 
 **Most candidates have no test, and that is normal.** They are settled by a second real case
 arriving, not by running anything: most are analytical claims with nothing to run them against.
@@ -78,7 +83,7 @@ what plays the part of the cold reader.
     ### <the rule's opening words, verbatim, so it can be matched to its home>
     - Home: <file> § <section>
     - Promoted: <absolute date>
-    - Cases: <full narratives, one per case, dated — moved verbatim from the rule>
+    - Cases: <full narratives, one per case, dated and with its model — moved verbatim from the rule>
     - Boundary: <what the opposite-direction case fixes, where one exists>
     - Severity ruling: <only for a rule promoted on one case: who ruled, when, and why a repeat
       would cost too much to wait for>
