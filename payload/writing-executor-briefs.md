@@ -43,7 +43,7 @@ This file is not auto-loaded, so its length is paid only when it is read.
   scoped edit for both the revert and the restore — never a repo-level discard command.**
   `git checkout --`/`restore`/`reset` operate at whole-file granularity regardless of how narrow
   the intended change was, and a checkpoint under review is exactly the state where the file
-  carries OTHER uncommitted, already-reviewed work riding alongside whatever is being temporarily
+  carries other uncommitted, already-reviewed work riding alongside whatever is being temporarily
   changed — a discard command takes that with it too, not just the probe. Only a string-scoped
   tool (Edit, or a `sed` whose inverse is applied the same way) round-trips symmetrically;
   confirm `git diff --stat` matches the pre-mutation baseline before trusting the revert, rather

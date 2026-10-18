@@ -149,6 +149,10 @@
       {
         "sha256": "83864ebccca5e7186d82ccbc74e818355f2ff25c762dc2910b97349bb48ccdfd",
         "note": "Shortened: sentences that only explained why the rule matters, not when it applies, were cut. Agents given the old and the new wording acted the same in the same test scenarios. One clause stayed because the test showed it was needed: an amendment does not inherit the maturity of the rule it extends."
+      },
+      {
+        "sha256": "f93bac058df4d9c05b648ab375803c0dade704db2adbfc2ec28faacf7c7daef8",
+        "note": "Capitals used for emphasis are lowercased; nothing else changed."
       }
     ],
     "existence-vs-magnitude": [
@@ -159,6 +163,10 @@
       {
         "sha256": "14f03aba9d058ff36d056682dcbd3846b2a246a5198c3a81724fbea2790c01c2",
         "note": "Shortened: sentences that only explained why the rule matters, not when it applies, were cut. A check for lost meaning found every instruction kept."
+      },
+      {
+        "sha256": "9107d78eff539442e58e8711ca3f11f8c66788d4ab434648e0a9ddc966686b97",
+        "note": "Capitals used for emphasis are lowercased; nothing else changed."
       }
     ],
     "write-for-readers": [
@@ -205,8 +213,8 @@
         "note": "Rules based on a single incident removed, as the routing rule requires."
       },
       {
-        "sha256": "7674acb3019352c51145e00ca3b549da254259ccb0b05bd652faa712129fdf97",
-        "note": "The cold-test rule gains the method moved from the user-level rules file: have a fresh agent act on a wording, never ask it whether the wording is clear. A new closing section lists what a new or reworded rule must pass before it is proposed: its opening names the situation, Claude wouldn't do it unprompted (checked by running a session without it), it does one job in the right place, nothing in it goes out of date, it contradicts no other rule, and its wording is calm and concrete. The cold-test rule now opens with when it applies (when you test a rule) and drops capitals used for emphasis."
+        "sha256": "9c2766047d21957b4460cab16106feca4e4f60dacb04705256d6437525bd0775",
+        "note": "The cold-test rule gains the method moved from the user-level rules file: have a fresh agent act on a wording, never ask it whether the wording is clear. A new closing section lists what a new or reworded rule must pass before it is proposed: its opening names the situation, Claude wouldn't do it unprompted (checked by running a session without it), it does one job in the right place, nothing in it goes out of date, it contradicts no other rule, and its wording is calm and concrete. The cold-test rule now opens with when it applies (when you test a rule) and drops capitals used for emphasis. The checklist's line on calm wording now follows Anthropic's prompting guidance: write a rule as a plain instruction, not a forceful one, so no capitals, bold on a single word, words like CRITICAL or MUST, or catch-alls like \"if in doubt, do X\"."
       }
     ],
     "writing-executor-briefs.md": [
@@ -219,8 +227,8 @@
         "note": "Rules based on a single incident removed, as the routing rule requires. Three stay even so, because an executor uses them at every checkpoint, where a repeat would cost too much to wait for a second case. All three are about showing that a new test really catches the bug it was written for, rather than passing whatever the code does: if the fix changed how a function is called, undoing it makes the test crash rather than fail, which proves nothing, so put the old behaviour back behind the new call instead; undo only the change being tested, not the whole file, so a failure has one possible cause; and when the test covers code that already worked, so there is no fix to undo, break the code deliberately and check the test fails."
       },
       {
-        "sha256": "7d632dd34d0dece4fe911c53284d4098d2cb986b6d68768c7156fb75c26510f4",
-        "note": "The rules on proving a test can fail moved to the new proving-tests-can-fail skill, split into seven rules that each open on when they apply; this file keeps a pointer for briefing a sub-agent that writes tests. The rule on sizing delegated checkpoints is split into four, each opening on when it applies, and no longer says sub-agents are cut off routinely or without a report, since Claude Code now tells Claude when a run is cut off. The caller-audit rule is split into three: report every caller, verify a proposed fix separately from its findings, and also find code that depends on what a changed symbol's answers mean."
+        "sha256": "3b92e74c79a8b5b89a62764a0a4d43a051481c03a892bfc4fa36994140aa7763",
+        "note": "The rules on proving a test can fail moved to the new proving-tests-can-fail skill, split into seven rules that each open on when they apply; this file keeps a pointer for briefing a sub-agent that writes tests. The rule on sizing delegated checkpoints is split into four, each opening on when it applies, and no longer says sub-agents are cut off routinely or without a report, since Claude Code now tells Claude when a run is cut off. The caller-audit rule is split into three: report every caller, verify a proposed fix separately from its findings, and also find code that depends on what a changed symbol's answers mean. Capitals used for emphasis are also lowercased."
       }
     ],
     "doc-test-probes.md": [
@@ -307,14 +315,18 @@
         "note": "Step 5 asks for a response to each item the budget report lists as bookkeeping: move it out of the always-loaded file, or say why it stays."
       },
       {
-        "sha256": "390206d059383ec1433884d668fbc2d02331663950d2bd3936a07af77c2aa986",
-        "note": "Step 2 also points at the list in writing-standing-docs.md that a new or reworded rule must pass before it is proposed. Corrected two pointers: the user-level rule on plain wording lets the user's own terms stand (it never exempted project jargon), and the replace-not-join rule lives in writing-standing-docs.md. Adds the proving-tests-can-fail skill as a fifth home for lessons (step 1 now counts five), for the agent proving a test can fail. The routing test and the list of files it commits name it. \"What NOT to record\" no longer repeats the routing tests; it points to step 1's, which also corrects its old claim that every lesson that doesn't transfer goes to memory or decisions.md. Step 1 now captures a lesson candidate only for a mistake that cost or nearly cost something: the user catching something wrong by a standard already in force (not a new preference, which is feedback), several attempts or turns, or a wrong result reaching or about to reach a file, plan, report or the user. A better approach with no failure behind it is recorded as a decision, except a sharper way to write a prompt or brief, which may still be suggested as a prompt lesson."
+        "sha256": "b06d836a91966b98590c99da0b407cca5412b49515fe6301410d9a730195c37c",
+        "note": "Step 2 also points at the list in writing-standing-docs.md that a new or reworded rule must pass before it is proposed. Corrected two pointers: the user-level rule on plain wording lets the user's own terms stand (it never exempted project jargon), and the replace-not-join rule lives in writing-standing-docs.md. Adds the proving-tests-can-fail skill as a fifth home for lessons (step 1 now counts five), for the agent proving a test can fail. The routing test and the list of files it commits name it. \"What NOT to record\" no longer repeats the routing tests; it points to step 1's, which also corrects its old claim that every lesson that doesn't transfer goes to memory or decisions.md. Step 1 now captures a lesson candidate only for a mistake that cost or nearly cost something: the user catching something wrong by a standard already in force (not a new preference, which is feedback), several attempts or turns, or a wrong result reaching or about to reach a file, plan, report or the user. A better approach with no failure behind it is recorded as a decision, except a sharper way to write a prompt or brief, which may still be suggested as a prompt lesson. Capitals used for emphasis are also lowercased."
       }
     ],
     "skills/bootstrap-project/SKILL.md": [
       {
         "sha256": "2fa9b5e1b99043082de0433df144324ff6aef504cbe0f18755153f1369dfbcb2",
         "note": ""
+      },
+      {
+        "sha256": "b2ad731231a1ed012df6df54955646499a2185b225239e30fe852316c73e0068",
+        "note": "Capitals used for emphasis are lowercased; nothing else changed."
       }
     ],
     "skills/bootstrap-project/scripts/scaffold.py": [
@@ -359,8 +371,8 @@
         "note": ""
       },
       {
-        "sha256": "03cc14758c7fa2182535266b1460bd8339dfe3e5851c07f4f36a557d30eef7be",
-        "note": "No longer names the test rules among what writing-executor-briefs.md holds; they moved to the proving-tests-can-fail skill."
+        "sha256": "328e5e9ec685a18d55b93209526d21216970ad288ea4fd9c77d3a5d76fc747ee",
+        "note": "No longer names the test rules among what writing-executor-briefs.md holds; they moved to the proving-tests-can-fail skill. Capitals used for emphasis are also lowercased."
       }
     ],
     "commands/memory-audit.md": [
@@ -373,8 +385,8 @@
         "note": "Part 1 adds a rule-by-rule pass over both CLAUDE.md files: where each rule should load, which sentences are only reasons or bookkeeping and can go, and a check of each trim before it is proposed."
       },
       {
-        "sha256": "f69c56f3d960546e0a0ab42cf842cf4da339b36d93c9f41ab8fdc5933fd6cde7",
-        "note": "The rule-by-rule pass checks each rule against the list in writing-standing-docs.md instead of its own, and no longer tells the reviewer to cut the short reasons that say what a rule protects. The actor test is cited as /finalise step 1 (it said step 2), the checklist's last step is called the cold test as that file calls it, and a line about /memory that no longer matched Claude Code was cut. Adds the proving-tests-can-fail skill as a fifth home for lessons, for the agent proving a test can fail. The audit's list of rule homes includes it."
+        "sha256": "4da15e66bd4a7ac020e3fbb293942bf91bf7b99de8cea3a4cdbff8328b293d0b",
+        "note": "The rule-by-rule pass checks each rule against the list in writing-standing-docs.md instead of its own, and no longer tells the reviewer to cut the short reasons that say what a rule protects. The actor test is cited as /finalise step 1 (it said step 2), the checklist's last step is called the cold test as that file calls it, and a line about /memory that no longer matched Claude Code was cut. Adds the proving-tests-can-fail skill as a fifth home for lessons, for the agent proving a test can fail. The audit's list of rule homes includes it. Capitals used for emphasis are also lowercased."
       }
     ],
     "hooks/remind_finalise.py": [
@@ -399,8 +411,8 @@
         "note": "The ledger template gains a field recording a severity ruling, for a rule promoted on one case."
       },
       {
-        "sha256": "a6c5cd8895b2c1768bc366d20a04124e0b73e69526367a0215ff2e2bde67d70e",
-        "note": "Names the rule the harness tests by its ID, self-carrying-sentences, not \"the clarity rule\". The candidate template's \"Would live in\" list includes the proving-tests-can-fail skill. Each case now records the model and Claude Code version it happened on, so a later review can tell which rules to re-check after a model change. The capture section says what counts as a case: a mistake that cost or nearly cost something."
+        "sha256": "88f9551bdf1e177f5b2568c977dfb0a7e95da52886bd5c095fc11645a3729973",
+        "note": "Names the rule the harness tests by its ID, self-carrying-sentences, not \"the clarity rule\". The candidate template's \"Would live in\" list includes the proving-tests-can-fail skill. Each case now records the model and Claude Code version it happened on, so a later review can tell which rules to re-check after a model change. The capture section says what counts as a case: a mistake that cost or nearly cost something. Capitals used for emphasis are also lowercased."
       }
     ],
     "under-explained-cases.md": [
@@ -439,8 +451,8 @@
     ],
     "skills/proving-tests-can-fail/SKILL.md": [
       {
-        "sha256": "ceca660cfb789173a61bd609dca5ebffcf5b6099a86800509d5d00e69fb36e23",
-        "note": "New skill: the rules on proving a test can fail before trusting it (write the test first, revert only the fix, break working code on purpose to check new tests). Claude loads it when adding or changing tests; in tests it loaded every time, including when the request never mentioned tests."
+        "sha256": "49c3e303f4c2f4b640661a84111096767ef797d692f26338eb3c0a594a7b1b9b",
+        "note": "New skill: the rules on proving a test can fail before trusting it (write the test first, revert only the fix, break working code on purpose to check new tests). Claude loads it when adding or changing tests; in tests it loaded every time, including when the request never mentioned tests. Capitals used for emphasis are also lowercased."
       }
     ]
   }

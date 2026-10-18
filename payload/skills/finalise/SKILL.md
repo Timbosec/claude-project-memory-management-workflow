@@ -57,7 +57,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      because a sentence leaned on a code symbol they'd have needed to open a file to decode.
      Append each to `~/.claude/under-explained-cases.md` (that file carries the schema and the
      evaluation protocol), then commit it (see the commit note above). **This capture is
-     automatic — do NOT route it through step 3's approval flow**; an entry records what was
+     automatic — do not route it through step 3's approval flow**; an entry records what was
      said, not what should be instructed. Any *rule change* derived from the corpus is a normal
      candidate and does go through step 3.
      **Under-count deliberately.** A user probing mechanics constantly is them working, not a
@@ -82,7 +82,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      (b) **recurs within this project, and is genuinely rule-shaped** — something you'd want
      enforced every time this project is worked on, not just known about? — append to `<project
      root>/lesson-candidates.md` instead (same schema and mechanics as the global ledger, gate
-     scoped down to a second occurrence WITHIN this project); promotes to `<project
+     scoped down to a second occurrence within this project); promotes to `<project
      root>/CLAUDE.md`, not a global home. `/memory-audit` separately scans every project's ledger
      together as one pool (its Part 2.6) — a case that looks project-specific from inside a single
      session can still turn out to match a case sitting in a *different* project's ledger, which
@@ -109,8 +109,8 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      `~/.claude/skills/proving-tests-can-fail/SKILL.md`; the agent at any other moment →
      `~/.claude/CLAUDE.md` § Working rules. An amendment re-derives its home
      rather than inheriting the home of the rule it extends.
-     **Split, don't dual-write** — a candidate can have BOTH a rule-shaped core (global or
-     project-level) AND a one-off residue; if (and only if) the residue isn't already recorded in
+     **Split, don't dual-write** — a candidate can have both a rule-shaped core (global or
+     project-level) and a one-off residue; if (and only if) the residue isn't already recorded in
      the repo, route each part to its own home: the rule to whichever ledger it belongs in, the
      residue to memory/decisions.md with a one-way reference naming the lesson tag (e.g.
      "generalised as prompt-lessons [tag]", or "recorded as a project rule, see CLAUDE.md").
@@ -126,7 +126,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      and check it for every candidate.** A first case is already parked here for many of them; if
      today's case is the *second, contrasting* one, the outcome is a promotion, not a new entry.
      Nothing else performs this within-session match, so skipping it leaves the pair unnoticed and
-     the gate never opens. A bucket (b) candidate is checked only against THIS project's own
+     the gate never opens. A bucket (b) candidate is checked only against this project's own
      ledger here — a match sitting in a different project's ledger is `/memory-audit`'s job, not
      this step's, since this session has no visibility into other projects' files. Aging of
      long-waiting candidates is not this step's job either way — `/memory-audit` owns that.
@@ -308,7 +308,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
    repo's push status — pushed (and whether on the user's say-so this run or a `CLAUDE.md`
    pre-authorization), or left uncommitted/unpushed for the user.
 
-## What NOT to record
+## What not to record
 
 - Ephemeral task detail (specifics checked, values found during routine work)
 - Things already in decisions.md or memory with no new information

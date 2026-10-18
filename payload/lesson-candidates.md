@@ -66,7 +66,7 @@ something able to prove it wrong, written down before the answer is known. The w
 the harness in `~/.claude/under-explained-cases.md` for the rule with the ID
 `self-carrying-sentences`:
 
-    - a prompt template composed BEFORE any case had been collected, so a later author who
+    - a prompt template composed before any case had been collected, so a later author who
       has read the answers cannot shape it around them;
     - filled with three things only — the rule as it currently stands, the background facts
       the agent actually held at the time, and the sentence that failed;
@@ -74,11 +74,11 @@ the harness in `~/.claude/under-explained-cases.md` for the rule with the ID
       which loads neither CLAUDE.md, so the rule reaches the reader only via the prompt;
     - with the answer key withheld from that prompt — the user's real complaint, and the repair
       that eventually worked — then used to grade afterwards;
-    - run at least twice per case, alongside control sentences the rule must leave ALONE;
+    - run at least twice per case, alongside control sentences the rule must leave alone;
     - graded against criteria written down before any output was read.
 
 The shape generalises past wording rules: fix the setup, withhold the answer, include cases that
-should NOT trigger, repeat each run, and decide what counts as a pass in advance. What varies is
+should not trigger, repeat each run, and decide what counts as a pass in advance. What varies is
 what plays the part of the cold reader.
 
 ### Origin log

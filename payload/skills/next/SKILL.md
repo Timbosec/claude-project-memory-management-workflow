@@ -7,7 +7,7 @@ description: Surfaces the recommended next backlog item (from backlog.md's "Next
 
 ## What to do
 
-1. Read `backlog.md`'s **"Next up" section** (top of file, before `## Open`) — this IS the triage:
+1. Read `backlog.md`'s **"Next up" section** (top of file, before `## Open`) — this is the triage:
    `/finalise` revises it at the end of each session, and it already says which threads are ready
    to build vs. still need a scoping/ruling pass. Don't re-rank the Open list from scratch — the
    file has no impact/effort scheme to rank against, and a fresh ranking would just compete with

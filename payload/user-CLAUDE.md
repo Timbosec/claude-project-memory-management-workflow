@@ -106,16 +106,16 @@
   → `[run-and-read-output]`
 - Before a fix or lesson becomes a standing rule, validate it against a **second real,
   contrasting case** — not synthetic, not the one that prompted it — plus a regression case in the
-  opposite direction where one exists. **When you are generalising instances into a CLASS, the
+  opposite direction where one exists. **When you are generalising instances into a class, the
   opposite-direction case is what fixes the boundary.** → `[second-real-example]`
-  **A check added as a "second, independent signal" must be validated where it stands ALONE.**
+  **A check added as a "second, independent signal" must be validated where it stands alone.**
   **An amendment that sharpens an existing rule needs its own second case** — it does not inherit
   the maturity of the rule it extends.
 - A defect's **existence and its magnitude are separate claims** — verify them separately. When
   a check disagrees with expectation, the alternative computation you reach for is a second
   candidate, not ground truth: establish what the right answer actually is, from the thing being
   measured, before characterising how large the error is or which way it runs. **Magnitude includes
-  reach** — before asserting what the user would SEE, check what else already handles the case; a
+  reach** — before asserting what the user would see, check what else already handles the case; a
   true structural finding can propagate to nothing.
   → `[existence-vs-magnitude]`
 - **Before scoping a fix to a report's own example, measure how far the underlying cause

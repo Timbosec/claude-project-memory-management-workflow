@@ -76,10 +76,12 @@ Check the rule against each line and fix what fails before proposing it. The sam
   Claude Code adds on its own, such as its commit instructions.
 - **Each thing the file names keeps one name throughout:** a defined term, a file, a tool or a
   step. Ordinary words can vary.
-- **Its wording is calm and concrete.** No capitals or words like CRITICAL or MUST for emphasis:
-  they make a rule fire too readily. An abstract phrase gets a plain word or a short example. The
-  cold test below won't catch this, since an agent can often work out a phrase a person
-  would stumble on.
+- **Its wording is calm and concrete.** Write it as a plain instruction ("Use this tool
+  when…"), not a forceful one ("CRITICAL: you MUST use this tool…"): forceful wording makes
+  Claude apply a rule where it doesn't belong. So no capitals, bold on a single word, or words
+  like CRITICAL or MUST to add force, and no catch-all nudges such as "if in doubt, do X". An
+  abstract phrase gets a plain word or a short example. The cold test below won't catch this,
+  since an agent can often work out a phrase a person would stumble on.
 
 Then give a fresh agent only the rule and ask it when the rule applies and what it would do, as
 the cold-test rule above describes. An answer that misses the situation or the action means the

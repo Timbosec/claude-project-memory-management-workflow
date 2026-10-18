@@ -277,8 +277,8 @@ class RulesFileVerbatimTest(RuleInstallCase):
     def test_a_mid_bullet_tag_and_the_paragraph_break_after_it_are_kept(self):
         # second-real-example has two paragraphs, and its tag ends the first one
         self.user_edits()
-        old = self.shipped.replace("must be validated where it stands ALONE",
-                                   "must be checked where it stands ALONE", 1)
+        old = self.shipped.replace("must be validated where it stands alone",
+                                   "must be checked where it stands alone", 1)
         self.assertNotEqual(old, self.shipped)
         self.last_had(old)
         out = self.ok()
@@ -289,7 +289,7 @@ class RulesFileVerbatimTest(RuleInstallCase):
         self.assertIn("New wording:\n" + indented(bullet) + "\n", text)
         self.assertIn("boundary.** \u2192 `[second-real-example]`\n      **A check added as", text)
         old_part = text[text.index("Old wording:"):text.index("New wording:")]
-        self.assertIn("must be checked where it stands ALONE", old_part)
+        self.assertIn("must be checked where it stands alone", old_part)
         self.assertIn("boundary.** \u2192 `[second-real-example]`\n      **A check added as",
                       old_part)
 

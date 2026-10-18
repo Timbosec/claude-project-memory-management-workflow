@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 ## Bootstrap this project's backlog / decisions / CLAUDE.md scaffolding
 
-Goal: set up `backlog.md`, `decisions.md`, and a `CLAUDE.md` pointer in the CURRENT project, so it
+Goal: set up `backlog.md`, `decisions.md`, and a `CLAUDE.md` pointer in the current project, so it
 can use `/finalise` and `/memory-audit` the way any other project on this machine does. The files
 start empty apart from any open work the user chooses to move in from this project's own memory
 (step 6).

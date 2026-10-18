@@ -3,17 +3,17 @@
 Goal: remove stale, conflicting, and low-value content from project memory and from the
 standing-rule files; archive durable decisions+rationale to a git-tracked decisions log so
 they're recallable without polluting task-oriented memory. Verify every claim against the
-CURRENT codebase/skills before acting. Do NOT delete anything until the user approves the plan.
+current codebase/skills before acting. Do not delete anything until the user approves the plan.
 
 ### Scope — discover, then confirm (don't hardcode paths)
 1. Discover all auto-memory dirs: `find ~/.claude/projects -name MEMORY.md`.
-   Each dir is keyed off a working directory, so ONE project's memory can be split
-   across dirs (e.g. run-from-home vs run-from-repo). List them and ASK which
+   Each dir is keyed off a working directory, so one project's memory can be split
+   across dirs (e.g. run-from-home vs run-from-repo). List them and ask which
    project(s) to audit — don't assume, don't touch unrelated projects.
 2. Check for fragmentation: the same project's memories scattered across dirs.
-   Consolidate into the project repo's dir (move files + reconcile BOTH indexes).
+   Consolidate into the project repo's dir (move files + reconcile both indexes).
 Then, per chosen project, audit:
-Auto memory (Claude-written; NOT git-tracked → deletions are unrecoverable):
+Auto memory (Claude-written; not git-tracked → deletions are unrecoverable):
   - ~/.claude/projects/<dir>/memory/  (MEMORY.md + topic files)
 CLAUDE.md (human-written instructions):
   - ~/.claude/CLAUDE.md, ~/CLAUDE.md  (user scope)
@@ -28,7 +28,7 @@ User-scope rule homes — standing rules, and they go stale like any other doc:
   a rule home here. The actor test that assigns a rule to one of these is stated in `/finalise`
   step 1 (`~/.claude/skills/finalise/SKILL.md`, "who's the actor?"); apply it from there, don't
   re-derive it.
-Lesson ledgers — NOT rule homes; nothing in them is in force. Audit per Part 2.6, not Part 2:
+Lesson ledgers — not rule homes; nothing in them is in force. Audit per Part 2.6, not Part 2:
   - ~/.claude/lesson-candidates.md    (first cases awaiting a second; origin logs of promoted rules)
   - <repo>/lesson-candidates.md       (this project's own ledger, if it has one — same schema,
     scoped to this project; see Part 2.6, which treats every project's ledger and the global one
@@ -48,7 +48,7 @@ Decisions log (git-tracked, durable):
 Read but never edit: any skill file or reference doc, wherever it lives
 (`~/.claude/skills/*/SKILL.md`, a skill's `references/` directory, or a reference doc kept in
 the project). On any conflict with this project's own docs (memory, decisions.md, project
-CLAUDE.md) the reference WINS — read them to decide whether a memory is still true, and report
+CLAUDE.md) the reference wins — read them to decide whether a memory is still true, and report
 defects found in them. Editing them would resolve a conflict by rewriting the source of truth
 instead of the copy, and would bypass the reference's own gates (test runs after a constant
 changes, completeness checks).
@@ -61,15 +61,15 @@ prefix with `./` or use `--`.
 
 ### Part 0 — Safety
 1. `cp -r` each auto-memory dir to a timestamped backup before any edit. On a
-   CONTINUED/resumed run, take a NEW backup of the CURRENT dir — a prior session's
+   continued/resumed run, take a new backup of the current dir — a prior session's
    backup predates its own edits and is not a clean baseline for this run's changes.
-2. Produce the full change plan (Output section) and STOP for the user's approval before
+2. Produce the full change plan (Output section) and stop for the user's approval before
    deleting/editing/committing.
 3. Work in batches: apply high-confidence changes first; defer per-file operational
    verification (checking memories against current skill code) to a focused pass —
    ideally a fresh session launched from the project repo, which is cheaper.
    For large dirs, assess from the index and deep-read only suspicious files per pass.
-   When you defer, RECORD the exact deferred set in the change-plan output (which
+   When you defer, record the exact deferred set in the change-plan output (which
    files, which unverified claims) so a later "continue" run resumes from that list
    deterministically instead of reconstructing the queue from backups/git/mtimes.
 
@@ -79,7 +79,7 @@ prefix with `./` or use `--`.
 - Trim persona/vague lines: not "zero effect," but they dilute adherence and cost
   context — keep concrete, verifiable instructions and the short reasons that say what they
   protect.
-- **Judge a trim by WHERE the file loads, not by its size.** Only the always-loaded surfaces
+- **Judge a trim by where the file loads, not by its size.** Only the always-loaded surfaces
   (both CLAUDE.mds and MEMORY.md) cost context every session; the other rule homes load on
   demand, so bytes cut from them reclaim none of that budget — judge those on whether the rule
   still fires, never on length. `context_budget_report.py` (Part 2.6) prints exactly those three
@@ -113,20 +113,20 @@ copy does not, and nothing announces the drift. If in doubt, ask whether a fresh
 recover the fact by reading one file. If yes, cut it.
 
 For each entry classify as one of: TRUE+LIVE / OBSOLETE / DURABLE-DECISION / DUPLICATE.
-- Still TRUE vs current code/skills? (e.g. confirm skill names, file paths.)
-- Conflicts with another memory? Resolve to the CURRENT TRUTH (verify both — newest
+- Still true vs current code/skills? (e.g. confirm skill names, file paths.)
+- Conflicts with another memory? Resolve to the current truth (verify both — newest
   is not automatically right). Delete the false one.
-- OBSOLETE (deleted file / finished task / project moved past it) → delete. Do NOT
+- OBSOLETE (deleted file / finished task / project moved past it) → delete. Do not
   archive obsolete content into the decisions log.
 - Relative dates ("recently") → absolute or delete.
 - Old mtime/age = re-verify, not auto-delete.
-- DUPLICATE → consolidate. NEVER judge duplication from index lines: read BOTH
+- DUPLICATE → consolidate. Never judge duplication from index lines: read both
   bodies first; merge preserving every unique rule; delete a file only if its
   content is an exact subset of the other.
 - Body vs metadata drift: a file's own `description:` frontmatter and its MEMORY.md
-  index line can lag its body (e.g. the body says a task is DONE while the
+  index line can lag its body (e.g. the body says a task is done while the
   description/index still say "open task"). Reconcile all three to the body's
-  CURRENT truth — and prioritise the description + index line, because those
+  current truth — and prioritise the description + index line, because those
   (not the body) are what actually load into context each session.
 
 ### Part 2.5 — Extract durable decisions to <repo>/decisions.md
@@ -140,7 +140,7 @@ For entries kept only for their rationale/"why we did X" (DURABLE-DECISION):
 - Then thin the auto-memory entry to a one-line pointer to decisions.md (or delete
   it if the live memory carried nothing but the rationale).
 - Mark any decision the project has since reversed as Status: Superseded — don't delete it.
-- **A generalisable rule is not a durable decision.** decisions.md records why THIS project did
+- **A generalisable rule is not a durable decision.** decisions.md records why this project did
   X. A rule that would transfer to an unrelated project belongs in a user-scope rule home per
   the actor test — or, if only one case supports it, in the ledger until a second arrives.
   Routing a rule into decisions.md buries it where no other project will ever read it.
@@ -209,8 +209,8 @@ cannot do from inside a single session: *aging* (how long a candidate has waited
 - Add a CLAUDE.md pointer in `<repo>/CLAUDE.md`: "Decision history & rationale: decisions.md" —
   only if this project has a project-level CLAUDE.md and the pointer isn't already there. Same
   check for a `lesson-candidates.md` pointer if the project has that file but no line naming it.
-- Keep the frontmatter FIELDS (name/description/metadata.type) on kept files, but
-  UPDATE `description:` whenever it no longer matches the body — a stale description
+- Keep the frontmatter fields (name/description/metadata.type) on kept files, but
+  update `description:` whenever it no longer matches the body — a stale description
   is what misleads the next session. Don't leave a wrong one in place as "preserved."
 - Fix or remove `[[wikilinks]]` orphaned by deletions/renames.
 - **Run the check rather than eyeballing it:**
@@ -235,7 +235,7 @@ specific memory, `decisions.md` entry, or the ledger, e.g. in the shape of:
 - a question this project's memory demonstrably answers today (confirm it still resolves)
 - "Why did we choose <a real past architecture/cost decision>?" (should resolve via decisions.md)
 - "I've just noticed <a one-case lesson> — where does it go?" (should resolve to the ledger via
-  the actor test, NOT straight into a rule home)
+  the actor test, not straight into a rule home)
 If a probe surfaces wrong/conflicting memory, that entry is a deletion candidate.
 
 ### Output — proposed change plan (await approval, then apply)
@@ -258,4 +258,4 @@ After the user approves: apply, then ask before committing or pushing either rep
 Where either isn't a git repo, say once that its edits are saved but not committed, and carry
 on. Never offer to initialise a repo.
 Auto-memory stays local (not committed).
-Since auto-memory isn't git-tracked, this report IS its audit trail — be exact.
+Since auto-memory isn't git-tracked, this report is its audit trail — be exact.

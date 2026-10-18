@@ -33,7 +33,7 @@ description: How to check that a test can fail before trusting it - write the te
   than what it claims. **Record which tests failed under which break, not a count:** the mapping
   shows each test is anchored to the behaviour it names, and a total hides a test riding on another
   test's assertion.
-- **When you break code to check tests, the tests you did NOT aim at are how you check the break.**
+- **When you break code to check tests, the tests you did not aim at are how you check the break.**
   Running only the targeted tests can't tell a valid break from one that could never have worked: a
   bad break often gives the targeted tests the result you expected anyway, because breaking how the
   code handles valid input produces exactly what a test for invalid input expects. For example, a
