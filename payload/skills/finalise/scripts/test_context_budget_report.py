@@ -336,12 +336,6 @@ class TestBuildReportEndToEnd(unittest.TestCase):
             ))
             project_claude = self._write(tmp, "project.md", "# Example Project\nsome project text\n")
             memory_index = self._write(tmp, "MEMORY.md", "# Memory index\n- one line\n")
-            prompt_lessons = self._write(tmp, "prompt-lessons.md", (
-                "## Checklist\n"
-                "- checklist rule, no marker\n"
-                "## Origin log\n"
-                "- Date: 2026-07-01 Provisional -- must not be counted, wrong section\n"
-            ))
             writing_standing_docs = self._write(tmp, "wsd.md", "- one clean rule\n")
             writing_executor_briefs = self._write(tmp, "web.md", (
                 "- rule one (Provisional -- case.)\n- rule two\n"
@@ -364,7 +358,6 @@ class TestBuildReportEndToEnd(unittest.TestCase):
                 "global_claude": global_claude,
                 "project_claude": project_claude,
                 "memory_index": memory_index,
-                "prompt_lessons": prompt_lessons,
                 "writing_standing_docs": writing_standing_docs,
                 "writing_executor_briefs": writing_executor_briefs,
                 "ledger": ledger,
@@ -376,14 +369,15 @@ class TestBuildReportEndToEnd(unittest.TestCase):
             self.assertEqual(report["n_candidates"], 1)
             self.assertEqual(report["oldest_age_days"], 10)
 
-            # Marker counts: global (1/2 in Working rules, router bullet excluded),
-            # prompt-lessons (0/1 -- the Origin log section's Provisional must not count),
-            # writing-standing-docs (0/1), writing-executor-briefs (1/2). Total 2/6.
-            self.assertEqual(report["total_rules"], 6)
+            # Marker counts across the three homes: global (1/2 in Working rules, router bullet
+            # excluded), writing-standing-docs (0/1), writing-executor-briefs (1/2). Total 2/5.
+            self.assertEqual(report["total_rules"], 5)
             self.assertEqual(report["total_marked"], 2)
             counts_by_label = {label: (n, m) for label, n, m in report["home_counts"]}
+            self.assertEqual(set(counts_by_label), {"~/.claude/CLAUDE.md § Working rules",
+                                                    "writing-standing-docs.md",
+                                                    "writing-executor-briefs.md"})
             self.assertEqual(counts_by_label["~/.claude/CLAUDE.md § Working rules"], (2, 1))
-            self.assertEqual(counts_by_label["prompt-lessons.md § Checklist"], (1, 0))
 
             # Bytes: computed from the actual fixture file contents, not hardcoded.
             with open(global_claude, encoding="utf-8") as f:
@@ -414,7 +408,6 @@ class TestBuildReportEndToEnd(unittest.TestCase):
                 "global_claude": global_claude,
                 "project_claude": os.path.join(tmp, "does-not-exist-project.md"),
                 "memory_index": os.path.join(tmp, "does-not-exist-memory.md"),
-                "prompt_lessons": os.path.join(tmp, "does-not-exist-pl.md"),
                 "writing_standing_docs": os.path.join(tmp, "does-not-exist-wsd.md"),
                 "writing_executor_briefs": os.path.join(tmp, "does-not-exist-web.md"),
                 "ledger": os.path.join(tmp, "does-not-exist-ledger.md"),
@@ -436,6 +429,8 @@ class TestBuildReportEndToEnd(unittest.TestCase):
                 "# Working rules\n- tagged rule (Provisional -- one case.)\n"))
             project_claude = self._write(tmp, "project.md", "text\n")
             memory_index = self._write(tmp, "mem.md", "text\n")
+            # A /finalise kept from an older bundle still passes --prompt-lessons; it must be
+            # accepted and ignored, not make the report fail.
             prompt_lessons = self._write(tmp, "pl.md", "## Checklist\n- rule\n")
             wsd = self._write(tmp, "wsd.md", "- rule\n")
             web = self._write(tmp, "web.md", "- rule\n")
@@ -603,8 +598,7 @@ class TestBookkeepingReport(unittest.TestCase):
             paths[key] = os.path.join(tmp, name)
             with open(paths[key], "w", encoding="utf-8") as f:
                 f.write(text)
-        for key in ("prompt_lessons", "writing_standing_docs", "writing_executor_briefs",
-                    "ledger", "history"):
+        for key in ("writing_standing_docs", "writing_executor_briefs", "ledger", "history"):
             paths[key] = os.path.join(tmp, "absent-" + key)
         return paths
 

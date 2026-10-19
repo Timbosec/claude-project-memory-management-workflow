@@ -23,11 +23,10 @@ Five things printed:
      a ledger with no candidates may have no such heading at all, and that must read as a
      genuine zero, not the default a broken parser would also print. See
      TestCountCandidatesAwaiting for the populated-fixture case that guards against exactly that.
-  2. Rules across the four user-scope homes (~/.claude/CLAUDE.md's Working rules section,
-     prompt-lessons.md's Checklist section, writing-standing-docs.md, writing-executor-briefs.md
-     in full) still carrying a "Provisional" single-case marker anywhere in their body. A
-     top-level bullet with several internal Provisional tags (one per sub-rule) still counts
-     once.
+  2. Rules across three user-scope homes (~/.claude/CLAUDE.md's Working rules section, and
+     writing-standing-docs.md and writing-executor-briefs.md in full) still carrying a
+     "Provisional" single-case marker anywhere in their body. A top-level bullet with several
+     internal Provisional tags (one per sub-rule) still counts once.
   3. Per-file and total bytes of the three always-loaded surfaces: ~/.claude/CLAUDE.md,
      the current project's CLAUDE.md, MEMORY.md.
   4. The delta on that total since the previous logged reading, with its date -- from
@@ -84,7 +83,6 @@ DEFAULT_GLOBAL_CLAUDE = os.path.expanduser("~/.claude/CLAUDE.md")
 DEFAULT_PROJECT_CLAUDE = os.path.join(os.getcwd(), "CLAUDE.md")
 DEFAULT_MEMORY_INDEX = os.path.expanduser(
     "~/.claude/projects/" + os.getcwd().replace("/", "-") + "/memory/MEMORY.md")
-DEFAULT_PROMPT_LESSONS = os.path.expanduser("~/.claude/prompt-lessons.md")
 DEFAULT_WRITING_STANDING_DOCS = os.path.expanduser("~/.claude/writing-standing-docs.md")
 DEFAULT_WRITING_EXECUTOR_BRIEFS = os.path.expanduser("~/.claude/writing-executor-briefs.md")
 DEFAULT_LEDGER = os.path.expanduser("~/.claude/lesson-candidates.md")
@@ -326,7 +324,7 @@ def upsert_reading(path, row):
 
 
 def build_report(paths, today):
-    """paths: dict with keys global_claude, project_claude, memory_index, prompt_lessons,
+    """paths: dict with keys global_claude, project_claude, memory_index,
     writing_standing_docs, writing_executor_briefs, ledger, history -- every one of them a path,
     always read through read_text/read_history, never assumed to exist. Returns a dict of every
     computed figure so main() (printing) and tests (asserting) share one computation, and a dict
@@ -334,7 +332,6 @@ def build_report(paths, today):
     global_text = read_text(paths["global_claude"])
     project_text = read_text(paths["project_claude"])
     memory_text = read_text(paths["memory_index"])
-    prompt_lessons_text = read_text(paths["prompt_lessons"])
     writing_standing_docs_text = read_text(paths["writing_standing_docs"])
     writing_executor_briefs_text = read_text(paths["writing_executor_briefs"])
     ledger_text = read_text(paths["ledger"])
@@ -365,8 +362,6 @@ def build_report(paths, today):
     homes = [
         ("~/.claude/CLAUDE.md § Working rules",
          extract_section(global_text, "# Working rules", "# ")),
-        ("prompt-lessons.md § Checklist",
-         extract_section(prompt_lessons_text, "## Checklist", "## ")),
         ("writing-standing-docs.md", writing_standing_docs_text),
         ("writing-executor-briefs.md", writing_executor_briefs_text),
     ]
@@ -455,7 +450,8 @@ def main():
     parser.add_argument("--global-claude", default=DEFAULT_GLOBAL_CLAUDE)
     parser.add_argument("--project-claude", default=DEFAULT_PROJECT_CLAUDE)
     parser.add_argument("--memory-index", default=DEFAULT_MEMORY_INDEX)
-    parser.add_argument("--prompt-lessons", default=DEFAULT_PROMPT_LESSONS)
+    # prompt-lessons.md was retired; a /finalise kept from an older bundle still passes this.
+    parser.add_argument("--prompt-lessons", help=argparse.SUPPRESS)
     parser.add_argument("--writing-standing-docs", default=DEFAULT_WRITING_STANDING_DOCS)
     parser.add_argument("--writing-executor-briefs", default=DEFAULT_WRITING_EXECUTOR_BRIEFS)
     parser.add_argument("--ledger", default=DEFAULT_LEDGER)
@@ -473,7 +469,6 @@ def main():
         "global_claude": args.global_claude,
         "project_claude": args.project_claude,
         "memory_index": args.memory_index,
-        "prompt_lessons": args.prompt_lessons,
         "writing_standing_docs": args.writing_standing_docs,
         "writing_executor_briefs": args.writing_executor_briefs,
         "ledger": args.ledger,

@@ -253,8 +253,8 @@ class RecordFileRefusalTest(RuleRecordCase):
 
     def test_other_files_are_not_affected(self):
         self.start(self.shipped)
-        self.write("prompt-lessons.md", "mine\n")
-        r = self.ok("record", "prompt-lessons.md", "--decision", "kept")
+        self.write("writing-executor-briefs.md", "mine\n")
+        r = self.ok("record", "writing-executor-briefs.md", "--decision", "kept")
         self.assertIn("skip it until it is edited again", r.stdout)
 
     def write_rules(self, rules):

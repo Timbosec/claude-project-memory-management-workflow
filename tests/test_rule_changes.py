@@ -226,7 +226,7 @@ class FileNotesTest(ChangesCase):
 
     def setUp(self):
         super().setUp()
-        self.rel = "prompt-lessons.md"
+        self.rel = "writing-executor-briefs.md"
         self.current = sha(read(os.path.join(REPO, "payload", self.rel)))
         self.write_changes({"files": {self.rel: [
             {"sha256": sha(self.OLD), "note": ""},
@@ -247,20 +247,20 @@ class FileNotesTest(ChangesCase):
     def test_a_listed_file_prints_every_note_since_its_recorded_version(self):
         self.had(sha(self.OLD))
         out = self.ok()
-        self.assertIn(NEEDS + "1\n  prompt-lessons.md (owned)\n"
+        self.assertIn(NEEDS + "1\n  writing-executor-briefs.md (owned)\n"
                       "    why: Added the routing rule.\n    why: Trimmed the examples.\n", out)
 
     def test_a_file_recorded_at_the_middle_version_prints_only_the_later_note(self):
         self.had(sha(self.OLD + "v1"))
         out = self.ok()
-        self.assertIn("  prompt-lessons.md (owned)\n    why: Trimmed the examples.\n", out)
+        self.assertIn("  writing-executor-briefs.md (owned)\n    why: Trimmed the examples.\n", out)
         self.assertNotIn("Added the routing rule.", out)
 
     def test_notes_follow_the_file_line_when_there_is_a_diff_and_the_diff_stays_pure(self):
         self.had(sha(self.OLD), base_text=self.OLD)
         out = self.ok()
-        diff = self.t("workflow-bundle/changes/prompt-lessons.md.diff")
-        self.assertIn("  prompt-lessons.md (owned), bundle change: %s\n    why: Added the "
+        diff = self.t("workflow-bundle/changes/writing-executor-briefs.md.diff")
+        self.assertIn("  writing-executor-briefs.md (owned), bundle change: %s\n    why: Added the "
                       "routing rule.\n" % diff, out)
         self.assertNotIn("routing rule", read(diff))
         self.assertNotIn("why:", read(diff))
@@ -288,14 +288,14 @@ class FileNotesTest(ChangesCase):
         del record["files"][self.rel]
         self.save_record(record)
         out = self.ok()
-        self.assertIn("  prompt-lessons.md (owned)\n    why: Added the routing rule.\n"
+        self.assertIn("  writing-executor-briefs.md (owned)\n    why: Added the routing rule.\n"
                       "    why: Trimmed the examples.\n", out)
 
     def test_a_listed_file_with_no_entry_prints_no_why(self):
         self.write_changes({"files": {}})
         self.had(sha(self.OLD))
         out = self.ok()
-        self.assertIn(NEEDS + "1\n  prompt-lessons.md (owned)\n", out)
+        self.assertIn(NEEDS + "1\n  writing-executor-briefs.md (owned)\n", out)
         self.assertNotIn("why:", out)
 
 

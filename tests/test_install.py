@@ -147,7 +147,7 @@ class InstallTest(TargetCase):
     def test_edited_owned_file_is_listed_not_overwritten(self):
         self.install_ok()
         edited = {
-            "prompt-lessons.md": b"my own prompt lessons\n",
+            "writing-executor-briefs.md": b"my own probes\n",
             "skills/finalise/scripts/check_thread_state.py":
                 read_bytes(self.t("skills/finalise/scripts/check_thread_state.py"))
                 + b"\n# my local tweak\n",
@@ -200,13 +200,13 @@ class InstallTest(TargetCase):
     def test_dry_run_over_partial_install_writes_nothing(self):
         self.install_ok()
         os.remove(self.t("commands/memory-audit.md"))
-        with open(self.t("prompt-lessons.md"), "wb") as f:
+        with open(self.t("writing-executor-briefs.md"), "wb") as f:
             f.write(b"mine\n")
         before = snapshot(self.target)
         r = self.install_ok("--dry-run")
         self.assertEqual(snapshot(self.target), before)
         self.assertIn("Installed: 1", r.stdout)
-        self.assertIn("  prompt-lessons.md (owned)", r.stdout)
+        self.assertIn("  writing-executor-briefs.md (owned)", r.stdout)
 
     # --- failures -----------------------------------------------------------
 
@@ -561,7 +561,7 @@ class SettingsTest(TargetCase):
             f.write(b"- a candidate\n")
         self.edit_script(b"\n# tweak\n")
         self.install_ok("record", self.SCRIPT, "--decision", "kept")
-        with open(self.t("prompt-lessons.md"), "ab") as f:
+        with open(self.t("writing-executor-briefs.md"), "ab") as f:
             f.write(b"- mine\n")
         os.remove(self.t("commands/memory-audit.md"))
         install_old_version(self, OLD_DOC)

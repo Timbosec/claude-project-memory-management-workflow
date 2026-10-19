@@ -269,7 +269,7 @@
         "note": "The routing probes carry the rule's new fifth home, and a new Probe F checks that a testing lesson with two contrasting cases routes to the proving-tests-can-fail skill."
       },
       {
-        "sha256": "f8a453461294a177020489b7dc3ef97aa79385accec8609b1b2f3787b7bfffae",
+        "sha256": "076969b92d3ab0a0ec4370358e704c208ba0cfaaa85d0bee02aef04a863f1bd3",
         "note": "The routing probes carry the rule's four homes: a lesson about writing a brief or prompt goes to writing-executor-briefs."
       }
     ],
@@ -317,6 +317,10 @@
       {
         "sha256": "fb6c4714a0c7235d2cd31908e21dae3820e3bc73bb61d220370391e00d20e076",
         "note": "Also lists bookkeeping in the files loaded every session: dated notes in brackets, \"Provisional\" and \"cold-tested\" tags, and a CLAUDE.md longer than the 200 lines Claude Code's documentation recommends. A dated note on a standing permission is not listed."
+      },
+      {
+        "sha256": "4008cd3061f681af4326519b5a5a724fe47b4477ce5c2af667a5cdf8c2f7acda",
+        "note": "Counts Provisional markers across three homes now that prompt-lessons.md is retired; --prompt-lessons is still accepted and ignored, so an older /finalise that passes it keeps working."
       }
     ],
     "skills/finalise/scripts/test_context_budget_report.py": [
@@ -327,6 +331,10 @@
       {
         "sha256": "eacc39b147e337d26c47f87ba0b7faba11b171b0a7cd6cff44ccd135c7b1c205",
         "note": "Tests for the bookkeeping list."
+      },
+      {
+        "sha256": "f4bff6a3d560621e61baca07ddb7b0518eb174d3ff88a996b2c57a610ebd28d1",
+        "note": "Tests the three homes, and that the retired --prompt-lessons option is still accepted."
       }
     ],
     "skills/finalise/SKILL.md": [
@@ -347,8 +355,8 @@
         "note": "Step 2 also points at the list in writing-standing-docs.md that a new or reworded rule must pass before it is proposed. Corrected two pointers: the user-level rule on plain wording lets the user's own terms stand (it never exempted project jargon), and the replace-not-join rule lives in writing-standing-docs.md. Adds the proving-tests-can-fail skill as a fifth home for lessons (step 1 now counts five), for the agent proving a test can fail. The routing test and the list of files it commits name it. \"What NOT to record\" no longer repeats the routing tests; it points to step 1's, which also corrects its old claim that every lesson that doesn't transfer goes to memory or decisions.md. Step 1 now captures a lesson candidate only for a mistake that cost or nearly cost something: the user catching something wrong by a standard already in force (not a new preference, which is feedback), several attempts or turns, or a wrong result reaching or about to reach a file, plan, report or the user. A better approach with no failure behind it is recorded as a decision, except a sharper way to write a prompt or brief, which may still be suggested as a prompt lesson. Capitals used for emphasis are also lowercased."
       },
       {
-        "sha256": "162c40e41c64e47f936094d9565903a62332a71427451ca8ad852631a7ee33a7",
-        "note": "Four user-scope homes instead of five now that prompt-lessons.md is retired; the bullet is renamed \"Lesson opportunities\" and no longer offers a sharper way to write a prompt as a lesson with no failure behind it, which is a decision. The cross-check reads the candidate's own home."
+        "sha256": "9ea82827cbae23ca97269b027ea3cc17eb965bbf2ff917142e5640b7d85197c4",
+        "note": "Four user-scope homes instead of five now that prompt-lessons.md is retired; the bullet is renamed \"Lesson opportunities\" and no longer offers a sharper way to write a prompt as a lesson with no failure behind it, which is a decision. The cross-check reads the candidate's own home. The context-budget command no longer passes the retired file, and the report counts Provisional markers across three homes."
       }
     ],
     "skills/bootstrap-project/SKILL.md": [

@@ -254,13 +254,14 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      Skip this step if `<project root>/backlog.md` doesn't exist yet.
    - `python3 ${CLAUDE_SKILL_DIR}/scripts/context_budget_report.py --project-claude
      <project root>/CLAUDE.md --memory-index <memory dir>/MEMORY.md --ledger
-     ~/.claude/lesson-candidates.md --prompt-lessons ~/.claude/prompt-lessons.md
-     --writing-standing-docs ~/.claude/writing-standing-docs.md --writing-executor-briefs
-     ~/.claude/writing-executor-briefs.md --history <project root>/context_budget_log.csv`
+     ~/.claude/lesson-candidates.md --writing-standing-docs ~/.claude/writing-standing-docs.md
+     --writing-executor-briefs ~/.claude/writing-executor-briefs.md --history <project
+     root>/context_budget_log.csv`
      It **reports and never gates — it always exits 0**, and writes one row to
      `<project root>/context_budget_log.csv` per calendar day. Prints: lesson candidates in
      `~/.claude/lesson-candidates.md` awaiting a second case (count + oldest age in days);
-     rules across the four user-scope homes still carrying a "Provisional" single-case marker;
+     rules across three user-scope homes (`~/.claude/CLAUDE.md` § Working rules,
+     `writing-standing-docs.md`, `writing-executor-briefs.md`) still carrying a "Provisional" single-case marker;
      per-file and total bytes of the three always-loaded surfaces (`~/.claude/CLAUDE.md`,
      `<project root>/CLAUDE.md`, `MEMORY.md`); and the total's delta against the previous logged
      reading; then **bookkeeping in those three files**, each item with its line number: a dated
