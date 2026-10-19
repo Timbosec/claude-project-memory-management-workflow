@@ -251,7 +251,7 @@
         "note": "The rules on proving a test can fail moved to the new proving-tests-can-fail skill, split into seven rules that each open on when they apply; this file keeps a pointer for briefing a sub-agent that writes tests. The rule on sizing delegated checkpoints is split into four, each opening on when it applies, and no longer says sub-agents are cut off routinely or without a report, since Claude Code now tells Claude when a run is cut off. The caller-audit rule is split into three: report every caller, verify a proposed fix separately from its findings, and also find code that depends on what a changed symbol's answers mean. Capitals used for emphasis are also lowercased."
       },
       {
-        "sha256": "648a95a43bab949c56696db8f21727d846c089ff234176b6e3a5a976a055ee47",
+        "sha256": "40a1e2578c13593cf27cbc8b909a57062cb6568c2f27d0f0e15fdd0ed4934cff",
         "note": "New section on what a brief must spell out, moved from the retired prompt-lessons.md: the doc-editing rules a cold agent needs, computable corrections specified as code, a second real case before a lesson is recorded, and how findings are presented. The file now also covers prompts the user asks for help with."
       }
     ],

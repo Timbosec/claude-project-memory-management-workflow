@@ -24,8 +24,8 @@ This file is not auto-loaded, so its length is paid only when it is read.
 - **When a brief's output is findings or choices for the user, say how they are presented:** one
   at a time, each recorded before the next, with anything the user must read in the text that
   ends the turn, as `[one-decision-at-a-time]` in `~/.claude/CLAUDE.md` and the rule beside it
-  set out. Otherwise the agent asks everything at
-  once, decides silently, or asks about context the user never saw.
+  set out. Otherwise the agent asks everything at once, decides silently, or asks about context
+  the user never saw.
 
 ## Running a delegated build and checking its work
 
