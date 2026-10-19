@@ -441,12 +441,20 @@
       {
         "sha256": "f04e2065c3d9f27596f970de9e025b6c0be34bdcf1c8e26fb05bbd15ec2a16e9",
         "note": ""
+      },
+      {
+        "sha256": "216117d7d3cf305b4e10a527fa31cabcb294853fdfa570f737a8fc26283053f2",
+        "note": "The reminder is now printed as JSON, so it reaches both the user (as a notice) and Claude (as added context); the old plain text went only to the debug log."
       }
     ],
     "hooks/test_remind_finalise.py": [
       {
         "sha256": "cd495bc94bbc8844b73674ed9efa87b79b71522c233097e907bf60837f030223",
         "note": ""
+      },
+      {
+        "sha256": "a85be47a1218f0c466c783fb6900a278f30aa75daccdb4d32b815920593ff0a5",
+        "note": "Adds a test that the commit reminder carries both the user message and the context for Claude."
       }
     ],
     "lesson-candidates.md": [

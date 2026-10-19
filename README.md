@@ -21,8 +21,8 @@ Nothing historical ships with it: every ledger, log and backlog starts empty.
    reports back. It points Claude to the rule files it reads when it plans, briefs sub-agents or
    edits docs. If you've installed the optional guard,
    a sub-agent can't edit the project's record files (`CLAUDE.md`, `backlog.md`, `decisions.md`,
-   memory). After each `git commit`, a hook reminds Claude to run `/finalise` before the session
-   ends.
+   memory). After each `git commit`, a hook shows you a notice and tells Claude to run `/finalise`
+   before the session ends.
 4. **Close the session.** Run `/finalise` (or `/finalize`) before `/clear`. It sweeps the
    conversation for decisions, fixes and lessons that exist only in the chat and proposes a home
    for each, one approval at a time. It then moves any loose work into `backlog.md`, runs
