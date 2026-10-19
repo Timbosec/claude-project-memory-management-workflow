@@ -20,9 +20,9 @@ CLAUDE.md (human-written instructions):
   - <repo>/CLAUDE.md                  (project scope)
 User-scope rule homes — standing rules, and they go stale like any other doc:
   - ~/.claude/CLAUDE.md § Working rules  (the agent at any other moment)
-  - ~/.claude/prompt-lessons.md          (the user authoring a prompt or brief)
   - ~/.claude/writing-standing-docs.md   (the agent editing a standing doc or memory)
-  - ~/.claude/writing-executor-briefs.md (the agent briefing an executor or verifying it)
+  - ~/.claude/writing-executor-briefs.md (the agent or the user writing a brief or prompt for an
+                                          agent, or the agent verifying its work)
   - ~/.claude/skills/proving-tests-can-fail/SKILL.md (the agent proving a test can fail)
   ~/.claude/CLAUDE.md appears twice on purpose — audited as an instruction file above, and as
   a rule home here. The actor test that assigns a rule to one of these is stated in `/finalise`

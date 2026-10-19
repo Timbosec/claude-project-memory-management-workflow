@@ -29,7 +29,7 @@ promoted on evidence since accumulated, or retired, and which rules still carry 
 
 Written by `/finalise` step 1 when routing a lesson candidate, or appended the moment a case is
 noticed — a session-end sweep may run after compaction has destroyed the verbatim detail.
-A case is a mistake that cost or nearly cost something, as `/finalise` step 1's "Prompt-lesson
+A case is a mistake that cost or nearly cost something, as `/finalise` step 1's "Lesson
 opportunities" bullet defines it; a better approach with no failure behind it is a decision, not a
 case.
 
@@ -48,7 +48,7 @@ Capture of a *candidate* needs no approval; it records an observation, not an in
       "no test — settled by a second real case" and stop.>
     - What a second case would need to show: <including the opposite direction, which
       bounds the claim rather than supporting it>
-    - Would live in: <prompt-lessons | writing-standing-docs | writing-executor-briefs |
+    - Would live in: <writing-standing-docs | writing-executor-briefs |
       proving-tests-can-fail skill | CLAUDE.md Working rules>  (per the actor test)
     - Status: awaiting a second contrasting case
 

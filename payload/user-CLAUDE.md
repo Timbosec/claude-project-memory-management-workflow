@@ -1,19 +1,16 @@
 # User scope (all projects)
 
-- `~/.claude/prompt-lessons.md` — rules for **authoring** a prompt or brief. Consult when the user
-  asks for help writing or reviewing one. Append only on their explicit instruction ("save that as
-  a prompt lesson"); suggesting a candidate is welcome, writing one unprompted is not.
-  → `[prompt-lessons-home]`
 - `~/.claude/writing-standing-docs.md` — rules for **editing** standing docs, skills and memory
   bodies. Consult before any such edit.
   → `[standing-docs-home]`
 - `~/.claude/writing-executor-briefs.md` — rules for **briefing an executor and verifying its
-  work**: caller audits, checkpoint sizing, porting a pattern. Consult before authoring any plan
-  or brief for a sub-agent, and before accepting a checkpoint.
+  work**, and for writing any brief or prompt for an agent: what the brief must spell out, caller
+  audits, checkpoint sizing, porting a pattern. Consult before writing any plan, brief or prompt
+  for an agent, including when the user asks for help with one, and before accepting a checkpoint.
   → `[executor-briefs-home]`
 - Routing a new lesson: ask who the **actor** is, then **how many cases you have**. The user
-  authoring a prompt → prompt-lessons. The agent editing a standing doc → writing-standing-docs. The
-  agent briefing an executor or verifying its checkpoint → writing-executor-briefs. The agent
+  or the agent writing a brief or prompt for an agent, or the agent verifying its checkpoint →
+  writing-executor-briefs. The agent editing a standing doc → writing-standing-docs. The agent
   proving a test can fail → the proving-tests-can-fail skill. The agent, at any other moment →
   Working rules below. **One case goes to none of them** — it goes to
   `~/.claude/lesson-candidates.md` and waits for a second, contrasting case. The one exception is

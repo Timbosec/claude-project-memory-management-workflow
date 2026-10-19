@@ -2,7 +2,7 @@
 
 Operative rules for instruction files, skills, CLAUDE.md and memory bodies.
 Consult before any such edit. Each rule's cases and rationale are logged in the
-origin log of `~/.claude/prompt-lessons.md`; the tag after a rule names its entry
+origin logs of `~/.claude/lesson-candidates.md`; the tag after a rule names its entry
 there.
 
 ## What to write down

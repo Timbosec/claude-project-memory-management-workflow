@@ -5,6 +5,10 @@
       {
         "sha256": "2c3407f0f66f5f39141d04897b7d3304762d4415cc07ea0385244055dc517efb",
         "note": ""
+      },
+      {
+        "removed": true,
+        "note": "prompt-lessons.md is retired: its rules on writing briefs moved to writing-executor-briefs.md, which now covers prompts and briefs the user writes too."
       }
     ],
     "standing-docs-home": [
@@ -25,6 +29,10 @@
       {
         "sha256": "7cd342a7cf5cc69de1e6061eb8a7eb32a4577fd422bab02f5b21318e15cae003",
         "note": "No longer sends test work to writing-executor-briefs.md: the rules on proving a test can fail moved to the proving-tests-can-fail skill, which loads itself when tests are added or changed."
+      },
+      {
+        "sha256": "6c73d0b3c6a3f700109ec47e08dafdab58903b21091b56f50c8d0d9ef3537913",
+        "note": "Also covers writing any brief or prompt for an agent, including one the user asks for help with, and names its new section on what a brief must spell out; it takes over from the retired prompt-lessons.md."
       }
     ],
     "lesson-routing": [
@@ -39,6 +47,10 @@
       {
         "sha256": "afacd8cf028831f775aa218def1dc2a0b0715af3fbfdf45e3130982dd795c115",
         "note": "Adds the proving-tests-can-fail skill as a fifth home for lessons, for the agent proving a test can fail. Its probes were re-run (B to F, three runs each) and all routed as expected."
+      },
+      {
+        "sha256": "8e21050781d6a3d7d8b37226d66ce3d17f786e6ae31647f3748ae7f11da8fbb4",
+        "note": "Four homes instead of five: a lesson about writing a brief or prompt, by the agent or the user, goes to writing-executor-briefs.md now that prompt-lessons.md is retired."
       }
     ],
     "search-silence": [
@@ -201,6 +213,10 @@
       {
         "sha256": "6151434c93c0cf54c106cdfb346086535d28560c3688833c87afe0b5904dabb9",
         "note": "Points at the new end-of-turn-text rule in place of the old question-panel rule."
+      },
+      {
+        "removed": true,
+        "note": "Retired: its rules on writing briefs moved to writing-executor-briefs.md, and each rule's cases go in the origin logs of lesson-candidates.md."
       }
     ],
     "writing-standing-docs.md": [
@@ -215,6 +231,10 @@
       {
         "sha256": "604e71339e6b33424c3c127d1cf391af62b72421fc029889d2f2ba3b472fdc30",
         "note": "The cold-test rule gains the method moved from the user-level rules file: have a fresh agent act on a wording, never ask it whether the wording is clear. A new closing section lists what a new or reworded rule must pass before it is proposed: its opening names the situation, Claude wouldn't do it unprompted (checked by running a session without it), it does one job in the right place, nothing in it goes out of date, it contradicts no other rule, and its wording is calm and concrete. The cold-test rule now opens with when it applies (when you test a rule) and drops capitals used for emphasis. The checklist's line on calm wording now follows Anthropic's guidance: write a rule as a plain instruction, not a forceful one, and leave out catch-alls like \"if in doubt, do X\"; keep emphasis (capitals, IMPORTANT) for one rule that sessions show being skipped, on that line alone; put a rule that must hold every time in a hook."
+      },
+      {
+        "sha256": "510ef48acf6022debe0e8ef8e8a0d09b4b23079ec3cd377ff4cb92b0e6c3342e",
+        "note": "Points to the origin logs in lesson-candidates.md for each rule's cases, now that prompt-lessons.md is retired."
       }
     ],
     "writing-executor-briefs.md": [
@@ -229,6 +249,10 @@
       {
         "sha256": "3b92e74c79a8b5b89a62764a0a4d43a051481c03a892bfc4fa36994140aa7763",
         "note": "The rules on proving a test can fail moved to the new proving-tests-can-fail skill, split into seven rules that each open on when they apply; this file keeps a pointer for briefing a sub-agent that writes tests. The rule on sizing delegated checkpoints is split into four, each opening on when it applies, and no longer says sub-agents are cut off routinely or without a report, since Claude Code now tells Claude when a run is cut off. The caller-audit rule is split into three: report every caller, verify a proposed fix separately from its findings, and also find code that depends on what a changed symbol's answers mean. Capitals used for emphasis are also lowercased."
+      },
+      {
+        "sha256": "648a95a43bab949c56696db8f21727d846c089ff234176b6e3a5a976a055ee47",
+        "note": "New section on what a brief must spell out, moved from the retired prompt-lessons.md: the doc-editing rules a cold agent needs, computable corrections specified as code, a second real case before a lesson is recorded, and how findings are presented. The file now also covers prompts the user asks for help with."
       }
     ],
     "doc-test-probes.md": [
@@ -243,6 +267,10 @@
       {
         "sha256": "163fef86478e0ec04111bf480d43a33d8507190c69156e9eeb7a0e379f15e340",
         "note": "The routing probes carry the rule's new fifth home, and a new Probe F checks that a testing lesson with two contrasting cases routes to the proving-tests-can-fail skill."
+      },
+      {
+        "sha256": "f8a453461294a177020489b7dc3ef97aa79385accec8609b1b2f3787b7bfffae",
+        "note": "The routing probes carry the rule's four homes: a lesson about writing a brief or prompt goes to writing-executor-briefs."
       }
     ],
     "skills/finalise/scripts/check_memory_index.py": [
@@ -317,6 +345,10 @@
       {
         "sha256": "b06d836a91966b98590c99da0b407cca5412b49515fe6301410d9a730195c37c",
         "note": "Step 2 also points at the list in writing-standing-docs.md that a new or reworded rule must pass before it is proposed. Corrected two pointers: the user-level rule on plain wording lets the user's own terms stand (it never exempted project jargon), and the replace-not-join rule lives in writing-standing-docs.md. Adds the proving-tests-can-fail skill as a fifth home for lessons (step 1 now counts five), for the agent proving a test can fail. The routing test and the list of files it commits name it. \"What NOT to record\" no longer repeats the routing tests; it points to step 1's, which also corrects its old claim that every lesson that doesn't transfer goes to memory or decisions.md. Step 1 now captures a lesson candidate only for a mistake that cost or nearly cost something: the user catching something wrong by a standard already in force (not a new preference, which is feedback), several attempts or turns, or a wrong result reaching or about to reach a file, plan, report or the user. A better approach with no failure behind it is recorded as a decision, except a sharper way to write a prompt or brief, which may still be suggested as a prompt lesson. Capitals used for emphasis are also lowercased."
+      },
+      {
+        "sha256": "162c40e41c64e47f936094d9565903a62332a71427451ca8ad852631a7ee33a7",
+        "note": "Four user-scope homes instead of five now that prompt-lessons.md is retired; the bullet is renamed \"Lesson opportunities\" and no longer offers a sharper way to write a prompt as a lesson with no failure behind it, which is a decision. The cross-check reads the candidate's own home."
       }
     ],
     "skills/bootstrap-project/SKILL.md": [
@@ -373,6 +405,10 @@
       {
         "sha256": "328e5e9ec685a18d55b93209526d21216970ad288ea4fd9c77d3a5d76fc747ee",
         "note": "No longer names the test rules among what writing-executor-briefs.md holds; they moved to the proving-tests-can-fail skill. Capitals used for emphasis are also lowercased."
+      },
+      {
+        "sha256": "8d784a8b1ab325067248316d0c75ae7a9978cbab3e2500ff12dba62b5ca92fa2",
+        "note": "The summary gives each task's backlog number every time it mentions one, and says so when an item has none."
       }
     ],
     "commands/memory-audit.md": [
@@ -387,6 +423,10 @@
       {
         "sha256": "4da15e66bd4a7ac020e3fbb293942bf91bf7b99de8cea3a4cdbff8328b293d0b",
         "note": "The rule-by-rule pass checks each rule against the list in writing-standing-docs.md instead of its own, and no longer tells the reviewer to cut the short reasons that say what a rule protects. The actor test is cited as /finalise step 1 (it said step 2), the checklist's last step is called the cold test as that file calls it, and a line about /memory that no longer matched Claude Code was cut. Adds the proving-tests-can-fail skill as a fifth home for lessons, for the agent proving a test can fail. The audit's list of rule homes includes it. Capitals used for emphasis are also lowercased."
+      },
+      {
+        "sha256": "03ebee392be98139c15b90d7b07312abbfd54cbdccaf5e6c36f149977a0f6c38",
+        "note": "The list of rule homes drops the retired prompt-lessons.md; writing-executor-briefs.md now covers briefs and prompts the user writes too."
       }
     ],
     "hooks/remind_finalise.py": [
@@ -413,6 +453,10 @@
       {
         "sha256": "88f9551bdf1e177f5b2568c977dfb0a7e95da52886bd5c095fc11645a3729973",
         "note": "Names the rule the harness tests by its ID, self-carrying-sentences, not \"the clarity rule\". The candidate template's \"Would live in\" list includes the proving-tests-can-fail skill. Each case now records the model and Claude Code version it happened on, so a later review can tell which rules to re-check after a model change. The capture section says what counts as a case: a mistake that cost or nearly cost something. Capitals used for emphasis are also lowercased."
+      },
+      {
+        "sha256": "59876f4b6a182cc8dd06e62cfefdfb9848de40f3376c515a82866c003862fb50",
+        "note": "The \"Would live in\" field no longer offers the retired prompt-lessons.md, and the capture section names /finalise's renamed \"Lesson opportunities\" bullet."
       }
     ],
     "under-explained-cases.md": [

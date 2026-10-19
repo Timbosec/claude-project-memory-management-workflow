@@ -1,9 +1,33 @@
 # Briefing an executor & verifying its work
 
-Operative rules for authoring a plan or brief for a sub-agent, and for accepting its
-checkpoints. Consult before writing either, and before approving a checkpoint.
+Operative rules for writing a plan, brief or prompt for an agent, whether yours or one the user
+asks for help with, and for accepting a sub-agent's checkpoints. Consult before writing any of
+these, and before approving a checkpoint.
 
 This file is not auto-loaded, so its length is paid only when it is read.
+
+## What the brief must spell out
+
+- **When a brief asks an agent to edit standing docs, spell out the rules from
+  `~/.claude/writing-standing-docs.md` that the edit needs.** A cold agent neither loads nor
+  infers them. To document a system or fix stale docs, have it sort each fact into contract,
+  snapshot or nuance, and delete snapshots rather than refresh them. To update a doc, ask for the
+  section to read as one consistent instruction afterwards, not only "add X". To make a file
+  generic, the human becomes "the user", and every "you" must still mean the agent afterwards.
+- **When a brief would tell an agent to remember a correction, check whether the correction can
+  be computed; if it can, specify the code, hook or validation that makes it.** A brief that says
+  "fix it and add a note" produces the note. The rule itself is `[rule-into-code]` in
+  `~/.claude/CLAUDE.md`.
+- **When a brief says "fix it and record the lesson", make it require checking the lesson against
+  a second real, contrasting case first.** Otherwise the agent ships the first plausible fix as a
+  rule. The rule itself is `[second-real-example]` in `~/.claude/CLAUDE.md`.
+- **When a brief's output is findings or choices for the user, say how they are presented:** one
+  at a time, each recorded before the next, with anything the user must read in the text that
+  ends the turn, as `[one-decision-at-a-time]` in `~/.claude/CLAUDE.md` and the rule beside it
+  set out. Otherwise the agent asks everything at
+  once, decides silently, or asks about context the user never saw.
+
+## Running a delegated build and checking its work
 
 - **When you delegate a build, size and commit the work so an interruption costs little.** A usage
   limit can end a sub-agent's run partway, leaving a partly applied tree; Claude is told the run was

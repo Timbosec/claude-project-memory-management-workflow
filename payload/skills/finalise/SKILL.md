@@ -20,7 +20,7 @@ updates that are needed before clearing context.
 
 **Every file this skill writes gets committed immediately, not batched at the end — write and
 commit together, at each step below that writes something.** Two repos are in play: `<project
-root>` (decisions.md, backlog.md) and `~/.claude` (CLAUDE.md, prompt-lessons.md,
+root>` (decisions.md, backlog.md) and `~/.claude` (CLAUDE.md,
 writing-standing-docs.md, writing-executor-briefs.md, skills/proving-tests-can-fail/SKILL.md,
 lesson-candidates.md, under-explained-cases.md). Commit in whichever repo the file lives in.
 **Ask before pushing either repo, unless a `CLAUDE.md` explicitly pre-authorizes routine pushes of
@@ -66,18 +66,17 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      tuning the rule than many noisy ones, and a noisy corpus would drive changes off bad
      evidence. When the file reaches ~10 entries, propose a re-evaluation of the
      `~/.claude/CLAUDE.md` § Working rules bullet it serves.
-   - **Prompt-lesson opportunities**: mistakes that cost or nearly cost something, where the fix
+   - **Lesson opportunities**: mistakes that cost or nearly cost something, where the fix
      is a reusable rule, not a one-off fact. A mistake counts when the user caught something you got wrong
      (wrong by a standard that existed before they said so: the facts, the task, or an instruction
      already in force; a preference they state for the first time is feedback, the "Feedback the
      user gave" bullet above), when you took several attempts or turns to resolve something, or
      when a wrong result reached, or was about to reach, a file, a plan, a report or the user. A
      better approach reached in discussion with no failure behind it is a decision, recorded under
-     (c) below. The exception is a sharper way to write a prompt or brief, which you may suggest as
-     a prompt lesson; `~/.claude/prompt-lessons.md` is written only when the user asks.
+     (c) below.
      Routing test, three-way:
      (a) **generalises across projects/disciplines?** — append to `~/.claude/lesson-candidates.md`,
-     gated on a second, contrasting case from anywhere; promotes to one of the five global
+     gated on a second, contrasting case from anywhere; promotes to one of the four global
      user-scope homes below.
      (b) **recurs within this project, and is genuinely rule-shaped** — something you'd want
      enforced every time this project is worked on, not just known about? — append to `<project
@@ -101,22 +100,21 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      projects' ledgers, potentially in a very different discipline — a vague symptom description
      risks a false match on wording alone where the two cases don't actually share a mechanism.
      Name what's actually going on.
-     For (a) only, **who's the actor?** — five user-scope homes (`/memory-audit` applies this
-     test from here, so it holds whatever the user's `CLAUDE.md` says): the user authoring a
-     prompt/brief → `prompt-lessons.md`; the agent editing a standing doc or memory →
-     `~/.claude/writing-standing-docs.md`; the agent briefing an executor or verifying its
-     checkpoint → `~/.claude/writing-executor-briefs.md`; the agent proving a test can fail →
+     For (a) only, **who's the actor?** — four user-scope homes (`/memory-audit` applies this
+     test from here, so it holds whatever the user's `CLAUDE.md` says): the agent editing a
+     standing doc or memory → `~/.claude/writing-standing-docs.md`; the agent or the user writing
+     a brief or prompt for an agent, or the agent verifying its checkpoint →
+     `~/.claude/writing-executor-briefs.md`; the agent proving a test can fail →
      `~/.claude/skills/proving-tests-can-fail/SKILL.md`; the agent at any other moment →
      `~/.claude/CLAUDE.md` § Working rules. An amendment re-derives its home
      rather than inheriting the home of the rule it extends.
      **Split, don't dual-write** — a candidate can have both a rule-shaped core (global or
      project-level) and a one-off residue; if (and only if) the residue isn't already recorded in
      the repo, route each part to its own home: the rule to whichever ledger it belongs in, the
-     residue to memory/decisions.md with a one-way reference naming the lesson tag (e.g.
-     "generalised as prompt-lessons [tag]", or "recorded as a project rule, see CLAUDE.md").
-     prompt-lessons.md carries no links to *project* files — its origin log names the project as
-     prose — but it does point to the other four user-scope homes when a rule's operative clause
-     lives there, with the origin log staying canonical for rationale. Never write the full
+     residue to memory/decisions.md with a one-way reference saying where the rule went (e.g.
+     "generalised as a lesson candidate in `~/.claude/lesson-candidates.md`", or "recorded as a
+     project rule, see CLAUDE.md"). The user-scope homes and the global ledger carry no links to
+     *project* files; an origin log names the project as prose. Never write the full
      candidate in two homes — that's the restatement-drift the canonical-plus-pointers lesson
      exists to prevent.
 
@@ -133,9 +131,9 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
    - `<project root>/decisions.md` — any architectural/workflow decision with a rationale
    - `<memory dir>/MEMORY.md` — index of all memories
    - Relevant individual memory files (read them if the index entry suggests a match)
-   - `~/.claude/prompt-lessons.md` — for prompt-lesson candidates: skip anything an existing
-     checklist rule already covers; a candidate that *sharpens* an existing rule proposes an
-     amendment to it, not a duplicate entry
+   - The candidate's user-scope home, from the actor test in step 1 — skip anything an existing
+     rule already covers; a candidate that *sharpens* an existing rule proposes an amendment to
+     it, not a duplicate entry
    - `~/.claude/writing-standing-docs.md` — **read before writing any approved candidate**;
      it carries the operative rules for editing standing docs and memory bodies
      (contract-vs-snapshot, canonical-plus-pointers, replace-not-join, audience-referent), and
@@ -168,9 +166,8 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
      `File:` leads because the point of the format is that the user never has to go looking for
      where a candidate lands. When `File:` and the actor's home disagree, the routing is wrong
      — settle that before asking. Some candidates are two writes and `File:` names both: a new
-     memory needs its own file *and* a `MEMORY.md` index line, and a
-     `~/.claude/prompt-lessons.md` entry needs one checklist line *and* one origin-log entry
-     ending with a prompt-writing consequence, per that file's own header rules.
+     memory needs its own file *and* a `MEMORY.md` index line, and a promoted rule needs its
+     line in its home *and* its cases in the ledger's origin log.
    - **Write `Problem:` so it survives having every identifier struck out.** Delete the task
      numbers, keys, filenames, function and column names from your own sentence; if what
      is left no longer says what goes wrong, the identifiers were carrying the meaning and the
@@ -315,7 +312,7 @@ step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, le
 - Code patterns or file structure (derivable from the codebase)
 - Git history (already in commits)
 - Mis-routed lessons: before writing a lesson anywhere, apply the routing test and the actor test
-  in step 1's "Prompt-lesson opportunities" bullet.
+  in step 1's "Lesson opportunities" bullet.
 
 ## Scope
 

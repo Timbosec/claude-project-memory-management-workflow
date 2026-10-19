@@ -41,12 +41,12 @@ def shipped_text():
 
 class SplitRulesTest(unittest.TestCase):
 
-    def test_shipped_file_parses_to_18_rules_with_18_unique_ids(self):
+    def test_shipped_file_parses_to_17_rules_with_17_unique_ids(self):
         rules = install.split_rules(shipped_text())
-        self.assertEqual(len(rules), 18)
+        self.assertEqual(len(rules), 17)
         ids = [rule_id for rule_id, _body in rules]
         self.assertNotIn(None, ids)
-        self.assertEqual(len(set(ids)), 18)
+        self.assertEqual(len(set(ids)), 17)
         self.assertTrue(KEPT_TAGS <= set(ids))
 
     def test_shipped_bodies_hold_no_id_tag_and_no_extra_whitespace(self):
@@ -145,7 +145,8 @@ class RealRulesToRaiseTest(unittest.TestCase):
     def test_the_base_a_real_install_holds_raises_only_the_rules_changed_since(self):
         # 4ac01a8 has no IDs, and its second-real-example tag sits mid-bullet. Since then the
         # routing rule gained its exception, the executor-briefs pointer lost a demoted rule, and
-        # the panel-after-prose and broken-instrument rules were removed. The panel rule came back
+        # the panel-after-prose and broken-instrument rules were removed, as was the pointer to
+        # prompt-lessons.md when that file was retired. The panel rule came back
         # reworded as end-of-turn-text; its first line differs, so it pairs with nothing and shows
         # as new beside the old bullet's removal. Five rules were since trimmed to their
         # instructions; their first lines are unchanged, so each pairs with its old bullet. The
@@ -166,12 +167,13 @@ class RealRulesToRaiseTest(unittest.TestCase):
                           ("existence-vs-magnitude", "changed"),
                           ("measure-reach", "new"),
                           (None, "removed"), (None, "removed"), (None, "removed"),
-                          (None, "removed"), (None, "removed")])
-        self.assertTrue(items[11]["old"].startswith("- **A search that turns up nothing"))
-        self.assertTrue(items[12]["old"].startswith("- Never call a blocking-panel tool"))
-        self.assertTrue(items[13]["old"].startswith("- **Write the sentence so it carries"))
-        self.assertTrue(items[14]["old"].startswith("- When introspecting on your own behaviour"))
-        self.assertTrue(items[15]["old"].startswith("- **A broken instrument's reading"))
+                          (None, "removed"), (None, "removed"), (None, "removed")])
+        self.assertTrue(items[11]["old"].startswith("- `~/.claude/prompt-lessons.md`"))
+        self.assertTrue(items[12]["old"].startswith("- **A search that turns up nothing"))
+        self.assertTrue(items[13]["old"].startswith("- Never call a blocking-panel tool"))
+        self.assertTrue(items[14]["old"].startswith("- **Write the sentence so it carries"))
+        self.assertTrue(items[15]["old"].startswith("- When introspecting on your own behaviour"))
+        self.assertTrue(items[16]["old"].startswith("- **A broken instrument's reading"))
 
     def test_the_version_before_the_shipped_text_rule_raises_exactly_that_rule(self):
         items = install.rules_to_raise(fixture_text("user-CLAUDE-a6c5979.md"),
@@ -185,7 +187,8 @@ class RealRulesToRaiseTest(unittest.TestCase):
                           ("existence-vs-magnitude", "changed"),
                           ("measure-reach", "new"),
                           ("write-for-readers", "new"), (None, "removed"), (None, "removed"),
-                          (None, "removed"), (None, "removed"), (None, "removed")])
+                          (None, "removed"), (None, "removed"), (None, "removed"),
+                          (None, "removed")])
         self.assertIsNone(items[11]["old"])
         self.assertTrue(items[11]["new"].startswith("- **Write shipped text for the people"))
         self.assertTrue(items[11]["first_line"].startswith("- **Write shipped text"))
@@ -288,6 +291,7 @@ class IdlessBaseTest(unittest.TestCase):
         # The search-silence, self-carrying-sentences and observable-vs-inferred rules' first
         # lines changed, so each shows as new beside its old bullet's removal. The rule-into-code
         # rule is tagged in this base, so its reworded opening pairs by ID and shows as changed.
+        # The pointer to the retired prompt-lessons.md shows as removed.
         base = fixture_text("user-CLAUDE-f596cd7.md")
         items = install.rules_to_raise(base, shipped_text(), {})
         self.assertEqual([(i["id"], i["status"]) for i in items],
@@ -299,14 +303,16 @@ class IdlessBaseTest(unittest.TestCase):
                           ("existence-vs-magnitude", "changed"),
                           ("measure-reach", "new"),
                           ("write-for-readers", "new"), (None, "removed"), (None, "removed"),
-                          (None, "removed"), (None, "removed"), (None, "removed")])
+                          (None, "removed"), (None, "removed"), (None, "removed"),
+                          (None, "removed")])
         changed = items[8]
         self.assertEqual(changed["id"], "second-real-example")
         self.assertTrue(changed["old"].startswith("- Before a fix or lesson becomes a standing"))
         self.assertNotEqual(changed["old"], changed["new"])
         self.assertIsNone(items[6]["old"])
-        self.assertTrue(items[12]["old"].startswith("- **A search that turns up nothing"))
-        self.assertTrue(items[15]["old"].startswith("- When introspecting on your own behaviour"))
+        self.assertTrue(items[12]["old"].startswith("- `~/.claude/prompt-lessons.md`"))
+        self.assertTrue(items[13]["old"].startswith("- **A search that turns up nothing"))
+        self.assertTrue(items[16]["old"].startswith("- When introspecting on your own behaviour"))
         self.assertIsNone(items[11]["old"])
 
     def test_pairing_is_by_first_line_with_the_id_tag_stripped(self):

@@ -19,10 +19,9 @@ wording; Probe C is a case the rule must leave alone.
 
     You are an AI coding agent. These two rules are in force for you:
 
-    RULE A - Routing a new lesson: ask who the actor is. The user authoring a prompt or brief ->
-    prompt-lessons. You editing a standing doc -> writing-standing-docs. You briefing an executor
-    or verifying its checkpoint -> writing-executor-briefs. You, at any other moment -> Working
-    rules. An amendment to an existing rule re-derives its home; it does not inherit it.
+    RULE A - Routing a new lesson: ask who the actor is. The user or you writing a brief or
+    prompt for an agent, or you verifying its checkpoint -> writing-executor-briefs. You editing a
+    standing doc -> writing-standing-docs. You, at any other moment -> Working rules. An amendment to an existing rule re-derives its home; it does not inherit it.
 
     RULE B - Before a fix or lesson becomes a standing rule, validate it against a second real,
     contrasting case - not synthetic, not the one that prompted it - plus a regression case in the
@@ -65,10 +64,9 @@ them use RULE B and the QUESTION from Probe A,
 and this RULE A:
 
     RULE A - Routing a new lesson: ask who the actor is, then how many cases you have. The user
-    authoring a prompt or brief -> prompt-lessons. You editing a standing doc ->
-    writing-standing-docs. You briefing an executor or verifying its checkpoint ->
-    writing-executor-briefs. You proving a test can fail -> the proving-tests-can-fail skill. You,
-    at any other moment -> Working rules. One case goes to none of them - it goes to
+    or you writing a brief or prompt for an agent, or you verifying its checkpoint ->
+    writing-executor-briefs. You editing a standing doc -> writing-standing-docs. You proving a test can
+    fail -> the proving-tests-can-fail skill. You, at any other moment -> Working rules. One case goes to none of them - it goes to
     ~/.claude/lesson-candidates.md and waits for a second, contrasting case. The
     one exception is the user ruling that a repeat would cost too much to wait for a second case:
     then it goes into its home now, untagged, with that reason recorded under the rule's entry in
