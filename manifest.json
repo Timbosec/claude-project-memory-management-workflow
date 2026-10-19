@@ -58,6 +58,20 @@
       "executable": false
     },
     {
+      "source": "payload/skills/finalise/scripts/check_rule_divergence.py",
+      "target": "skills/finalise/scripts/check_rule_divergence.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
+      "source": "payload/skills/finalise/scripts/test_check_rule_divergence.py",
+      "target": "skills/finalise/scripts/test_check_rule_divergence.py",
+      "kind": "owned",
+      "component": "core",
+      "executable": false
+    },
+    {
       "source": "payload/skills/finalise/scripts/check_thread_state.py",
       "target": "skills/finalise/scripts/check_thread_state.py",
       "kind": "owned",
@@ -263,6 +277,10 @@
     {
       "component": "core",
       "file": "skills/finalise/scripts/test_check_memory_index.py"
+    },
+    {
+      "component": "core",
+      "file": "skills/finalise/scripts/test_check_rule_divergence.py"
     },
     {
       "component": "core",

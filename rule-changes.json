@@ -514,6 +514,18 @@
         "sha256": "49c3e303f4c2f4b640661a84111096767ef797d692f26338eb3c0a594a7b1b9b",
         "note": "New skill: the rules on proving a test can fail before trusting it (write the test first, revert only the fix, break working code on purpose to check new tests). Claude loads it when adding or changing tests; in tests it loaded every time, including when the request never mentioned tests. Capitals used for emphasis are also lowercased."
       }
+    ],
+    "skills/finalise/scripts/check_rule_divergence.py": [
+      {
+        "sha256": "cee35fe2483a9a87c78eef093bbaa58dd20b60bf2509323bfed817af8034c264",
+        "note": ""
+      }
+    ],
+    "skills/finalise/scripts/test_check_rule_divergence.py": [
+      {
+        "sha256": "415a1dd061b7f16f0bdf9950bca96cc974d74eed94e53077dfa7fde59681a355",
+        "note": ""
+      }
     ]
   }
 }
