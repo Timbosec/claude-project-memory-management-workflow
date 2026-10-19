@@ -29,7 +29,9 @@ Nothing historical ships with it: every ledger, log and backlog starts empty.
    integrity checks, and rewrites "Next up" so the next session's `/next` starts from it.
 5. **Audit occasionally.** Run `/memory-audit` from time to time. It checks the rule files, both
    `CLAUDE.md`s and memory against each other for contradictions, duplication and staleness. It
-   shows you the whole plan before changing anything.
+   shows you the whole plan before changing anything. Run it after each upgrade as well: it finds bundle rules you
+   edited in place and offers to move each addition into a rule of its own, so the next upgrade
+   doesn't conflict with it.
 
 ## How a lesson becomes a rule
 

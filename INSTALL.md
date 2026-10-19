@@ -219,3 +219,11 @@ entry stay in place until they remove them.
 ## 6. Git
 
 Ask the user before committing anything in `~/.claude` to git.
+
+## 7. Recommend `/memory-audit`
+
+After an upgrade, not a first install, tell the user to run `/memory-audit` in a new session. It
+lists the bundle rules their `CLAUDE.md` has edited in place and offers to move each addition into
+a rule of its own, so that later upgrades don't raise it again. Don't run it as part of the install:
+it asks the user for a separate set of decisions. On a first install nothing has been edited, so
+skip it.

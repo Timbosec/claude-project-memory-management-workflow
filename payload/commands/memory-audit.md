@@ -101,6 +101,30 @@ prefix with `./` or use `--`.
      `~/.claude/doc-test-probes.md` describes at its top.
      Then run the list's cold test on the new wording.
   A rule that passes every line needs no decision: list it as checked.
+- **Find bundle rules the user has edited in place.** A rule edited in place differs from the
+  bundle's wording at every upgrade; a rule of its own never does. Run
+  `python3 ~/.claude/skills/finalise/scripts/check_rule_divergence.py`. It compares each bundle
+  rule in `~/.claude/CLAUDE.md` with the bundle's wording as last installed and prints each
+  difference inline, as `[-words only in the bundle's-]` and `{+words only in the user's+}`. It
+  skips with a message when there is no install record. Take each rule it lists as EDITED, or as
+  NO TAG and edited, with the user one at a time:
+  1. **Quote both rules in full, not only the difference**, and say in plain words what the
+     user's edit does. Never refer to an edit by a label of your own.
+  2. **Classify the edit.** It is an addition if it adds a case, exception or condition and keeps
+     the bundle's meaning. Otherwise it is a rewording or a deletion; only additions can be moved
+     out, so for those the choices stay as in the installer: keep theirs, take the bundle's, or
+     merge.
+  3. **For an addition, check its evidence first,** as the lesson-routing rule in
+     `~/.claude/CLAUDE.md` sets out. If one case supports it, say so and offer to move it to
+     `~/.claude/lesson-candidates.md` or leave it in the rule for now.
+  4. **To move an addition into a rule of its own,** put the bundle's rule back exactly as the
+     bundle writes it, with its tag, and write the addition as a separate rule ending
+     `→ [local: extends <id>]`. It must pass the list in `~/.claude/writing-standing-docs.md`,
+     "Before a new or reworded rule goes in", including a cold test. Refuse the move if the new
+     rule only restates the bundle's or contradicts it or another rule.
+  5. **A rule listed as NO TAG and identical** needs only its `→ [id]` tag added. One listed as
+     MISSING: ask whether it was left out on purpose.
+  A rule the script does not list needs no decision.
 
 ### Part 2 — Auto-memory audit (MEMORY.md + every topic file)
 
@@ -245,6 +269,8 @@ If a probe surfaces wrong/conflicting memory, that entry is a deletion candidate
 - Conflicts resolved: which won and why (cite the code/skill checked)
 - CLAUDE.md edits (incl. decisions.md pointer)
 - Rule-home edits: which home, which rule, and whether it was trimmed, moved or de-duplicated
+- Bundle rules edited in place: for each, the user's addition quoted, its classification, the
+  evidence, and the proposed outcome (moved to its own rule, kept, taken or merged).
 - The CLAUDE.md rule-by-rule pass: for each rule, the lines it failed, the proposed change and
   what the checks found, with a recommendation. Take these with the user one rule at a time.
 - Ledger outcomes: each waiting candidate → promoted (naming the second case) / still waiting /

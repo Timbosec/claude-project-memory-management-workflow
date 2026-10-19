@@ -435,6 +435,10 @@
       {
         "sha256": "03ebee392be98139c15b90d7b07312abbfd54cbdccaf5e6c36f149977a0f6c38",
         "note": "The list of rule homes drops the retired prompt-lessons.md; writing-executor-briefs.md now covers briefs and prompts the user writes too."
+      },
+      {
+        "sha256": "fd31ad85f77a921f9c74f8d27c9f144760e8a6a42975c0801ef2ca7d00acf3e8",
+        "note": "Part 1 gains a step that lists the bundle rules the user edited in place and offers to move each addition into a rule of its own, checking its evidence and the rule-writing list first; the output plan lists them."
       }
     ],
     "hooks/remind_finalise.py": [
