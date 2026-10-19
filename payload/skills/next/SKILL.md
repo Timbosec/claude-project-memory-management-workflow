@@ -16,6 +16,8 @@ description: Surfaces the recommended next backlog item (from backlog.md's "Next
 2. Summarise what the Next-up section says in <=3 bullets: the recommended item(s), why now (per
    its own text), and any open decision it's waiting on. If the section names no single ready
    item — it sometimes says exactly that — report that plainly rather than manufacturing a pick.
+   Give each task's backlog number (#38) every time you mention it, so the user can refer to it
+   by number. If an item has no number, say so: it isn't on the Open list.
 3. Present the recommendation and stop. Do not edit any file or start work until the user picks
    an item — the section may name more than one candidate, or the user may want something else
    off the Open list entirely.
