@@ -89,6 +89,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CORE = "core"
@@ -662,7 +663,10 @@ def project_dirs(target):
             continue
         dirs.update(decode_project_folder(name))
         dirs.update(session_dirs(folder))
-    return sorted({os.path.realpath(d) for d in dirs if os.path.isdir(d)})
+    # Folders under the system temp dir are scratch (probe runs and the like), not projects.
+    scratch = os.path.realpath(tempfile.gettempdir())
+    found = {os.path.realpath(d) for d in dirs if os.path.isdir(d)}
+    return sorted(d for d in found if os.path.commonpath([d, scratch]) != scratch)
 
 
 def projects_with_own(target, names):

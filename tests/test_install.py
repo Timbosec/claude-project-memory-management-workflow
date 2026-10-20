@@ -3,6 +3,7 @@
 Run from the repo root: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover tests
 Every run passes --target explicitly: the script's default target is the real ~/.claude.
 """
+import atexit
 import copy
 import hashlib
 import json
@@ -26,9 +27,16 @@ CORE_TESTS = [t["file"] for t in MANIFEST["tests"] if t["component"] == "core"]
 GUARD_TESTS = [t["file"] for t in MANIFEST["tests"] if t["component"] == "subagent-guard"]
 
 
-def run_install(target, *extra, script=INSTALL, home=None):
+# install.py ignores project folders under the system temp dir (they are scratch). The tests'
+# fixtures live under the temp dir, so the script is run with TMPDIR pointing at a directory
+# none of them are under, unless a test passes its own.
+_EMPTY_TMP = tempfile.mkdtemp(prefix="install-test-empty-tmp-")
+atexit.register(shutil.rmtree, _EMPTY_TMP, ignore_errors=True)
+
+
+def run_install(target, *extra, script=INSTALL, home=None, tmpdir=None):
     assert target, "every run must pass --target"
-    env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+    env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", TMPDIR=tmpdir or _EMPTY_TMP)
     if home:
         env["HOME"] = home
     return subprocess.run([sys.executable, script, "--target", target, *extra],
@@ -56,6 +64,7 @@ class TargetCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.target = os.path.join(self._tmp.name, "claude")
+        self.script_tmpdir = None  # the TMPDIR install.py runs with; None: an unrelated empty one
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -64,7 +73,7 @@ class TargetCase(unittest.TestCase):
         return os.path.join(self.target, rel)
 
     def install(self, *extra):
-        return run_install(self.target, *extra)
+        return run_install(self.target, *extra, tmpdir=self.script_tmpdir)
 
     def install_ok(self, *extra):
         r = self.install(*extra)
@@ -935,9 +944,9 @@ class ProjectOverrideTest(TargetCase):
         self.home = os.path.join(self._tmp.name, "home")
         os.makedirs(self.home)
 
-    def project(self, name, own="skill"):
+    def project(self, name, own="skill", under=None):
         """A project directory with its own /finalise, known to Claude Code by its folder."""
-        d = os.path.realpath(os.path.join(self.home, name))
+        d = os.path.realpath(os.path.join(under or self.home, name))
         os.makedirs(d, exist_ok=True)
         self.give_own(d, own)
         os.makedirs(self.t("projects/" + re.sub(r"[^A-Za-z0-9]", "-", d)), exist_ok=True)
@@ -1053,6 +1062,86 @@ class ProjectOverrideTest(TargetCase):
         r = self.install_ok("--dry-run")
         self.assertIn(self.HELD + "1", r.stdout)
         self.assertEqual(sorted(os.listdir(self.target)), ["projects"])
+
+    # --- scratch folders under the system temp dir are not projects ---------------------------
+
+    def scratch_dir(self):
+        """A directory standing in for the system temp dir; install.py is run with it as TMPDIR."""
+        scratch = os.path.realpath(os.path.join(self._tmp.name, "scratch"))
+        os.makedirs(scratch)
+        self.script_tmpdir = scratch
+        return scratch
+
+    def project_by_session_log(self, parent, name):
+        """A project with its own /finalise, known only from a session log's cwd."""
+        d = os.path.realpath(os.path.join(parent, name))
+        os.makedirs(d)
+        self.give_own(d)
+        folder = self.t("projects/-no-such-path-" + name)
+        os.makedirs(folder)
+        with open(os.path.join(folder, "s.jsonl"), "w", encoding="utf-8") as f:
+            f.write(json.dumps({"type": "user", "cwd": d}) + "\n")
+        return d
+
+    def assert_not_held_back(self, r):
+        self.assertIn(self.HELD + "0", r.stdout)
+        self.assertNotIn("overriding", r.stdout)
+        self.assertNotIn("own copy in", r.stdout)
+        self.assertTrue(os.path.exists(self.t(self.SKILL)))
+
+    def test_scratch_project_found_from_its_folder_name_is_skipped(self):
+        scratch = self.scratch_dir()
+        self.project("probe_run", under=scratch)
+        self.assert_not_held_back(self.install_ok())
+
+    def test_scratch_project_found_from_a_session_log_is_skipped(self):
+        scratch = self.scratch_dir()
+        self.project_by_session_log(scratch, "probe_run")
+        self.assert_not_held_back(self.install_ok())
+
+    def test_scratch_project_already_installed_over_is_not_reported_as_overriding(self):
+        scratch = self.scratch_dir()
+        self.install_ok()
+        self.project("probe_run", under=scratch)
+        self.assert_not_held_back(self.install_ok())
+
+    def test_scratch_project_reached_through_a_symlink_outside_temp_is_skipped(self):
+        scratch = self.scratch_dir()
+        real = self.project("probe_run", under=scratch)
+        link = os.path.join(self.home, "link_to_probe")
+        os.symlink(real, link)
+        os.makedirs(self.t("projects/" + re.sub(r"[^A-Za-z0-9]", "-", link)))
+        self.assert_not_held_back(self.install_ok())
+
+    def test_a_temp_dir_given_as_a_symlink_still_covers_what_is_under_it(self):
+        real_scratch = os.path.realpath(os.path.join(self._tmp.name, "real_scratch"))
+        os.makedirs(real_scratch)
+        link = os.path.join(self._tmp.name, "scratch_link")
+        os.symlink(real_scratch, link)
+        self.script_tmpdir = link
+        self.project("probe_run", under=real_scratch)
+        self.assert_not_held_back(self.install_ok())
+
+    def test_projects_outside_the_temp_dir_are_still_held_back_by_both_routes(self):
+        scratch = self.scratch_dir()
+        by_name = self.project("real_by_name")
+        by_log = self.project_by_session_log(self.home, "real_by_log")
+        self.project("probe_by_name", under=scratch)
+        self.project_by_session_log(scratch, "probe_by_log")
+        r = self.install_ok()
+        self.assertIn(self.HELD + "1", r.stdout)
+        self.assertIn("  %s (/finalise), own copy in: %s" % (
+            self.SKILL, ", ".join(sorted([by_name, by_log]))), r.stdout)
+        self.assertNotIn("probe_by", r.stdout)
+        self.assertFalse(os.path.exists(self.t(self.SKILL)))
+
+    def test_a_project_whose_name_only_starts_like_the_temp_dir_is_not_skipped(self):
+        # /x/scratch is the temp dir; /x/scratch2 is not under it.
+        scratch = self.scratch_dir()
+        os.makedirs(scratch + "2")
+        d = self.project("neighbour", under=scratch + "2")
+        r = self.install_ok()
+        self.assertIn("  %s (/finalise), own copy in: %s" % (self.SKILL, d), r.stdout)
 
 
 if __name__ == "__main__":

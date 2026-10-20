@@ -160,7 +160,8 @@ A skill or command installed in `~/.claude` overrides a project's own skill or c
 same name, in every session in that project. So when a project already has its own copy, the
 script doesn't install the bundle's. It lists the file under "Held back", with the projects that
 have their own. It finds projects from the folders Claude Code keeps for each directory it has
-been used in, so a project never opened in Claude Code isn't checked.
+been used in, so a project never opened in Claude Code isn't checked. Directories under the
+system temp directory are skipped, since they are scratch folders and not projects.
 
 Take the held-back files one at a time. For each, tell the user which projects have their own
 copy, and that installing the bundle's means those projects run the bundle's version instead of
