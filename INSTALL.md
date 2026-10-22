@@ -48,11 +48,28 @@ file, relative to the clone root. The user-level `CLAUDE.md` is stored as
 Take the files one at a time. Finish one, including its `record` command, before raising the
 next.
 
+When a question you put to the user concerns text the user wrote, such as a paragraph or line
+they added to a listed file, a rule in their `CLAUDE.md`, a `settings.json` entry or a project's
+own skill, put that text in front of them, because they may not remember writing it. This holds
+for every question in these steps, and for a question about a bundle change whenever an option
+would keep, replace or delete something they wrote. Put it in the question itself or its preview,
+not only in the text before it:
+- quote each such passage in full, as their file holds it, with the bundle's passage it meets
+  beside it;
+- say in plain words what the passage does or requires;
+- word each option by what happens to their text, such as "keep the rule you added about X and
+  take the bundle's other changes", never by a name you made up for the passage.
+
+Quote only the passages the choice bears on, not the rest of the file. Where nothing the user
+wrote bears on a question, there is nothing to quote.
+
 A listed file may end with `bundle change: <path>`. That diff holds only what the bundle changed
-since the version the user last had, never the user's own edits. Work from it rather than from
-the whole files: show the user each change and carry the ones they agree to into their file. A
-file listed without one has no earlier bundle version to compare against, so compare the whole
-files as below. `CLAUDE.md` never carries one; it has its own procedure below.
+since the version the user last had, never the user's own edits. Work from it, not from a
+comparison of the whole files, to see what the bundle changed: show the user each change and
+carry the ones they agree to into their file. Read the user's file for any text of theirs that an
+option would affect, and put it to them as above. A file listed without one has no earlier bundle
+version to compare against, so compare the whole files as below. `CLAUDE.md` never carries one;
+it has its own procedure below.
 
 The bundle says why it changed something: `why:` lines under a listed file, and "Why the bundle
 changed it" under a rule in the rules file. Give the user that reason with the change. Where the
@@ -72,9 +89,9 @@ what happened to it, and the path printed under them is a file holding each rule
 wording exactly as the bundle writes it. Take the rules one at a time:
 - **new** or **changed**: find what the user's file says about the same situation, under any
   heading. For a changed rule, show the user what the bundle changed between the two wordings.
-  Raise it with the options in item 4 of the full pass below. Then draft a one-line reason from
-  the conflict you raised (or, with no conflict, from what the rule adds) and have the user
-  confirm or correct it; they never have to write one. Record it:
+  Raise it with the options in item 4 of the full pass below, quoting as above. Then draft a
+  one-line reason from the conflict you raised (or, with no conflict, from what the rule adds)
+  and have the user confirm or correct it; they never have to write one. Record it:
   `python3 install.py record-rule ID --decision taken|merged|dropped --reason "TEXT"`. Taken
   means the bundle's wording went in as it is; merged means a wording agreed with the user,
   including keeping both with the bundle rule as an exception; dropped means it was left out.
@@ -86,8 +103,8 @@ wording exactly as the bundle writes it. Take the rules one at a time:
   and the bundle has reworded it since. It stays dropped. Tell the user in one line that it
   changed. Raise it again only if the new wording plausibly answers their reason; if it does and
   they decide, record that as above. Recording nothing keeps it dropped.
-- **removed from the bundle**: if the user's file still holds the rule, ask whether to keep it
-  or delete it. There is nothing to record.
+- **removed from the bundle**: if the user's file still holds the rule, quote it as above and ask
+  whether to keep it or delete it. There is nothing to record.
 
 For `CLAUDE.md`, each rule's `record-rule` is what finishes that rule; record the file once, after
 the last rule: `python3 install.py record CLAUDE.md --decision merged`. It refuses, naming the
@@ -104,7 +121,7 @@ whole file:
    permission use. Those are where an existing file, often an employer's default, most often
    differs.
 3. List every overlap or contradiction, quoting the existing text and the bundle text side by
-   side. If the list is empty, tell the user so.
+   side as above. If the list is empty, tell the user so.
 4. Raise the items one at a time. Get a decision on each before raising the next:
    - keep the existing text: leave the bundle rule out;
    - take the bundle's: drop the existing text and keep the bundle rule;
@@ -126,8 +143,9 @@ whole file:
 
 **Any other file** (kind `owned`): with a bundle change, work from the diff as above. Without
 one, read both versions in full and show the user the specific differences, not just that the
-file differs. Ask whether to keep theirs, take the bundle's or merge. For a merge, agree each
-difference with the user, then write the result to the target.
+file differs, quoting their own passages as above. Ask whether to keep theirs, take the
+bundle's or merge. For a merge, agree each difference with the user, then write the result to the
+target.
 
 Then record the decision:
 - kept theirs: `python3 install.py record PATH --decision kept`
@@ -143,12 +161,12 @@ again, and a bundle change lists only the rules it changed.
 `python3 install.py rules` lists every recorded rule decision with its reason. To reverse one,
 record the rule again with the new decision.
 
-If the summary lists `settings.json` entries that differ from the bundle's, show the user both
-and change an entry only if they say so.
+If the summary lists `settings.json` entries that differ from the bundle's, show the user both,
+as above, and change an entry only if they say so.
 
 **Files no longer in the bundle.** The summary lists, under "No longer in the bundle, you edited
 it or it isn't in the record", each file the bundle used to install and now doesn't, with what
-replaced it. Show the user the file and ask whether to remove it or keep it:
+replaced it. Show the user the file, as above, and ask whether to remove it or keep it:
 - remove: delete only that file once the user has said yes, then
   `python3 install.py record PATH --decision removed`;
 - keep: `python3 install.py record PATH --decision kept`. It isn't listed again until it is
@@ -165,7 +183,8 @@ system temp directory are skipped, since they are scratch folders and not projec
 
 Take the held-back files one at a time. For each, tell the user which projects have their own
 copy, and that installing the bundle's means those projects run the bundle's version instead of
-their own from then on. Ask whether to install it anyway or leave it out:
+their own from then on. Put each project's copy to them as in step 2, setting out the passages
+where it differs from the bundle's. Ask whether to install it anyway or leave it out:
 - install it: `python3 install.py project-override PATH --decision install`, then run
   `python3 install.py` again and resolve anything it newly lists as in step 2;
 - leave it out: `python3 install.py project-override PATH --decision hold`.
