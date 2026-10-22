@@ -357,6 +357,10 @@
       {
         "sha256": "9ea82827cbae23ca97269b027ea3cc17eb965bbf2ff917142e5640b7d85197c4",
         "note": "Four user-scope homes instead of five now that prompt-lessons.md is retired; the bullet is renamed \"Lesson opportunities\" and no longer offers a sharper way to write a prompt as a lesson with no failure behind it, which is a decision. The cross-check reads the candidate's own home. The context-budget command no longer passes the retired file, and the report counts Provisional markers across three homes."
+      },
+      {
+        "sha256": "1c577405be3d55b99fb5e9ef42d63ef89ceb97827d78e831162368e4e79bdb2b",
+        "note": "Step 1 now recovers what a compaction took out of the conversation: it runs a script that lists the user's messages since the previous run, marking which ones are no longer in context, and reads the transcript around the decisions, feedback and lessons among them. If the script cannot read the transcript, it says so and sweeps what is visible instead of assuming nothing was lost. Without this, anything said before a compaction was never recorded."
       }
     ],
     "skills/bootstrap-project/SKILL.md": [
@@ -528,6 +532,18 @@
     "skills/finalise/scripts/test_check_rule_divergence.py": [
       {
         "sha256": "415a1dd061b7f16f0bdf9950bca96cc974d74eed94e53077dfa7fde59681a355",
+        "note": ""
+      }
+    ],
+    "skills/finalise/scripts/list_compacted_messages.py": [
+      {
+        "sha256": "012dc962fd40895c13fef4f76fbb8795c880fa5981d1efb28761d8909a3b99b0",
+        "note": ""
+      }
+    ],
+    "skills/finalise/scripts/test_list_compacted_messages.py": [
+      {
+        "sha256": "200d3433447a97bd9e0d1c4bb8d8d5cd7a7053286030d443dfbad0a759a8ae1a",
         "note": ""
       }
     ]

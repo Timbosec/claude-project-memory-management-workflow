@@ -37,7 +37,31 @@ local. Every memory write this skill makes (a new memory file, an edited one, a 
 line) persists to disk only; skip the commit for those and don't report them as committed in
 step 7. If a memory file shows up as untracked in `~/.claude`'s `git status`, leave it untracked.
 
-1. **Sweep the session conversation** for any of the following:
+1. **Sweep the session conversation.** When the session has been compacted, first recover the
+   stretch you can no longer see: after a compaction you hold only a summary of what the user said,
+   but the full transcript stays on disk. Run
+   `python3 ${CLAUDE_SKILL_DIR}/scripts/list_compacted_messages.py` from `<project root>`. It lists
+   the user's messages since the previous `/finalise`, one line each (`#<n> L<line> <date> <status>
+   <model> | <text>`), marked COMPACTED (a compaction took it out of context) or IN-CONTEXT.
+   - Exit 2, or output saying it cannot read the transcript: tell the user so in one line and sweep
+     from the conversation you can see. That is not "no compaction".
+   - "no compaction since the last /finalise": carry on with the sweep as usual, with no extra
+     reading.
+   - Otherwise the listing is an index only. For each COMPACTED message that looks like a decision,
+     feedback from the user or a lesson candidate, read the transcript around it with the same
+     script and `--around <line>`: what you wrote and did before it (with tool output), and how it
+     was resolved and what it cost after. Note its date and model from the listing. IN-CONTEXT
+     messages are already in front of you; don't re-read them.
+   - Check what you find against `decisions.md`, the lesson ledgers and `backlog.md`, and raise
+     only what they do not already record. It then goes through the list below, and steps 2 and
+     3, like anything else in the sweep.
+   - Record what the transcript shows (what was written, done and said); label any guess about why
+     you went wrong as a guess. Where the user's message is ambiguous (a new preference, or a
+     mistake by a standard that already existed?) or the case can't be pieced together from the
+     transcript, put the excerpt in front of the user, in the text that ends your turn, before
+     writing anything.
+
+   Sweep for any of the following:
    - Architectural or workflow decisions (why X was chosen over Y, tradeoffs accepted)
    - Resolved bugs or surprising fixes (root cause + fix approach worth remembering)
    - New patterns, tools, or behaviours discovered
