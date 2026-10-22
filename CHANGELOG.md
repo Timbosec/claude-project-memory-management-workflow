@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-10-22
+
+**Added**
+- `/finalise` now recovers what a compaction took out of the conversation. Claude Code shortens a
+  long session by replacing its older part with a summary, so `/finalise` used to sweep only the
+  summary and miss decisions and feedback from the part it replaced. A new script lists the user's
+  messages since the previous `/finalise` from the transcript saved on disk and marks which ones a
+  compaction removed from the agent's view. The agent then reads the transcript around those that
+  look like decisions, feedback or lessons and raises only what isn't already recorded.
+
+**Changed**
+- When an upgrade asks what to do about a file the user has edited, the agent now shows the user's
+  own wording next to the bundle's and explains in plain words what each choice would do to it.
+  Why: the agent shouldn't expect the user will remember the wording of a specific rule.
+
+**Fixed**
+- An upgrade no longer assumes temporary folders are projects. Why: the installer checks the
+  folders Claude Code has been used in for projects that have their own copy of a skill such as
+  `/finalise`, and asks before the bundle's version would override one. Temporary folders left
+  behind by earlier test runs counted as projects with their own copies, so it asked about
+  projects that weren't real.
+
 ## 2026-10-19
 
 **Added**
