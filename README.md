@@ -1,6 +1,6 @@
 # Claude Code project memory & session-close workflow
 
-A set of skills, a command, hooks and rule files for [Claude Code](https://claude.com/claude-code),
+A set of skills, a command, a sub-agent, hooks and rule files for [Claude Code](https://claude.com/claude-code),
 with an install script. It keeps each session's context tight while making sure what matters,
 the decisions made, lessons learned and work still open, is written down before `/clear` throws
 the conversation away. Install it once per machine and it works in every project on it.

@@ -123,6 +123,19 @@ class InstallTest(TargetCase):
                              read_bytes(os.path.join(REPO, e["source"])))
             self.assertEqual(rec["base"], "workflow-bundle/base/" + e["target"] + ".base")
 
+    def test_fresh_install_puts_the_cold_test_agent_in_a_missing_agents_directory(self):
+        # A fresh machine has no ~/.claude/agents/. The agent must still arrive, and keep
+        # omitClaudeMd: true, the frontmatter key that starts it without any CLAUDE.md.
+        self.assertFalse(os.path.exists(self.t("agents")))
+        self.install_ok()
+        installed = read_bytes(self.t("agents/cold-test.md"))
+        self.assertEqual(installed,
+                         read_bytes(os.path.join(REPO, "payload", "agents", "cold-test.md")))
+        frontmatter = installed.decode("utf-8").split("---")[1].splitlines()
+        self.assertIn("omitClaudeMd: true", frontmatter)
+        self.assertIn("name: cold-test", frontmatter)
+        self.assertIn("agents/cold-test.md", self.record()["files"])
+
     def test_with_subagent_guard(self):
         r = self.install_ok("--with-subagent-guard")
         for e in GUARD_FILES:
