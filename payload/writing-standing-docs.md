@@ -40,7 +40,10 @@ there.
   leave alone, not only ones where it should apply.** A test that only checks whether the rule
   applies proves half of it: applying it where it doesn't belong goes unseen, and that is how a
   rule turns into padding. Run each case more than once; single runs mislead. **Ask the agent to
-  act on the rule, never whether the rule is clear:** that question invites a yes.
+  act on the rule, never whether the rule is clear:** that question invites a yes. Run it with the
+  `cold-test` agent, which starts without the user's and the project's `CLAUDE.md` files; an agent
+  of any other type holds them, so its pass can come from a rule already there. Where that agent
+  isn't installed, say in the result that the agent held the always-loaded rules.
 - **In an agent-facing file, "you" is the agent.** The human is "the user", third
   person. De-personalising a file ("make this project-agnostic") can silently invert an
   approval gate — "await your approval" hands a human-in-the-loop check to the agent

@@ -235,6 +235,10 @@
       {
         "sha256": "510ef48acf6022debe0e8ef8e8a0d09b4b23079ec3cd377ff4cb92b0e6c3342e",
         "note": "Points to the origin logs in lesson-candidates.md for each rule's cases, now that prompt-lessons.md is retired."
+      },
+      {
+        "sha256": "d1c73c744ecbd217d2c041dbc12dca933471564a8dc2048735bee9dbaa737ddd",
+        "note": "The cold-test rule now says to run the test with the cold-test agent, which starts without your CLAUDE.md files; an agent of any other type holds them, so its pass can come from a rule already there. Where that agent is not installed, the result should say the agent held the always-loaded rules."
       }
     ],
     "writing-executor-briefs.md": [
@@ -253,6 +257,10 @@
       {
         "sha256": "40a1e2578c13593cf27cbc8b909a57062cb6568c2f27d0f0e15fdd0ed4934cff",
         "note": "New section on what a brief must spell out, moved from the retired prompt-lessons.md: the doc-editing rules a cold agent needs, computable corrections specified as code, a second real case before a lesson is recorded, and how findings are presented. The file now also covers prompts the user asks for help with."
+      },
+      {
+        "sha256": "42e17f1d6a11b1da19063f1d2297e4bc9ca51b35bc2251a3955b67f64e459714",
+        "note": "New rule under what a brief must spell out: when a brief asks an executor to cold-test a rule or doc, it names the cold-test agent, because an agent of any other type holds your CLAUDE.md and its pass can come from a rule already there."
       }
     ],
     "doc-test-probes.md": [
@@ -545,6 +553,12 @@
       {
         "sha256": "200d3433447a97bd9e0d1c4bb8d8d5cd7a7053286030d443dfbad0a759a8ae1a",
         "note": ""
+      }
+    ],
+    "agents/cold-test.md": [
+      {
+        "sha256": "722dfeac286dc40ac323f090b79a513fe76ce65e3ad698af4d2932e7608c595b",
+        "note": "New agent, installed into the agents folder: it tests a rule or instruction by acting on it with only the text it is given, without loading your CLAUDE.md files, so a pass cannot come from a rule already in them. The cold-test rule in writing-standing-docs.md now says to use it."
       }
     ]
   }

@@ -26,6 +26,9 @@ This file is not auto-loaded, so its length is paid only when it is read.
   ends the turn, as `[one-decision-at-a-time]` in `~/.claude/CLAUDE.md` and the rule beside it
   set out. Otherwise the agent asks everything at once, decides silently, or asks about context
   the user never saw.
+- **When a brief asks an executor to cold-test a rule or doc, name the `cold-test` agent as the
+  one to use.** An agent of any other type holds the user's `CLAUDE.md`, so its pass can come from
+  a rule already there. The rule itself is in `~/.claude/writing-standing-docs.md`.
 
 ## Running a delegated build and checking its work
 
