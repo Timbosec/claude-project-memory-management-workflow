@@ -6,6 +6,7 @@ Every run passes --target explicitly: the script's default target is the real ~/
 import atexit
 import copy
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -786,6 +787,145 @@ class BundleChangeTest(TargetCase):
         r = self.install_ok()
         self.assertNotIn(OLD_DOC, r.stdout)
         self.assertFalse(os.path.exists(self.diff))
+
+
+class HeldChangeNoteTest(TargetCase):
+    """A listed file carries a note when the user's copy already holds the bundle's changes."""
+
+    LISTED = "Needs a decision (existing file differs, left as it is): "
+    NOTE = ("your copy already holds every bundle change since your recorded version; "
+            "it differs only by your own additions")
+    MINE = b"- a rule of my own\n"
+    DROPPED = b"- a rule the bundle has since dropped\n"
+
+    def setUp(self):
+        super().setUp()
+        self.install_ok()
+        self.new = read_bytes(os.path.join(REPO, "payload", OLD_DOC))
+        self.lines = self.new.splitlines(keepends=True)
+        # The older bundle lacked one line that the bundle has now.
+        self.added = self.lines[10]
+        self.old = b"".join(self.lines[:10] + self.lines[11:])
+
+    def entry(self, with_note):
+        return "  %s (owned)%s" % (OLD_DOC, " (%s)" % self.NOTE if with_note else "")
+
+    def listing(self, old, now, *extra):
+        install_old_version(self, OLD_DOC, old=old, now=now)
+        r = self.install_ok(*extra)
+        self.assertIn(self.LISTED + "1", r.stdout)
+        return r.stdout
+
+    def assertNote(self, out):
+        self.assertIn(self.entry(True), out)
+
+    def assertNoNote(self, out):
+        self.assertIn(self.entry(False), out)
+        self.assertNotIn("already holds", out)
+
+    def test_copy_holding_the_bundle_change_plus_an_addition_gets_the_note(self):
+        self.assertNote(self.listing(self.old, self.new + self.MINE))
+
+    def test_note_shows_in_a_dry_run_too(self):
+        self.assertNote(self.listing(self.old, self.new + self.MINE, "--dry-run"))
+
+    def test_copy_without_the_bundle_change_gets_no_note(self):
+        self.assertNoNote(self.listing(self.old, self.old + self.MINE))
+
+    def test_user_edit_inside_the_bundles_added_text_gets_no_note(self):
+        edited = self.added.replace(b" ", b"  ", 1) + b"- and a second line of mine\n"
+        now = b"".join(self.lines[:10]) + edited + b"".join(self.lines[11:]) + self.MINE
+        self.assertNotEqual(self.added, edited)
+        self.assertNoNote(self.listing(self.old, now))
+
+    def test_copy_still_holding_a_line_the_bundle_removed_gets_no_note(self):
+        old = b"".join(self.lines[:10]) + self.DROPPED + b"".join(self.lines[10:])
+        self.assertNoNote(self.listing(old, old + self.MINE))
+
+    def test_removal_made_in_the_copy_plus_an_addition_gets_the_note(self):
+        old = b"".join(self.lines[:10]) + self.DROPPED + b"".join(self.lines[10:])
+        self.assertNote(self.listing(old, self.new + self.MINE))
+
+    def test_user_edit_to_the_line_after_the_bundles_change_still_gets_the_note(self):
+        after = self.lines[11].rstrip(b"\n") + b" (my wording)\n"
+        now = (b"".join(self.lines[:11]) + after + b"".join(self.lines[12:]) + self.MINE)
+        self.assertNote(self.listing(self.old, now))
+
+    def test_user_edit_to_the_line_before_the_bundles_change_still_gets_the_note(self):
+        before = self.lines[9].rstrip(b"\n") + b" (my wording)\n"
+        now = (b"".join(self.lines[:9]) + before + b"".join(self.lines[10:]) + self.MINE)
+        self.assertNote(self.listing(self.old, now))
+
+    def test_added_line_found_elsewhere_in_the_copy_gets_no_note(self):
+        # The user has the line, but at the end of the file, not where the bundle put it.
+        self.assertNoNote(self.listing(self.old, self.old + self.added + self.MINE))
+
+    def test_added_blank_line_with_blank_lines_elsewhere_gets_no_note(self):
+        self.assertEqual(self.lines[6], b"\n")
+        old = b"".join(self.lines[:6] + self.lines[7:])
+        self.assertIn(b"\n\n", old)
+        self.assertNoNote(self.listing(old, old + self.MINE))
+
+    def test_no_saved_base_copy_gets_no_note(self):
+        install_old_version(self, OLD_DOC, old=self.old, now=self.new + self.MINE)
+        os.remove(self.t("workflow-bundle/base/" + OLD_DOC + ".base"))
+        r = self.install_ok()
+        self.assertIn(self.LISTED + "1", r.stdout)
+        self.assertIn("  %s (owned)\n" % OLD_DOC, r.stdout)
+        self.assertNotIn("already holds", r.stdout)
+
+    def test_no_record_gets_no_note(self):
+        with open(self.t(OLD_DOC), "wb") as f:
+            f.write(self.new + self.MINE)
+        os.remove(self.t("workflow-bundle/install-record.json"))
+        r = self.install_ok()
+        self.assertIn(self.LISTED + "1", r.stdout)
+        self.assertIn("  %s (owned)\n" % OLD_DOC, r.stdout)
+        self.assertNotIn("already holds", r.stdout)
+
+    def test_note_changes_nothing_but_the_printed_line(self):
+        install_old_version(self, OLD_DOC, old=self.old, now=self.new + self.MINE)
+        mine = self.new + self.MINE
+        record = read_bytes(self.t("workflow-bundle/install-record.json"))
+        plain = self.install_ok("--dry-run").stdout
+        self.assertNote(plain)
+        self.assertEqual(read_bytes(self.t(OLD_DOC)), mine)
+        self.assertEqual(read_bytes(self.t("workflow-bundle/install-record.json")), record)
+        r = self.install_ok()
+        self.assertIn(self.LISTED + "1", r.stdout)
+        self.assertEqual(read_bytes(self.t(OLD_DOC)), mine)
+        # A real run saves the whole record in its own layout and refreshes other files'
+        # entries; the listed file's entry stays as it was.
+        self.assertEqual(self.record()["files"][OLD_DOC], json.loads(record)["files"][OLD_DOC])
+        # The same files are listed with and without the note: only the note text differs.
+        self.assertEqual(plain.replace(" (%s)" % self.NOTE, ""),
+                         self.install_ok("--dry-run").stdout.replace(" (%s)" % self.NOTE, ""))
+
+
+class HoldsBundleChangesTest(unittest.TestCase):
+    """The line-by-line check behind the note, called directly."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = importlib.util.spec_from_file_location("install_under_test", INSTALL)
+        cls.install = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.install)
+
+    def holds(self, base, new, mine):
+        return self.install.holds_bundle_changes(base.splitlines(True), new.splitlines(True),
+                                                 mine.splitlines(True))
+
+    def test_a_bundle_that_changed_nothing_is_not_held(self):
+        text = "a\nb\nc\n"
+        self.assertFalse(self.holds(text, text, text + "mine\n"))
+
+    def test_a_held_insertion_is_held_and_an_unheld_one_is_not(self):
+        self.assertTrue(self.holds("a\nc\n", "a\nb\nc\n", "a\nb\nc\nmine\n"))
+        self.assertFalse(self.holds("a\nc\n", "a\nb\nc\n", "a\nc\nmine\n"))
+
+    def test_one_of_two_changes_held_is_not_held(self):
+        self.assertFalse(self.holds("a\nc\ne\n", "a\nb\nc\nd\ne\n",
+                                    "a\nb\nc\ne\nmine\n"))
 
 
 RETIRED = MANIFEST["retired"][0]["target"]

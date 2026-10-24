@@ -260,8 +260,12 @@ class FileNotesTest(ChangesCase):
         self.had(sha(self.OLD), base_text=self.OLD)
         out = self.ok()
         diff = self.t("workflow-bundle/changes/writing-executor-briefs.md.diff")
-        self.assertIn("  writing-executor-briefs.md (owned), bundle change: %s\n    why: Added the "
-                      "routing rule.\n" % diff, out)
+        # The file here is the bundle's own text plus the user's line, so the listing also
+        # carries the note that the copy already holds the bundle's changes.
+        self.assertIn("  writing-executor-briefs.md (owned) (your copy already holds every bundle "
+                      "change since your recorded version; it differs only by your own "
+                      "additions), bundle change: %s\n    why: Added the routing rule.\n" % diff,
+                      out)
         self.assertNotIn("routing rule", read(diff))
         self.assertNotIn("why:", read(diff))
 

@@ -18,7 +18,9 @@ decided on). Otherwise it leaves the existing file alone: a seed ledger is kept 
 whose recorded decision still holds is skipped, and any other file is listed as needing a
 decision. When the bundle has changed since the version recorded for a listed file, that change
 alone (recorded version to current bundle version) is written as a diff under
-workflow-bundle/changes/ and its path printed with the file.
+workflow-bundle/changes/ and its path printed with the file. If the user's copy also holds
+every line of that change in place, the listing says so in a note, and the file stays listed:
+what is left to decide is the user's own additions. A check that finds any doubt prints no note.
 
 rule-changes.json, beside this script, holds a one-line reason for each version of a rule or
 file the bundle has shipped. Where a raised rule or a file needing a decision has such reasons for
@@ -104,6 +106,8 @@ RULES_SUFFIX = ".rules"
 # Why each shipped rule and file changed, beside this script; not in the manifest, never installed.
 RULE_CHANGES_PATH = os.path.join(HERE, "rule-changes.json")
 FULL_PASS_NOTE = "no earlier bundle version to compare against: full pass"
+HOLDS_CHANGES_NOTE = ("your copy already holds every bundle change since your recorded version; "
+                      "it differs only by your own additions")
 SETTINGS_FILE = "settings.json"
 DECISIONS = ("kept", "merged", "replaced")
 # The decisions on one rule of the shared rules file (record-rule).
@@ -556,6 +560,58 @@ def bundle_change(record, target, entry, bundle_sha):
     return "".join(lines)
 
 
+def read_lines(path):
+    """A file's lines the way bundle_change reads them, line endings kept."""
+    with open(path, encoding="utf-8", errors="replace", newline="") as f:
+        return f.read().splitlines(keepends=True)
+
+
+def has_run(lines, run):
+    """Whether `run` (a non-empty list of lines) appears in `lines` as consecutive lines."""
+    n = len(run)
+    return n > 0 and any(lines[i:i + n] == run for i in range(len(lines) - n + 1))
+
+
+def holds_bundle_changes(base, new, mine):
+    """Whether the user's lines already hold every change from the base lines to the bundle's.
+
+    For each place the bundle changed, the bundle's new text must stand in the user's lines in
+    place: the new text together with the bundle line before it, or together with the line after
+    it, must appear there as consecutive lines (one neighbour is enough, since the user may have
+    edited the other beside it). Without a neighbour a short or blank added block would match
+    unrelated places in the user's file. Where the bundle removed or replaced base text, that
+    text with the same neighbour must not still appear. A false "yes" is worse than a false
+    "no", so anything unclear gives False, and so does a bundle that changed nothing.
+    """
+    changed = False
+    matcher = difflib.SequenceMatcher(None, base, new, autojunk=False)
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "equal":
+            continue
+        changed = True
+        before, after = new[max(j1 - 1, 0):j1], new[j2:j2 + 1]
+        if not (has_run(mine, before + new[j1:j2]) or has_run(mine, new[j1:j2] + after)):
+            return False
+        if i2 > i1 and (has_run(mine, before + base[i1:i2])
+                        or has_run(mine, base[i1:i2] + after)):
+            return False
+    return changed
+
+
+def copy_holds_bundle_changes(record, target, entry, bundle_sha, dst):
+    """Whether the user's file already holds the bundle's changes since the version the record
+    says they last had. False when there is nothing to compare against, under the same
+    conditions as bundle_change. Reads files only; writes nothing."""
+    seen = record["files"].get(entry["target"])
+    if not isinstance(seen, dict) or seen.get("bundle_sha256") == bundle_sha:
+        return False
+    base = recorded_base(record, target, entry)
+    if base is None:
+        return False
+    return holds_bundle_changes(read_lines(base), read_lines(os.path.join(HERE, entry["source"])),
+                                read_lines(dst))
+
+
 def write_change(target, rel, text, suffix=CHANGE_SUFFIX):
     path = os.path.join(changes_dir(target), rel + suffix)
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -972,7 +1028,9 @@ def cmd_install(args, manifest, record, target):
             change = bundle_change(record, target, entry, bundle_sha) if write else None
             diff = write_change(target, entry["target"], change) if change else None
             # CLAUDE.md is the shared kind and never reaches here, so no whole-file reasons.
-            needs_decision.append((entry["target"], entry["kind"], diff, None,
+            held = copy_holds_bundle_changes(record, target, entry, bundle_sha, dst)
+            needs_decision.append((entry["target"], entry["kind"], diff,
+                                   HOLDS_CHANGES_NOTE if held else None,
                                    file_notes(changes, record, entry)))
             continue
 

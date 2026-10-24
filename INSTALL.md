@@ -71,6 +71,13 @@ option would affect, and put it to them as above. A file listed without one has 
 version to compare against, so compare the whole files as below. `CLAUDE.md` never carries one;
 it has its own procedure below.
 
+A listed file may also carry a note that the user's copy already holds every bundle change since
+the version they last had. The script checks this line by line against the diff and writes no
+note when anything is unclear, so a file without the note may still hold the change; the note
+claims no more than that check. With the note, the question to the user is only about their
+own additions in the file: put those additions to them, quoted in full as above, and don't show
+the bundle's change again as if it were still to be carried over.
+
 The bundle says why it changed something: `why:` lines under a listed file, and "Why the bundle
 changed it" under a rule in the rules file. Give the user that reason with the change. Where the
 reason says a cut was tested, the cut text is not a loss, so don't recommend restoring it because
