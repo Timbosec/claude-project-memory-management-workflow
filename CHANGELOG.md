@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-10-24
+
+**Added**
+- A `cold-test` agent, installed into the agents folder. This bundle's workflow requires that a
+  new or changed rule be tested, to find out whether it actually does what it was written to do.
+  Each test hands an agent the rule and a task and watches what it does. A rule gets several
+  tests: some cases where it should apply and some where it should leave things alone, and each
+  case is run several times, because a single run can pass or fail by chance. This agent
+  performs those tests. Why: an ordinary agent has already read the user's `CLAUDE.md` files, so
+  it can do the right thing because some other rule there says to, and a rule that doesn't work
+  still appears to pass. This agent starts without those files, so a pass shows the rule did the
+  work.
+
+**Changed**
+- The rule in `writing-standing-docs.md` for testing a new or changed rule now says to use the
+  `cold-test` agent. Where that agent isn't installed, the result should say that the agent had
+  already read the user's own rules, so a pass may not prove the rule works.
+  `writing-executor-briefs.md`, which guides how a brief for sub-agents is written, now
+  specifies that tests of a rule should be run by the `cold-test` agent. Why: a test of a rule
+  can only be trusted if the agent running it has nothing but that rule to go on. On upgrade, a
+  copy of either file the user has edited is shown to the user, who decides what to keep.
+
 ## 2026-10-22
 
 **Added**
