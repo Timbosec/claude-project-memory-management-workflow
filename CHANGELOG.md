@@ -21,6 +21,14 @@
   specifies that tests of a rule should be run by the `cold-test` agent. Why: a test of a rule
   can only be trusted if the agent running it has nothing but that rule to go on. On upgrade, a
   copy of either file the user has edited is shown to the user, who decides what to keep.
+- When the user updates the bundle, `install.py` lists the files they edited that differ from the
+  bundle's version, and the agent asks what to do with each. It now adds a note to a file that
+  already includes the new version's changes, so the user knows only their own additions are
+  left. Why: a change can reach a user's files without going through `install.py`, for example
+  when an agent applies it directly, and the file was then listed like any other edit, leaving the
+  user to compare it with the bundle's. The note only informs. A file with no note may still
+  include the changes, because `install.py` adds no note when it is unsure. `INSTALL.md` now
+  tells the agent that, with the note, only the user's own additions need asking about.
 
 ## 2026-10-22
 
