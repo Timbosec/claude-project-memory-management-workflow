@@ -2,6 +2,19 @@
 
 ## 2026-10-24
 
+**Changed**
+- When the agent adds or rewords a rule in an instruction file, a skill or a memory note, it now
+  checks the rule against each line of the checklist in `writing-standing-docs.md` and shows the
+  user the result line by line. The checklist is there to keep rules short, needed, in the right
+  place and calmly worded, so each one still gets followed. Fixing a fact or a path needs no check.
+  The rule file `rules/standing-docs.md` now also applies to a skill's other markdown files and to
+  the `writing-*.md` files in `~/.claude`. Why: reading a checklist does not apply it. In a test,
+  fresh sessions showed the line-by-line result in five of six runs with the new wording and in
+  none of six with the old. On upgrade, the pointer in the user's `CLAUDE.md` is listed as a
+  changed rule, and the user decides whether to take it.
+
+## 2026-10-24
+
 **Added**
 - A `cold-test` agent, installed into the agents folder. This bundle's workflow requires that a
   new or changed rule be tested, to find out whether it actually does what it was written to do.
