@@ -1,7 +1,9 @@
 # User scope (all projects)
 
 - `~/.claude/writing-standing-docs.md` — rules for **editing** standing docs, skills and memory
-  bodies. Consult before any such edit.
+  bodies. Read it before any such edit. When an edit adds or rewords a rule, check the rule against
+  each line of its "Before a new or reworded rule goes in" list and show the user the line-by-line
+  result with the proposal; a fix to a fact or a path needs no check.
   → `[standing-docs-home]`
 - `~/.claude/writing-executor-briefs.md` — rules for **briefing an executor and verifying its
   work**, and for writing any brief or prompt for an agent: what the brief must spell out, caller

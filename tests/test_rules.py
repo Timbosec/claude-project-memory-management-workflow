@@ -159,7 +159,8 @@ class RealRulesToRaiseTest(unittest.TestCase):
                          {"one-decision-at-a-time", "rule-into-code", "second-real-example"})
         items = install.rules_to_raise(base, shipped_text(), {})
         self.assertEqual([(i["id"], i["status"]) for i in items],
-                         [("executor-briefs-home", "changed"), ("lesson-routing", "changed"),
+                         [("standing-docs-home", "changed"), ("executor-briefs-home", "changed"),
+                          ("lesson-routing", "changed"),
                           ("search-silence", "new"), ("say-what-you-searched", "new"),
                           ("end-of-turn-text", "new"), ("self-carrying-sentences", "new"),
                           ("observable-vs-inferred", "new"), ("rule-into-code", "changed"),
@@ -168,18 +169,19 @@ class RealRulesToRaiseTest(unittest.TestCase):
                           ("measure-reach", "new"),
                           (None, "removed"), (None, "removed"), (None, "removed"),
                           (None, "removed"), (None, "removed"), (None, "removed")])
-        self.assertTrue(items[11]["old"].startswith("- `~/.claude/prompt-lessons.md`"))
-        self.assertTrue(items[12]["old"].startswith("- **A search that turns up nothing"))
-        self.assertTrue(items[13]["old"].startswith("- Never call a blocking-panel tool"))
-        self.assertTrue(items[14]["old"].startswith("- **Write the sentence so it carries"))
-        self.assertTrue(items[15]["old"].startswith("- When introspecting on your own behaviour"))
-        self.assertTrue(items[16]["old"].startswith("- **A broken instrument's reading"))
+        self.assertTrue(items[12]["old"].startswith("- `~/.claude/prompt-lessons.md`"))
+        self.assertTrue(items[13]["old"].startswith("- **A search that turns up nothing"))
+        self.assertTrue(items[14]["old"].startswith("- Never call a blocking-panel tool"))
+        self.assertTrue(items[15]["old"].startswith("- **Write the sentence so it carries"))
+        self.assertTrue(items[16]["old"].startswith("- When introspecting on your own behaviour"))
+        self.assertTrue(items[17]["old"].startswith("- **A broken instrument's reading"))
 
     def test_the_version_before_the_shipped_text_rule_raises_exactly_that_rule(self):
         items = install.rules_to_raise(fixture_text("user-CLAUDE-a6c5979.md"),
                                        shipped_text(), {})
         self.assertEqual([(i["id"], i["status"]) for i in items],
-                         [("executor-briefs-home", "changed"), ("lesson-routing", "changed"),
+                         [("standing-docs-home", "changed"), ("executor-briefs-home", "changed"),
+                          ("lesson-routing", "changed"),
                           ("search-silence", "new"), ("say-what-you-searched", "new"),
                           ("end-of-turn-text", "new"), ("self-carrying-sentences", "new"),
                           ("observable-vs-inferred", "new"), ("rule-into-code", "changed"),
@@ -189,10 +191,10 @@ class RealRulesToRaiseTest(unittest.TestCase):
                           ("write-for-readers", "new"), (None, "removed"), (None, "removed"),
                           (None, "removed"), (None, "removed"), (None, "removed"),
                           (None, "removed")])
-        self.assertIsNone(items[11]["old"])
-        self.assertTrue(items[11]["new"].startswith("- **Write shipped text for the people"))
-        self.assertTrue(items[11]["first_line"].startswith("- **Write shipped text"))
-        self.assertIsNone(items[11]["reason"])
+        self.assertIsNone(items[12]["old"])
+        self.assertTrue(items[12]["new"].startswith("- **Write shipped text for the people"))
+        self.assertTrue(items[12]["first_line"].startswith("- **Write shipped text"))
+        self.assertIsNone(items[12]["reason"])
 
 
 class RulesToRaiseTest(unittest.TestCase):
@@ -295,7 +297,8 @@ class IdlessBaseTest(unittest.TestCase):
         base = fixture_text("user-CLAUDE-f596cd7.md")
         items = install.rules_to_raise(base, shipped_text(), {})
         self.assertEqual([(i["id"], i["status"]) for i in items],
-                         [("executor-briefs-home", "changed"), ("lesson-routing", "changed"),
+                         [("standing-docs-home", "changed"), ("executor-briefs-home", "changed"),
+                          ("lesson-routing", "changed"),
                           ("search-silence", "new"), ("say-what-you-searched", "new"),
                           ("end-of-turn-text", "new"), ("self-carrying-sentences", "new"),
                           ("observable-vs-inferred", "new"), ("rule-into-code", "changed"),
@@ -305,15 +308,15 @@ class IdlessBaseTest(unittest.TestCase):
                           ("write-for-readers", "new"), (None, "removed"), (None, "removed"),
                           (None, "removed"), (None, "removed"), (None, "removed"),
                           (None, "removed")])
-        changed = items[8]
+        changed = items[9]
         self.assertEqual(changed["id"], "second-real-example")
         self.assertTrue(changed["old"].startswith("- Before a fix or lesson becomes a standing"))
         self.assertNotEqual(changed["old"], changed["new"])
-        self.assertIsNone(items[6]["old"])
-        self.assertTrue(items[12]["old"].startswith("- `~/.claude/prompt-lessons.md`"))
-        self.assertTrue(items[13]["old"].startswith("- **A search that turns up nothing"))
-        self.assertTrue(items[16]["old"].startswith("- When introspecting on your own behaviour"))
-        self.assertIsNone(items[11]["old"])
+        self.assertIsNone(items[7]["old"])
+        self.assertTrue(items[13]["old"].startswith("- `~/.claude/prompt-lessons.md`"))
+        self.assertTrue(items[14]["old"].startswith("- **A search that turns up nothing"))
+        self.assertTrue(items[17]["old"].startswith("- When introspecting on your own behaviour"))
+        self.assertIsNone(items[12]["old"])
 
     def test_pairing_is_by_first_line_with_the_id_tag_stripped(self):
         base = "- the same first line\n  old second line\n"

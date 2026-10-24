@@ -15,6 +15,10 @@
       {
         "sha256": "de3530bd04df8ba400f19dac83000cf9fab8e03853b840cce837fc2c4c2ee67d",
         "note": ""
+      },
+      {
+        "sha256": "a035289cee1f05ae7be91fe0df2832830f4c855d0d76ceac1de91962a76ff84c",
+        "note": "Now tells Claude to check an added or reworded rule against each line of the checklist in writing-standing-docs.md and show you the result, not only to read the file first. Fixing a fact or a path needs no check. In one session the checklist was read but not applied, and a small test showed fresh sessions showing a line-by-line result in 5 of 6 runs with this wording and 0 of 6 without it."
       }
     ],
     "executor-briefs-home": [
@@ -517,6 +521,10 @@
       {
         "sha256": "33f3591cadcf1253dae3f5ac34b6174cc0d6a9f2f6703db49184ffabca3f61fa",
         "note": "New: loads a pointer to writing-standing-docs.md whenever Claude reads or edits a CLAUDE.md, skill, memory or other instruction file in the session's project, so the doc-editing rules are read without relying on the CLAUDE.md pointer alone."
+      },
+      {
+        "sha256": "1fa72be7b836f98cc4c33c54ad9aee9b3b1b7bdd0314caf22b9e0844d1ba7d05",
+        "note": "Now also loads for the other markdown files inside a skill and for the writing-*.md files in ~/.claude, and tells Claude to check an added or reworded rule against the checklist and show you the result. Fixing a fact or a path needs no check."
       }
     ],
     "rules/tests.md": [

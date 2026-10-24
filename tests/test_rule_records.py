@@ -183,6 +183,7 @@ class RecordFileRefusalTest(RuleRecordCase):
 
     def test_allowed_once_each_rule_is_recorded_and_then_refreshes_the_base(self):
         self.start(fixture("user-CLAUDE-a6c5979.md"))
+        self.ok("record-rule", "standing-docs-home", "--decision", "taken")
         self.ok("record-rule", "executor-briefs-home", "--decision", "taken")
         self.ok("record-rule", "lesson-routing", "--decision", "taken")
         self.ok("record-rule", "end-of-turn-text", "--decision", "taken")
@@ -213,6 +214,7 @@ class RecordFileRefusalTest(RuleRecordCase):
 
     def test_a_dropped_changed_rule_does_not_block(self):
         self.start(fixture("user-CLAUDE-f596cd7.md"))
+        self.ok("record-rule", "standing-docs-home", "--decision", "taken")
         self.ok("record-rule", "executor-briefs-home", "--decision", "taken")
         self.ok("record-rule", "lesson-routing", "--decision", "taken")
         self.ok("record-rule", "end-of-turn-text", "--decision", "taken")
