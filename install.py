@@ -132,6 +132,10 @@ class SetupError(Exception):
     """The manifest, the payload, the install record or settings.json can't be used."""
 
 
+class UpdateError(Exception):
+    """`update` started changing the clone and could not finish; the message says what state it is in."""
+
+
 def sha256_of(path):
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -470,6 +474,132 @@ def bundle_commit():
     except (OSError, subprocess.SubprocessError):
         return None
     return out.stdout.strip() if out.returncode == 0 else None
+
+
+def run_git(path, args, timeout=30, env=None):
+    """Run git on the clone at `path`. A missing git or a timeout comes back as a failed run."""
+    cmd = ["git", "-C", path] + list(args)
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env)
+    except (OSError, subprocess.SubprocessError) as e:
+        return subprocess.CompletedProcess(cmd, 1, "", str(e))
+
+
+def first_line(text):
+    lines = text.strip().splitlines()
+    return lines[0] if lines else "no reason given"
+
+
+def git_out(path, args):
+    """The stripped output of a git command that has to work, or a SetupError."""
+    r = run_git(path, args)
+    if r.returncode != 0:
+        raise SetupError("couldn't read the state of this clone (git %s: %s)"
+                         % (" ".join(args), first_line(r.stderr)))
+    return r.stdout.strip()
+
+
+def plural(n, one, many):
+    return "%d %s" % (n, one if n == 1 else many)
+
+
+def update_clone(path, now):
+    """Bring the clone at `path` to the remote branch it follows; return the report to print.
+
+    Anything the clone holds of its own (commits not on the remote branch, edited tracked files,
+    new untracked files) is saved to a branch named backup-YYYYMMDD-HHMM first. Nothing is
+    discarded and nothing is asked.
+    """
+    top = run_git(path, ["rev-parse", "--show-toplevel"])
+    if top.returncode != 0 or os.path.realpath(top.stdout.strip()) != os.path.realpath(path):
+        raise SetupError("this folder isn't a Git clone, so it can't be updated in place; "
+                         "download the bundle again")
+    branch = run_git(path, ["symbolic-ref", "-q", "--short", "HEAD"])
+    if branch.returncode != 0 or not branch.stdout.strip():
+        raise SetupError("this clone isn't on a branch, so update can't tell what to update to")
+    branch = branch.stdout.strip()
+    if run_git(path, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"]
+               ).returncode != 0:
+        raise SetupError("this branch isn't linked to a remote branch, so update can't tell "
+                         "what to update to")
+    remote = run_git(path, ["config", "branch.%s.remote" % branch]).stdout.strip()
+    fetch_env = dict(os.environ, GIT_TERMINAL_PROMPT="0")
+    fetched = run_git(path, ["fetch", remote], timeout=120, env=fetch_env)
+    if fetched.returncode != 0:
+        raise SetupError("couldn't download the latest bundle (%s)" % first_line(fetched.stderr))
+
+    upstream = git_out(path, ["rev-parse", "@{u}"])
+    head = git_out(path, ["rev-parse", "HEAD"])
+    ahead = int(git_out(path, ["rev-list", "--count", "%s..%s" % (upstream, head)]))
+    status = git_out(path, ["status", "--porcelain", "--untracked-files=all"])
+    files = len(status.splitlines())
+    old_short = git_out(path, ["rev-parse", "--short", head])
+    new_short = git_out(path, ["rev-parse", "--short", upstream])
+
+    if head == upstream and not files:
+        return "The bundle is already up to date (at %s)." % old_short
+    if not files and ahead == 0:
+        r = run_git(path, ["reset", "--hard", upstream])
+        if r.returncode != 0:
+            raise UpdateError("couldn't bring the bundle up to date (%s); nothing of yours was "
+                              "lost" % first_line(r.stderr))
+        return "Updated the bundle from %s to %s." % (old_short, new_short)
+
+    name = "backup-" + now.strftime("%Y%m%d-%H%M")
+    save_backup(path, branch, name, upstream, files)
+    parts = []
+    if ahead:
+        parts.append(plural(ahead, "commit", "commits"))
+    if files:
+        parts.append(plural(files, "edited or new file", "edited or new files"))
+    if head == upstream:
+        first = "The bundle already matches the published version (at %s)." % new_short
+    else:
+        first = "Updated the bundle from %s to %s." % (old_short, new_short)
+    return ("%s\nYour clone had changes of its own (%s). They are saved in the branch %s. "
+            "The bundle files are now exactly the published version."
+            % (first, " and ".join(parts), name))
+
+
+def save_backup(path, branch, name, upstream, dirty):
+    """Save the clone's own work on branch `name`, then make `branch` match `upstream`.
+
+    The reset happens only if every earlier step worked; otherwise the original branch is checked
+    out again and an UpdateError says the clone was not changed.
+    """
+    created = False
+
+    def fail(step, r):
+        run_git(path, ["checkout", branch])
+        saved = (" Whatever was saved so far is in the branch %s." % name) if created else ""
+        raise UpdateError("couldn't save your changes (%s: %s), so the clone was not changed.%s"
+                          % (step, first_line(r.stderr), saved))
+
+    r = run_git(path, ["checkout", "-b", name])
+    if r.returncode != 0:
+        fail("git checkout -b %s" % name, r)
+    created = True
+    if dirty:
+        r = run_git(path, ["add", "-A"])
+        if r.returncode != 0:
+            fail("git add -A", r)
+        r = run_git(path, ["-c", "user.name=install.py update", "-c", "user.email=update@invalid",
+                           "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false",
+                           "commit", "--no-verify", "-m", "Saved by install.py update"])
+        if r.returncode != 0:
+            fail("git commit", r)
+    r = run_git(path, ["rev-parse", "--verify", "refs/heads/" + name])
+    if r.returncode != 0:
+        fail("git rev-parse --verify", r)
+    r = run_git(path, ["checkout", branch])
+    if r.returncode != 0:
+        raise UpdateError("your changes are saved in the branch %s, but going back to %s failed "
+                          "(%s), so the clone was not brought up to date"
+                          % (name, branch, first_line(r.stderr)))
+    r = run_git(path, ["reset", "--hard", upstream])
+    if r.returncode != 0:
+        raise UpdateError("your changes are saved in the branch %s, but making %s match the "
+                          "published version failed (%s)" % (name, branch, first_line(r.stderr)))
 
 
 def copy_file(src, dst, executable):
@@ -1439,6 +1569,17 @@ def cmd_project_override(args, manifest, record, target):
     return 0
 
 
+def cmd_update():
+    """Bring this clone up to date. Needs no manifest or install record, so it works on an old one."""
+    try:
+        text = update_clone(HERE, datetime.datetime.now())
+    except UpdateError as e:
+        print("install.py: %s" % e, file=sys.stderr)
+        return 2
+    print(text)
+    return 0
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Install the workflow bundle.")
     parser.add_argument("--target", default=os.path.expanduser("~/.claude"),
@@ -1474,6 +1615,7 @@ def main(argv=None):
     p_rule.add_argument("--target", default=argparse.SUPPRESS)
     p_rules = sub.add_parser("rules", help="list the recorded per-rule decisions")
     p_rules.add_argument("--target", default=argparse.SUPPRESS)
+    sub.add_parser("update", help="bring this clone up to date, saving any changes of its own")
     args = parser.parse_args(argv)
 
     if args.command and (args.dry_run or args.with_subagent_guard):
@@ -1482,6 +1624,8 @@ def main(argv=None):
 
     target = os.path.abspath(os.path.expanduser(args.target))
     try:
+        if args.command == "update":
+            return cmd_update()
         manifest = load_manifest()
         record = load_record(target)
         if args.command == "decline":
