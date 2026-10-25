@@ -12,8 +12,16 @@ Run every command from the clone root, the directory holding this file. The inst
 into `~/.claude`. `--target DIR` exists only for testing in a scratch directory: the hook
 commands it writes still run files under `~/.claude/hooks/`.
 
-To upgrade an existing install, run `git pull` in the clone first, then follow these same steps.
-The script works out from its install record what the bundle has changed since.
+To upgrade an existing install, run `python3 install.py update` in the clone first and show the
+user its report; it brings the clone up to date. Then read this file again from the top, because
+the update may have changed it, and follow these same steps. The script works out from its install
+record what the bundle has changed since.
+
+If it answers that `update` is not a command, this clone predates it. Run `git pull --ff-only`. If
+that refuses, the clone holds changes of its own: save them with `git branch backup-old-clone` and,
+if `git status --short` lists files, `git stash push --include-untracked`; then run `git fetch` and
+`git reset --hard @{u}`, and tell the user where the changes went. Then read this file again; the
+clone is now up to date, so carry on with the steps below without running `update` again.
 
 Install bundle files as they are. Don't generalise, adapt or add to them, and don't edit files
 in this clone. The script updates a file the user never edited to the bundle's newer version on
@@ -26,14 +34,16 @@ user (the file, what goes wrong, the evidence and a suggested fix) and tell them
 issue on the repository they cloned from. Name it with
 `git remote get-url origin | sed -E 's#://[^/@]*@#://#'`, which removes any user name or token
 an HTTPS clone URL can carry; don't print the remote URL without that filter. Fixes arrive
-through `git pull`.
+through `update`.
 
 ## 1. Run the script
 
 Run `python3 install.py` and show the user its summary. If it exits non-zero, show the user the
 output (failing tests are printed under `Tests:`) and stop. The tests run against the files as
 they are on disk, so if any files are listed under "Needs a decision", tell the user that a pass
-covers their own copies of those, not the bundle's.
+covers their own copies of those, not the bundle's. If the summary ends with a line starting
+`Note:` about changes in the clone, tell the user, and tell them `python3 install.py update` saves
+those changes to a backup branch when they next upgrade. If there is no such line, don't mention it.
 
 ## 2. Resolve each listed file
 
