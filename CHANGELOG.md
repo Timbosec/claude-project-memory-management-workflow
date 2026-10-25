@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-10-25
+
+**Added**
+- `python3 install.py update`, which brings the clone you installed from up to date with the
+  published bundle. If the clone holds changes of its own (commits, edited files or new files),
+  `update` first saves them to a branch named `backup-<date>-<time>` and says where, so nothing is
+  lost and no Git choice is needed. Why: upgrading started with `git pull`, which stops with a
+  "divergent branches" error once the clone holds a commit of its own, and that error gives a
+  reader new to Git nothing to act on.
+- A note at the end of a plain `python3 install.py` run when the clone has changes of its own,
+  which asks the agent to pass it on and to run `update` at the next upgrade. It reads Git without
+  downloading anything and prints nothing when it cannot tell. Why: a user who never runs `update`
+  still hears about the changes before a later upgrade runs into them.
+
+**Changed**
+- `README.md` and `INSTALL.md` now have the agent run `update` first when upgrading, then re-read
+  `INSTALL.md`, since the update can change it. A clone made before this version has no `update`,
+  so for that one upgrade `INSTALL.md` has the agent run `git pull --ff-only` and, if that refuses,
+  save the clone's changes to a branch (and uncommitted files to a stash) before matching the
+  published bundle. Why: the upgrade steps should not depend on the user knowing Git.
+
 ## 2026-10-24
 
 **Changed**
