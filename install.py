@@ -133,7 +133,8 @@ class SetupError(Exception):
 
 
 class UpdateError(Exception):
-    """`update` started changing the clone and could not finish; the message says what state it is in."""
+    """`update` started changing the clone and could not finish; the message says what state
+    it is in."""
 
 
 def sha256_of(path):
@@ -503,17 +504,70 @@ def plural(n, one, many):
     return "%d %s" % (n, one if n == 1 else many)
 
 
+def is_clone_top(path):
+    """Whether `path` is the top folder of a Git clone, not a folder inside one or elsewhere."""
+    top = run_git(path, ["rev-parse", "--show-toplevel"], timeout=10)
+    return top.returncode == 0 and os.path.realpath(top.stdout.strip()) == os.path.realpath(path)
+
+
+def rebase_in_progress(path):
+    for name in ("rebase-merge", "rebase-apply"):
+        r = run_git(path, ["rev-parse", "--git-path", name], timeout=10)
+        if r.returncode == 0 and r.stdout.strip() and \
+                os.path.exists(os.path.join(path, r.stdout.strip())):
+            return True
+    return False
+
+
+def own_changes_text(ahead, files):
+    """What the clone holds of its own, in words: '1 commit and 2 edited or new files'."""
+    parts = []
+    if ahead:
+        parts.append(plural(ahead, "commit", "commits"))
+    if files:
+        parts.append(plural(files, "edited or new file", "edited or new files"))
+    return " and ".join(parts)
+
+
+def own_changes_note(path):
+    """The note a plain install prints when the clone at `path` holds changes of its own, else None.
+
+    Read-only and offline: it compares with the upstream reference as the clone last fetched it.
+    Anything unexpected (git missing or failing, not a clone, no branch, no upstream) gives None.
+    """
+    env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")  # `git status` must not rewrite the index
+
+    def git(*args):
+        r = run_git(path, args, timeout=10, env=env)
+        return r.stdout.strip() if r.returncode == 0 else None
+    if not is_clone_top(path) or not git("symbolic-ref", "-q", "--short", "HEAD"):
+        return None
+    if git("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}") is None:
+        return None
+    ahead = git("rev-list", "--count", "@{u}..HEAD")
+    status = git("status", "--porcelain", "--untracked-files=all")
+    if ahead is None or status is None or not ahead.isdigit():
+        return None
+    what = own_changes_text(int(ahead), len(status.splitlines()))
+    if not what:
+        return None
+    return ("Note: this clone has changes of its own (%s). Run `python3 install.py update` to "
+            "save them to a backup branch and match the bundle, before the next upgrade." % what)
+
+
 def update_clone(path, now):
     """Bring the clone at `path` to the remote branch it follows; return the report to print.
 
     Anything the clone holds of its own (commits not on the remote branch, edited tracked files,
-    new untracked files) is saved to a branch named backup-YYYYMMDD-HHMM first. Nothing is
-    discarded and nothing is asked.
+    new untracked files) is saved to a branch named backup-YYYYMMDD-HHMM first (with -2, -3 and
+    so on added if that name is taken). Nothing is discarded and nothing is asked.
     """
-    top = run_git(path, ["rev-parse", "--show-toplevel"])
-    if top.returncode != 0 or os.path.realpath(top.stdout.strip()) != os.path.realpath(path):
+    if not is_clone_top(path):
         raise SetupError("this folder isn't a Git clone, so it can't be updated in place; "
                          "download the bundle again")
+    if rebase_in_progress(path):
+        raise SetupError("a rebase is half-finished in this clone; finish it or run "
+                         "`git rebase --abort`, then run update again")
     branch = run_git(path, ["symbolic-ref", "-q", "--short", "HEAD"])
     if branch.returncode != 0 or not branch.stdout.strip():
         raise SetupError("this clone isn't on a branch, so update can't tell what to update to")
@@ -545,32 +599,44 @@ def update_clone(path, now):
                               "lost" % first_line(r.stderr))
         return "Updated the bundle from %s to %s." % (old_short, new_short)
 
-    name = "backup-" + now.strftime("%Y%m%d-%H%M")
-    save_backup(path, branch, name, upstream, files)
-    parts = []
-    if ahead:
-        parts.append(plural(ahead, "commit", "commits"))
-    if files:
-        parts.append(plural(files, "edited or new file", "edited or new files"))
+    name = save_backup(path, branch, "backup-" + now.strftime("%Y%m%d-%H%M"), upstream, files)
     if head == upstream:
         first = "The bundle already matches the published version (at %s)." % new_short
     else:
         first = "Updated the bundle from %s to %s." % (old_short, new_short)
     return ("%s\nYour clone had changes of its own (%s). They are saved in the branch %s. "
             "The bundle files are now exactly the published version."
-            % (first, " and ".join(parts), name))
+            % (first, own_changes_text(ahead, files), name))
 
 
-def save_backup(path, branch, name, upstream, dirty):
-    """Save the clone's own work on branch `name`, then make `branch` match `upstream`.
+def free_backup_name(path, base):
+    """`base`, or base-2, base-3 ... (up to -99): the first that is not already a branch."""
+    for n in range(1, 100):
+        name = base if n == 1 else "%s-%d" % (base, n)
+        if run_git(path, ["rev-parse", "--verify", "-q", "refs/heads/" + name]).returncode != 0:
+            return name
+    raise UpdateError("couldn't find a free name for the backup branch (%s through %s-99 are "
+                      "all taken), so the clone was not changed" % (base, base))
+
+
+def save_backup(path, branch, base, upstream, dirty):
+    """Save the clone's own work on a new branch named from `base`, then make `branch` match
+    `upstream`; return the branch name used.
 
     The reset happens only if every earlier step worked; otherwise the original branch is checked
-    out again and an UpdateError says the clone was not changed.
+    out again and an UpdateError says what state the clone is in.
     """
+    name = free_backup_name(path, base)
     created = False
+    committed = False
 
     def fail(step, r):
         run_git(path, ["checkout", branch])
+        if committed:
+            raise UpdateError("couldn't confirm that your changes were saved (%s: %s). They were "
+                              "committed to the branch %s, so they are no longer in the working "
+                              "folder; %s is checked out again but was not brought up to date"
+                              % (step, first_line(r.stderr), name, branch))
         saved = (" Whatever was saved so far is in the branch %s." % name) if created else ""
         raise UpdateError("couldn't save your changes (%s: %s), so the clone was not changed.%s"
                           % (step, first_line(r.stderr), saved))
@@ -587,7 +653,9 @@ def save_backup(path, branch, name, upstream, dirty):
                            "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false",
                            "commit", "--no-verify", "-m", "Saved by install.py update"])
         if r.returncode != 0:
+            run_git(path, ["reset", "-q"])  # unstage what `add` staged
             fail("git commit", r)
+        committed = True
     r = run_git(path, ["rev-parse", "--verify", "refs/heads/" + name])
     if r.returncode != 0:
         fail("git rev-parse --verify", r)
@@ -600,6 +668,7 @@ def save_backup(path, branch, name, upstream, dirty):
     if r.returncode != 0:
         raise UpdateError("your changes are saved in the branch %s, but making %s match the "
                           "published version failed (%s)" % (name, branch, first_line(r.stderr)))
+    return name
 
 
 def copy_file(src, dst, executable):
@@ -1309,6 +1378,9 @@ def cmd_install(args, manifest, record, target):
     if declined:
         print("Optional components declined earlier: %s" % ", ".join(declined))
 
+    note = own_changes_note(HERE)
+    if note:
+        print(note)
     if results is not None and not all(r[1] for r in results):
         return 1
     return 0
@@ -1570,7 +1642,8 @@ def cmd_project_override(args, manifest, record, target):
 
 
 def cmd_update():
-    """Bring this clone up to date. Needs no manifest or install record, so it works on an old one."""
+    """Bring this clone up to date. Needs no manifest or install record, so it works on an old
+    one."""
     try:
         text = update_clone(HERE, datetime.datetime.now())
     except UpdateError as e:
